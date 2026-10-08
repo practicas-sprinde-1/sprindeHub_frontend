@@ -1,0 +1,70 @@
+.login-page {
+    min-height: 100vh;
+    /*vh = viewport height*/
+    display: flex;
+    /*permite organizar a los elementos hijos*/
+    justify-content: center;
+    /*centra el contenido horizontalmente*/
+    align-items: center;
+    /*centra el contenido verticalmente*/
+    padding: 24px;
+    /*espacio entre la pantalla y el contenido*/
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 32px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+}
+
+.login-card h1 {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 12px;
+    margin-left: 0;
+    color: var(--color-primary);
+}
+
+.login-card p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* se utiliza # porque se llama al id y no a la clase*/
+#login-form {
+  display: flex;
+  flex-direction: column; /*pone los elementos hijos en columnas (uno debajo de otro)*/
+  gap: 20px; /*separacion entre cada hijo*/
+  margin-top: 24px; /*añade separacion vertical entre el formulario y otro componente*/
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 14px;
+  font-weight: 600; /*grosor de las letras*/
+}
+
+/*margin=espacio por fuera del elemento. padding=espacio por dentro del elemento*/
+
+.form-field input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+.form-field input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
