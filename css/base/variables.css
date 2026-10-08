@@ -1,0 +1,11 @@
+/* Variables que se reutilizan en la app */
+
+/*Se utiliza 'root' porque represanta la raíz del documento <html> y se podrá utilizar en toda la app*/
+:root {
+  --color-primary: #234577;
+  --color-background: #e6edf3;
+  --color-surface: #ffffff; /*fondo de componentes*/
+  --color-text: #292d32; 
+  --color-text-secondary: #64748b;
+  --color-border: #c3cddd;
+}

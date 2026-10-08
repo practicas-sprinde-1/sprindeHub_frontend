@@ -1,0 +1,17 @@
+/* Valores que se quitan de la configuracion automatica del navegador y se sustituye por el creado por la app **/
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+input,
+button {
+  font: inherit;
+}
