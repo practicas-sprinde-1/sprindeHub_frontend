@@ -17,13 +17,13 @@ registerForm.addEventListener("submit", async (event) => {
   };
 
   try {
-    registerMessage.textContent = "Registro completado. Iniciando sesión...";
-
     const userData = await register(credentials);
+
+    registerMessage.textContent = "Registro completado. Iniciando sesión...";
 
     window.location.replace("/index.html");
   } catch (error) {
-    loginMessage.textContent =
+    registerMessage.textContent =
       error.message || "No se ha podido crear la cuenta.";
   }
 });
