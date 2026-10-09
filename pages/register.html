@@ -10,18 +10,26 @@
     <link rel="stylesheet" href="../css/pages/login-register.css" />
     <link rel="stylesheet" href="../css/components/button.css" />
 
-    <script type="module" src="../js/pages/login.js"></script>
+    <script type="module" src="../js/pages/register.js"></script>
   </head>
+  <header>
+    <h1>REGISTRO DESACTIVADO</h1>
+  </header>
 
   <body>
-    <main class="login-page">
-      <section class="login-card">
-        <h1 id="login-title">Sprinde Hub</h1>
+    <main class="register-page">
+      <section class="register-card">
+        <h1 id="register-title">Sprinde Hub</h1>
 
-        <form id="login-form">
+        <form id="register-form">
           <div class="form-field">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required />
+          </div>
+
+          <div class="form-field">
+            <label for="username">Nombre de usuario</label>
+            <input type="text" id="username" name="username" required />
           </div>
 
           <div class="form-field">
@@ -34,8 +42,8 @@
               required
             />
           </div>
-          <button type="submit" class="button">Acceder</button>
-          <p id="login-message" role="status"></p>
+          <button type="submit" class="button">Registrarse</button>
+          <p id="register-message" role="status"></p>
         </form>
       </section>
     </main>
