@@ -1,5 +1,6 @@
-//Crea una variable buscando el elemento cuyo id sea 'login-form # -> id .->clase'
+import { login } from "../api/auth.api.js";
 
+//Crea una variable buscando el elemento cuyo id sea 'login-form # -> id .->clase'
 const loginForm = document.querySelector("#login-form");
 
 loginForm.addEventListener("submit", async (event) => {
@@ -15,33 +16,17 @@ loginForm.addEventListener("submit", async (event) => {
   };
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
-      method: "POST",
-      headers: {
-        //Le dice al servidor el tipo de contenido que envía la app
-        "Content-Type": "application/json",
-      },
-      //manda las credenciales en formato .json
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      loginMessage.textContent = " No se ha podido iniciar sesión.";
-      return;
-    }
-
     loginMessage.textContent = "Iniciando sesión...";
 
-    //Guarda el token de la API del tipo Token creado en el backend.
-
-    const tokenData = await response.json();
-
-    //Guarda el access_token en el navegador. Al cerrar la pestaña, se borra.
+    const tokenData = await login(credentials);
 
     sessionStorage.setItem("accessToken", tokenData.access_token);
 
+    console.log(tokenData);
+
     window.location.replace("/index.html");
   } catch (error) {
-    loginMessage.textContent = "No se ha podido conectar con el servidor.";
+    loginMessage.textContent =
+      error.message || "No se ha podido iniciar sesión.";
   }
 });
