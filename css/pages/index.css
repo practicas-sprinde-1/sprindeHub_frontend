@@ -112,15 +112,16 @@ main {
 
 /* Tabla. */
 .table-titles {
-  overflow-x: auto;
+  overflow: visible;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
 
 .projects-table table {
   width: 100%;
-  min-width: 980px;
+  min-width: 0;
   border-collapse: collapse;
+  table-layout: fixed;
   text-align: left;
 }
 
@@ -135,11 +136,12 @@ main {
 }
 
 .projects-table td {
-  padding: 18px 20px;
+  padding: 18px 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
   font-size: 13px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .projects-table tbody tr {
@@ -171,26 +173,17 @@ main {
 
 /* Los dominios son enlaces, pero mantienen el color principal de la tabla. */
 .projects-table td.cell-centered .domain-link {
-  color: var(--text) !important;
+  color: var(--text);
   cursor: pointer;
+  white-space: nowrap;
   font-weight: 700;
   text-decoration: none;
 }
 
 .projects-table td.cell-centered .domain-link:hover {
-  color: var(--text) !important;
+  color: var(--text);
   font-weight: 700;
   text-decoration: none;
-}
-
-.projects-table td .project-link {
-  color: var(--navy);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.projects-table td .project-link:hover {
-  color: var(--blue);
 }
 
 .cell-centered {
@@ -204,7 +197,6 @@ td.repositories-cell a,
   display: inline-block;
   margin: 4px 8px;
 }
-
 /* Etiquetas de entornos y servicios. */
 .environment {
   display: inline-flex;

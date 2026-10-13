@@ -1,0 +1,34 @@
+.detail-list-item {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-list-title {
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.detail-list-link {
+  overflow-wrap: anywhere;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.detail-list-link:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.detail-list-link:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.detail-list-content {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
