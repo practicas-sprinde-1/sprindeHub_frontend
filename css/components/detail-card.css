@@ -86,23 +86,3 @@
   outline: 3px solid rgba(37, 99, 168, 0.32);
   outline-offset: 2px;
 }
-
-@media (max-width: 1400px) {
-  .info-card {
-    position: fixed;
-    top: 80px;
-    right: 24px;
-    left: auto;
-    min-width: 320px;
-    width: auto;
-  }
-}
-
-@media (max-width: 700px) {
-  .info-card {
-    right: 14px;
-    left: 14px;
-    min-width: 0;
-    max-height: calc(100vh - 28px);
-  }
-}
