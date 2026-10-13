@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proyecto</title>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/variables.css" />
+    <link rel="stylesheet" href="../css/base/global.css" />
+    <link rel="stylesheet" href="../css/components/header.css" />
+    <link rel="stylesheet" href="../css/components/command-list.css" />
+    <link rel="stylesheet" href="../css/components/detail-list.css" />
+    <link rel="stylesheet" href="../css/pages/project.css" />
+  </head>
+
+  <body>
+    <div id="header-container"></div>
+
+    <main class="project-page">
+      <a class="back-link" href="../index.html">Volver a proyectos</a>
+
+      <p id="project-error" hidden></p>
+
+      <section id="project-detail" hidden>
+        <header class="project-header">
+          <div class="project-title">
+            <a id="project-client"></a>
+            <h1 id="project-name"></h1>
+          </div>
+          <p id="project-description"></p>
+          <span id="project-status" class="project-status"></span>
+        </header>
+
+        <section>
+          <h2>Entornos</h2>
+          <ul id="project-environments"></ul>
+        </section>
+
+        <section>
+          <h2>Repositorios</h2>
+          <ul id="project-repositories"></ul>
+        </section>
+
+        <section>
+          <h2>Servicios</h2>
+          <ul id="project-services"></ul>
+        </section>
+
+        <section>
+          <h2>Dominios</h2>
+          <ul id="project-domains"></ul>
+        </section>
+
+        <section>
+          <h2>Comandos</h2>
+          <ul id="project-commands"></ul>
+        </section>
+
+        <section>
+          <h2>Documentación</h2>
+          <ul id="project-links"></ul>
+        </section>
+
+        <section>
+          <h2>Notas</h2>
+          <ul id="project-notes"></ul>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="../js/pages/project.js"></script>
+  </body>
+</html>
