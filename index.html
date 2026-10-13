@@ -2,26 +2,86 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <!-- El ancho de la página será el ancho del dispositivo y empezará sin zoom, es decir, 100%-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Sprinde Hub</title>
+
     <link rel="stylesheet" href="./css/base/variables.css" />
     <link rel="stylesheet" href="./css/base/reset.css" />
+    <link rel="stylesheet" href="./css/pages/index.css" />
+    <link rel="stylesheet" href="./css/components/header.css" />
+    <link rel="stylesheet" href="./css/components/detail-card.css" />
 
     <script type="module" src="./js/pages/index.js"></script>
   </head>
 
   <body>
-    <header>
-      <h1>Sprinde Hub</h1>
-      <button type="button" id="logout-button">Salir</button>
-    </header>
+    <div id="header-container"></div>
 
     <main>
-      <p>
-        Aplicación para centralizar la información técnica de los proyectos.
-      </p>
+      <section class="projects-table">
+        <header class="projects-table-header">
+          <h2>Proyectos</h2>
+
+          <div class="projects-table-actions">
+            <button class="button-new-project" type="button">
+              + Nuevo proyecto
+            </button>
+            <button class="button-new-client" type="button">
+              + Nuevo cliente
+            </button>
+          </div>
+        </header>
+
+        <label class="search">
+          <span>⌕</span>
+
+          <input
+            id="input-index"
+            type="search"
+            placeholder="Buscar por cliente o proyecto"
+          />
+        </label>
+
+        <div class="table-titles">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Proyecto</th>
+                <th class="cell-centered">Entornos</th>
+                <th class="cell-centered repositories-cell">Repositorios</th>
+                <th class="cell-centered">Servicios</th>
+                <th class="cell-centered">Dominios</th>
+                <th class="cell-centered">Comandos</th>
+                <th class="cell-centered">Documentación</th>
+                <th class="cell-centered">Notas</th>
+              </tr>
+            </thead>
+
+            <tbody id="projects-table-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <label for="records-per-page">
+            Mostrar
+            <select id="records-per-page">
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            proyectos
+          </label>
+
+          <div>
+            <button type="button" id="previous-page">Anterior</button>
+
+            <span id="page-information"></span>
+
+            <button type="button" id="next-page">Siguiente</button>
+          </div>
+        </div>
+      </section>
     </main>
   </body>
 </html>
