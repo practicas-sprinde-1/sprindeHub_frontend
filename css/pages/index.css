@@ -1,0 +1,320 @@
+main {
+  max-width: 1720px;
+  margin: 0 auto;
+  padding: 0 390px 0 24px;
+}
+
+/* Tarjeta principal que contiene el listado de proyectos. */
+.projects-table {
+  width: 100%;
+  margin: 40px 0;
+  position: relative;
+  overflow: visible;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.08);
+  color: var(--text);
+}
+
+/* Cabecera y botones. */
+.projects-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.projects-table h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 24px;
+  letter-spacing: -0.4px;
+}
+
+.projects-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.projects-table-actions button {
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.projects-table-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.button-new-project {
+  background-color: var(--blue);
+  color: white;
+}
+
+.button-new-project:hover {
+  background-color: var(--navy);
+}
+
+.button-new-client {
+  border-color: var(--blue) !important;
+  background-color: white;
+  color: var(--blue);
+}
+
+.button-new-client:hover {
+  background-color: var(--blue-light);
+}
+
+/* Buscador. */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 28px;
+  padding: 0 14px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: #fbfdff;
+  color: var(--muted);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 168, 0.14);
+}
+
+.search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.search input::placeholder {
+  color: #94a3b8;
+}
+
+/* Tabla. */
+.table-titles {
+  overflow-x: auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.projects-table table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.projects-table th {
+  padding: 14px 20px;
+  background-color: var(--navy);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.projects-table td {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.projects-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.projects-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.projects-table tbody tr:hover {
+  background-color: #f8fbff;
+}
+
+.projects-table td strong {
+  color: var(--navy);
+  font-size: 14px;
+}
+
+.projects-table td a {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.projects-table td a:hover {
+  text-decoration: underline;
+}
+
+/* Los dominios son enlaces, pero mantienen el color principal de la tabla. */
+.projects-table td.cell-centered .domain-link {
+  color: var(--text) !important;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.projects-table td.cell-centered .domain-link:hover {
+  color: var(--text) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.projects-table td .project-link {
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.projects-table td .project-link:hover {
+  color: var(--blue);
+}
+
+.cell-centered {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Separación entre enlaces de repositorios y dominios. */
+td.repositories-cell a,
+.projects-table td.cell-centered .domain-link {
+  display: inline-block;
+  margin: 4px 8px;
+}
+
+/* Etiquetas de entornos y servicios. */
+.environment {
+  display: inline-flex;
+  align-items: center;
+  margin: 3px 8px 3px 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.environment::before {
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background-color: var(--production);
+  content: "";
+}
+
+.environment--production::before {
+  background-color: var(--production);
+}
+
+.environment--staging::before {
+  background-color: var(--staging);
+}
+
+.environment--development::before {
+  background-color: var(--development);
+}
+
+.environment--test::before {
+  background-color: var(--test);
+}
+
+.tag {
+  display: inline-block;
+  margin: 3px 4px 3px 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background-color: var(--blue-light);
+  color: #315b8c;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Paginación. */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 28px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pagination select {
+  margin: 0 4px;
+  padding: 5px 24px 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: white;
+  color: var(--text);
+}
+
+.pagination button {
+  margin-left: 8px;
+  padding: 7px 11px;
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  background-color: white;
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+/*Comportamiento cuando pasas el ratón sobre un botón que esté activado*/
+.pagination button:hover:not(:disabled) {
+  background-color: var(--blue-light);
+}
+
+.pagination button:disabled {
+  border-color: var(--border);
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Botones que muestran información rápida de un proyecto. */
+.table-count-button {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--blue);
+  cursor: pointer;
+  white-space: nowrap; /*Evita que el texto salte a otra linea*/
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.table-count-button:hover {
+  border-color: var(--blue);
+  background-color: var(--blue-light);
+}
+
+.table-count-button:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
