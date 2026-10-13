@@ -2,7 +2,11 @@ import { checkToken } from "../api/session.js";
 import { createHeader } from "../components/header.js";
 import { projectsMockData } from "../mockdata/projects.mockdata.js";
 import { createDetailCard } from "../components/detail-card.js";
-import { getCommands } from "../mockdata/list-details.mockdata.js";
+import {
+  getCommands,
+  getLinks,
+  getNotes,
+} from "../mockdata/list-details.mockdata.js";
 // checkToken();
 
 //Devuelve el primer elemento que tenga ese #id o .clase
@@ -156,17 +160,45 @@ function renderTable(projects) {
 
     commandsCell.append(commandsButton);
 
-    // numero de Links
-
     const linksCell = document.createElement("td");
     linksCell.classList.add("cell-centered");
-    linksCell.textContent = `${project.links_count} enlaces`;
 
-    // numero de Notas
+    const linksButton = document.createElement("button");
+    linksButton.classList.add("table-count-button");
+    linksButton.type = "button";
+    linksButton.textContent = `${project.links_count} enlaces`;
+
+    linksButton.addEventListener("click", async () => {
+      const links = await getLinks(project.id);
+
+      const linksText = links.map((link) => {
+        return `${link.title} - ${link.url}`;
+      });
+
+      showDetailCard(row, "Documentación", linksText, project.id);
+    });
+
+    linksCell.append(linksButton);
 
     const notesCell = document.createElement("td");
     notesCell.classList.add("cell-centered");
-    notesCell.textContent = `${project.notes_count} notas`;
+
+    const notesButton = document.createElement("button");
+    notesButton.classList.add("table-count-button");
+    notesButton.type = "button";
+    notesButton.textContent = `${project.notes_count} notas`;
+
+    notesButton.addEventListener("click", async () => {
+      const notes = await getNotes(project.id);
+
+      const notesText = notes.map((note) => {
+        return `${note.description} - ${note.content}`;
+      });
+
+      showDetailCard(row, "Notas", notesText, project.id);
+    });
+
+    notesCell.append(notesButton);
 
     // Introducimos todas las celdas en la fila
     row.append(

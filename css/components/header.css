@@ -27,16 +27,12 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .main-header-logout:hover {
   background-color: white;
   color: var(--navy);
-}
-
-@media (max-width: 700px) {
-  .main-header {
-    padding: 14px 20px;
-  }
 }
