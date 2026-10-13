@@ -1,0 +1,42 @@
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 48px;
+  background-color: var(--navy);
+  box-shadow: 0 2px 10px rgba(30, 58, 95, 0.18);
+}
+
+.main-header-profile {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.main-header-profile:hover {
+  text-decoration: underline;
+}
+
+.main-header-logout {
+  padding: 8px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.main-header-logout:hover {
+  background-color: white;
+  color: var(--navy);
+}
+
+@media (max-width: 700px) {
+  .main-header {
+    padding: 14px 20px;
+  }
+}
