@@ -1,4 +1,8 @@
-export function createDetailCard(title, items, projectUrl) {
+import { renderCommands } from "../utils/render-commands.js";
+import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
+import { renderNotes } from "../utils/render-notes.js";
+
+export function createDetailCard(title, items, projectUrl, contentType) {
   const card = document.createElement("section");
   card.classList.add("info-card");
 
@@ -18,12 +22,19 @@ export function createDetailCard(title, items, projectUrl) {
   const list = document.createElement("ul");
   list.classList.add("info-card-list");
 
-  items.forEach((text) => {
-    const item = document.createElement("li");
-    item.textContent = text;
-
-    list.append(item);
-  });
+  if (contentType === "commands") {
+    renderCommands(list, items);
+  } else if (contentType === "links") {
+    renderDocumentationLinks(list, items);
+  } else if (contentType === "notes") {
+    renderNotes(list, items);
+  } else {
+    items.forEach((itemData) => {
+      const item = document.createElement("li");
+      item.textContent = itemData;
+      list.append(item);
+    });
+  }
 
   const detailLink = document.createElement("a");
   detailLink.href = projectUrl;

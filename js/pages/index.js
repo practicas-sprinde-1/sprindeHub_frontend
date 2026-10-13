@@ -84,7 +84,7 @@ function renderTable(projects) {
     const projectCell = document.createElement("td");
     const projectLink = document.createElement("a");
     projectLink.classList.add("project-link");
-    projectLink.href = `./pages/project/${project.id}.html`;
+    projectLink.href = `./pages/project.html?id=${project.id}`;
     projectLink.textContent = project.name;
     projectCell.append(projectLink);
 
@@ -138,8 +138,8 @@ function renderTable(projects) {
 
       domainLink.classList.add("domain-link");
       domainLink.href = `https://${domain.url}`;
+      //El enlace se abre en una pestaña nueva
       domainLink.target = "_blank";
-      domainLink.rel = "noreferrer";
       domainLink.textContent = domain.url;
 
       domainsCell.append(domainLink);
@@ -157,10 +157,13 @@ function renderTable(projects) {
       const commands = await getCommands(project.id);
 
       const commandTexts = commands.map((command) => {
-        return `${command.name} - ${command.instruction}`;
+        return {
+          name: command.name,
+          instruction: command.instruction,
+        };
       });
 
-      showDetailCard(row, "Comandos", commandTexts, project.id);
+      showDetailCard(row, "Comandos", commandTexts, project.id, "commands");
     });
 
     commandsCell.append(commandsButton);
@@ -177,10 +180,13 @@ function renderTable(projects) {
       const links = await getLinks(project.id);
 
       const linksText = links.map((link) => {
-        return `${link.title} - ${link.url}`;
+        return {
+          title: link.title,
+          url: link.url,
+        };
       });
 
-      showDetailCard(row, "Documentación", linksText, project.id);
+      showDetailCard(row, "Documentación", linksText, project.id, "links");
     });
 
     linksCell.append(linksButton);
@@ -197,10 +203,13 @@ function renderTable(projects) {
       const notes = await getNotes(project.id);
 
       const notesText = notes.map((note) => {
-        return `${note.description} - ${note.content}`;
+        return {
+          description: note.description,
+          content: note.content,
+        };
       });
 
-      showDetailCard(row, "Notas", notesText, project.id);
+      showDetailCard(row, "Notas", notesText, project.id, "notes");
     });
 
     notesCell.append(notesButton);
@@ -243,17 +252,16 @@ searchInput.addEventListener("input", () => {
 
 let openedDetailCard = null;
 
-function showDetailCard(row, title, items, projectId) {
+function showDetailCard(row, title, items, projectId, contentType) {
   if (openedDetailCard) {
     openedDetailCard.remove();
   }
 
-  const projectUrl = `./pages/project/${projectId}.html`;
+  const projectUrl = `./pages/project.html?id=${projectId}`;
 
-  const detailCard = createDetailCard(title, items, projectUrl);
+  const detailCard = createDetailCard(title, items, projectUrl, contentType);
 
   projectsTable.append(detailCard);
-
   const tableTop = tableTitles.offsetTop;
   const rowTop = row.offsetTop;
   const cardTop = tableTop + rowTop;

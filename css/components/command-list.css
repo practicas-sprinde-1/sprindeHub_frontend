@@ -1,0 +1,45 @@
+.command-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.command-content {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.command-content strong {
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.command-content code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+}
+
+.command-copy-button {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.command-copy-button:hover {
+  background-color: var(--blue-light);
+}
+
+.command-copy-button:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
