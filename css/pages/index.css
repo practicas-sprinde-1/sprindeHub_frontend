@@ -169,6 +169,20 @@ main {
   text-decoration: underline;
 }
 
+/* Los dominios son enlaces, pero mantienen el color principal de la tabla. */
+.projects-table td.cell-centered .domain-link {
+  color: var(--text) !important;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.projects-table td.cell-centered .domain-link:hover {
+  color: var(--text) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .projects-table td .project-link {
   color: var(--navy);
   font-size: 14px;
@@ -184,10 +198,11 @@ main {
   vertical-align: middle;
 }
 
-/* Separación entre enlaces de repositorios. */
-td.repositories-cell a {
+/* Separación entre enlaces de repositorios y dominios. */
+td.repositories-cell a,
+.projects-table td.cell-centered .domain-link {
   display: inline-block;
-  margin: 3px 6px;
+  margin: 4px 8px;
 }
 
 /* Etiquetas de entornos y servicios. */
@@ -289,6 +304,7 @@ td.repositories-cell a {
   background-color: var(--surface);
   color: var(--blue);
   cursor: pointer;
+  white-space: nowrap; /*Evita que el texto salte a otra linea*/
   font-size: 13px;
   font-weight: 700;
 }

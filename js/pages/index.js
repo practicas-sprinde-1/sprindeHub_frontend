@@ -134,10 +134,15 @@ function renderTable(projects) {
     domainsCell.classList.add("cell-centered");
 
     project.domains.forEach((domain) => {
-      const domainText = document.createElement("span");
-      domainText.textContent = domain.url;
+      const domainLink = document.createElement("a");
 
-      domainsCell.append(domainText);
+      domainLink.classList.add("domain-link");
+      domainLink.href = `https://${domain.url}`;
+      domainLink.target = "_blank";
+      domainLink.rel = "noreferrer";
+      domainLink.textContent = domain.url;
+
+      domainsCell.append(domainLink);
     });
 
     const commandsCell = document.createElement("td");
