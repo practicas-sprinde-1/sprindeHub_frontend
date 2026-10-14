@@ -4,6 +4,7 @@ import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
+import { createAlertModal } from "../components/alert-modal.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -93,6 +94,21 @@ function renderProject(project) {
     if (document.querySelector(".modal-overlay")) return;
     const modal = createEditModalProject(project);
     document.body.append(modal);
+  });
+
+  const deleteProject = document.querySelector(".button-delete-project");
+  deleteProject.addEventListener("click", () => {
+    if (document.querySelector(".alert-overlay")) return;
+
+    const alertModal = createAlertModal(
+      "Borrar proyecto",
+      `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?`,
+      async () => {
+        // Aquí irá DELETE /projects/{project.id}.
+      },
+    );
+
+    document.body.append(alertModal);
   });
 }
 
