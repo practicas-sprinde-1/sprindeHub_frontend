@@ -1,5 +1,5 @@
 .project-page {
-  width: min(1100px, calc(100% - 48px));
+  width: 58%;
   margin: 0 auto;
   padding: 40px 0 64px;
   color: var(--text);
