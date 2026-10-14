@@ -1,0 +1,221 @@
+.modal-overlay {
+  width: 100%;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: grid;
+  place-items: center;
+
+  padding: 24px;
+  background-color: rgba(30, 58, 95, 0.55);
+}
+
+.project-edit-modal {
+  position: relative;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: min(1000px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+}
+
+.modal-title {
+  /*Ocupa ambas columnas*/
+  grid-column: 1 / -1;
+  margin: 0 40px 0 0;
+  color: var(--navy);
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.project-edit-modal > input {
+  grid-column: 1 / -1;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.project-edit-modal > input:focus-visible,
+.project-edit-modal li input:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.project-edit-modal section {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.project-edit-modal h3 {
+  margin: 0;
+  padding: 14px 20px;
+  background-color: var(--navy);
+  color: var(--surface);
+  font-size: 17px;
+}
+
+.project-edit-modal ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 20px 20px;
+  list-style: none;
+}
+
+.project-edit-modal li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: var(--background);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.project-edit-modal li a {
+  min-width: 0;
+  margin-right: auto;
+  overflow-wrap: anywhere;
+  color: var(--blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.project-edit-modal li a:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.project-edit-modal li input {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.project-edit-modal li > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  margin-right: auto;
+}
+
+.project-edit-modal li > div strong {
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.project-edit-modal li > div code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+}
+
+.project-edit-modal li > div p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Las notas se editan con textarea; este bloque mantiene ese campo dentro de la fila sin desbordarla. */
+.project-edit-modal li textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.project-edit-modal li textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.project-edit-modal button {
+  flex-shrink: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--blue);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.project-edit-modal button:hover {
+  background-color: var(--blue-light);
+}
+
+.project-edit-modal button:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.project-edit-modal .modal-save-button {
+  background-color: var(--blue);
+  color: var(--surface);
+}
+
+.modal-actions {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-edit-modal .modal-save-button:hover {
+  background-color: var(--navy);
+}
+
+.project-edit-modal .modal-cancel-button {
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .project-edit-modal {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    grid-column: 1;
+  }
+}

@@ -3,6 +3,7 @@ import { projectDetailData } from "../mockdata/project-page.mockdata.js";
 import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
+import { createEditModalProject } from "../components/project-edit-modal.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -86,6 +87,13 @@ function renderProject(project) {
 
   renderDocumentationLinks(documentationList, linksInfo);
   renderNotes(notesList, notesInfo);
+
+  const modifyProject = document.querySelector("#button-edit-project");
+  modifyProject.addEventListener("click", () => {
+    if (document.querySelector(".modal-overlay")) return;
+    const modal = createEditModalProject(project);
+    document.body.append(modal);
+  });
 }
 
 function renderList(selector, texts) {
