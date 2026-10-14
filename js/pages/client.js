@@ -1,6 +1,8 @@
 import { createHeader } from "../components/header.js";
 import { clientMockData } from "../mockdata/client.mockdata.js";
 import { projectsByClientIdMockData } from "../mockdata/projectsByClientId.mockdata.js";
+import { createAlertModal } from "../components/alert-modal.js";
+import { createEditModalClient } from "../components/client-edit-modal.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -49,4 +51,26 @@ function renderClient(client) {
   });
   document.querySelector("#client-cif").textContent = client.cif;
   document.querySelector("#client-phone").textContent = client.phone;
+
+  const modifyClient = document.querySelector(".button-edit-client");
+  modifyClient.addEventListener("click", () => {
+    if (document.querySelector(".modal-overlay")) return;
+
+    document.body.append(createEditModalClient(client));
+  });
+
+  const deleteClient = document.querySelector(".button-delete-client");
+  deleteClient.addEventListener("click", () => {
+    if (document.querySelector(".alert-overlay")) return;
+
+    const alertModal = createAlertModal(
+      "Borrar cliente",
+      `¿Estás seguro de que deseas borrar el cliente "${client.name}"?`,
+      async () => {
+        // Aquí irá DELETE /clients/{client.id}.
+      },
+    );
+
+    document.body.append(alertModal);
+  });
 }
