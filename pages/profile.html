@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil</title>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/variables.css" />
+    <link rel="stylesheet" href="../css/base/global.css" />
+    <link rel="stylesheet" href="../css/components/header.css" />
+    <link rel="stylesheet" href="../css/pages/profile.css" />
+  </head>
+  <body>
+    <div id="header-container"></div>
+
+    <main class="user-page">
+      <div class="user-topbar">
+        <a class="back-link" href="../index.html"
+          >Volver a la página principal</a
+        >
+
+        <div class="user-actions">
+          <button class="button-edit-user" type="button">
+            Modificar datos
+          </button>
+        </div>
+      </div>
+
+      <section id="user-detail">
+        <header class="user-header">
+          <h1 class="user-title" id="user-title"></h1>
+        </header>
+
+        <section>
+          <h2>Proyectos</h2>
+          <ul id="user-list-projects"></ul>
+        </section>
+
+        <dl class="user-data">
+          <div>
+            <dt>email</dt>
+            <dd id="user-email"></dd>
+          </div>
+          <div>
+            <dt>username</dt>
+            <dd id="user-name"></dd>
+          </div>
+          <div>
+            <dt>role</dt>
+            <dd id="user-role"></dd>
+          </div>
+        </dl>
+      </section>
+    </main>
+    <script type="module" src="../js/pages/profile.js"></script>
+    2.
+  </body>
+</html>
