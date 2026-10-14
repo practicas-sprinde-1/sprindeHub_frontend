@@ -1,0 +1,221 @@
+.client-page {
+  width: 58%;
+  margin: 0 auto;
+  padding: 40px 0 64px;
+  color: var(--text);
+}
+
+.client-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.back-link:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 3px;
+}
+
+#client-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.client-header {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.514);
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.client-title {
+  padding: 24px 28px;
+  background-color: var(--navy);
+}
+
+.client-header h1 {
+  margin: 8px 0 0;
+  color: var(--surface);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+.client-status {
+  display: inline-flex;
+  align-items: center;
+  margin: 18px 28px 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.client-status::before {
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  content: "";
+}
+
+.client-status--active {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.client-status--inactive {
+  background-color: #fee2e2;
+  color: var(--test);
+}
+
+.client-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.client-actions button {
+  padding: 10px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.button-edit-client {
+  border: 1px solid var(--blue);
+  background-color: var(--blue);
+  color: var(--surface);
+}
+
+.button-edit-client:hover {
+  background-color: var(--navy);
+}
+
+.button-delete-client {
+  border: 1px solid var(--test);
+  background-color: var(--surface);
+  color: var(--test);
+}
+
+.button-delete-client:hover {
+  background-color: #fef2f2;
+}
+
+.client-actions button:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.client-page section section {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: var(--surface);
+  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.05);
+  overflow: hidden;
+}
+
+.client-page h2 {
+  margin: 0;
+  padding: 14px 20px;
+  background-color: var(--navy);
+  color: var(--surface);
+  font-size: 17px;
+  letter-spacing: -0.2px;
+}
+
+.client-page ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 20px 20px;
+  list-style: none;
+}
+
+.client-page li {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: var(--background);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.client-page li a {
+  color: var(--blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.client-page li a:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.client-page li a:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.client-data {
+  display: grid;
+  gap: 20px;
+}
+
+.client-data > div {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: var(--surface);
+  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.05);
+}
+
+.client-data dt {
+  padding: 14px 20px;
+  background-color: var(--navy);
+  color: var(--surface);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.client-data dd {
+  margin: 16px 20px 20px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: var(--background);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+#client-error {
+  padding: 16px 18px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background-color: #fef2f2;
+  color: var(--test);
+  font-weight: 600;
+}
