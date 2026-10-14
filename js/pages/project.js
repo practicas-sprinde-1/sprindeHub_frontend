@@ -13,7 +13,7 @@ const projectError = document.querySelector("#project-error");
 const searchParams = new URLSearchParams(window.location.search);
 const projectId = Number(searchParams.get("id"));
 
-const project = projectDetailData;
+const project = projectDetailData.id === projectId ? projectDetailData : null;
 
 //Validación para comprobar que el projectid sea numero mayor que 1.
 
