@@ -171,12 +171,3 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
-
-#client-error {
-  padding: 16px 18px;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  background-color: #fef2f2;
-  color: var(--test);
-  font-weight: 600;
-}
