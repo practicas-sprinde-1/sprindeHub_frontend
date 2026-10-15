@@ -118,6 +118,10 @@
   background-color: var(--blue-light);
 }
 
+#existing-client-container[hidden] {
+  display: none;
+}
+
 #project-form input,
 #project-form select,
 #project-form textarea {
