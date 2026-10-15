@@ -250,6 +250,12 @@ searchInput.addEventListener("input", () => {
   showTableRows();
 });
 
+const createNewProjectButton = document.querySelector("#button-new-project");
+
+createNewProjectButton.addEventListener("click", () => {
+  window.location.href = "./pages/new-project.html";
+});
+
 let openedDetailCard = null;
 
 function showDetailCard(row, title, items, projectId, contentType) {
