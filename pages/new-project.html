@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Crear nuevo Proyecto</title>
+    <title>Nuevo Proyecto - Sprinde</title>
 
     <link rel="stylesheet" href="../css/base/reset.css" />
     <link rel="stylesheet" href="../css/base/variables.css" />
     <link rel="stylesheet" href="../css/base/global.css" />
     <link rel="stylesheet" href="../css/components/header.css" />
+    <link rel="stylesheet" href="../css/pages/new-project.css" />
   </head>
 
   <body>
@@ -20,7 +21,7 @@
       </div>
 
       <header id="new-project-header">
-        <h2 class="new-project-title">Nuevo projecto</h2>
+        <h2 class="new-project-title">Nuevo proyecto</h2>
         <p id="new-project-description">Crea tu nuevo proyecto</p>
       </header>
 
@@ -29,31 +30,48 @@
           <legend>Datos del proyecto</legend>
           <label>
             Nombre del proyecto
-            <input name="name" required />
+            <input name="project-name" required />
           </label>
           <label>
             Descripción
             <input name="description" required />
           </label>
         </fieldset>
-
         <fieldset>
           <legend>Datos del cliente</legend>
-          <label>
-            Nombre del cliente asociado
-            <input name="name" required />
-          </label>
-          <label>
-            CIF
-            <input name="cif" required />
-          </label>
-          <label>
-            Teléfono
-            <input name="phone" required />
-          </label>
+          <button type="button" id="use-existing-client">
+            Usar cliente existente
+          </button>
+
+          <div id="existing-client-container" hidden>
+            <label>
+              Cliente existente
+              <select id="existing-client-select" name="existing-client-id">
+                <option value="">Selecciona un cliente</option>
+              </select>
+            </label>
+            <button type="button" id="cancel-existing-client">Cancelar</button>
+          </div>
+          <div id="new-client-fields">
+            <label>
+              Nombre del cliente asociado
+              <input name="client-name" required />
+            </label>
+            <label>
+              CIF
+              <input name="cif" required />
+            </label>
+            <label>
+              Teléfono
+              <input name="phone" required />
+            </label>
+          </div>
         </fieldset>
 
-        <fieldset data-collection="environments">
+        <fieldset
+          data-collection="environments"
+          data-template="environment-template"
+        >
           <legend>Entornos</legend>
 
           <div class="collection-list"></div>
@@ -61,7 +79,7 @@
           <button type="button" data-action="add-item">Añadir entorno</button>
         </fieldset>
 
-        <fieldset data-collection="services">
+        <fieldset data-collection="services" data-template="service-template">
           <legend>Servicios</legend>
 
           <div class="collection-list"></div>
@@ -69,7 +87,7 @@
           <button type="button" data-action="add-item">Añadir servicio</button>
         </fieldset>
 
-        <fieldset data-collection="commands">
+        <fieldset data-collection="commands" data-template="command-template">
           <legend>Comandos</legend>
 
           <div class="collection-list"></div>
@@ -77,7 +95,7 @@
           <button type="button" data-action="add-item">Añadir comando</button>
         </fieldset>
 
-        <fieldset data-collection="notes">
+        <fieldset data-collection="notes" data-template="note-template">
           <legend>Notas</legend>
 
           <div class="collection-list"></div>
@@ -85,7 +103,10 @@
           <button type="button" data-action="add-item">Añadir nota</button>
         </fieldset>
 
-        <fieldset data-collection="repositories">
+        <fieldset
+          data-collection="repositories"
+          data-template="repository-template"
+        >
           <legend>Repositorios</legend>
 
           <div class="collection-list"></div>
@@ -95,7 +116,7 @@
           </button>
         </fieldset>
 
-        <fieldset data-collection="domains">
+        <fieldset data-collection="domains" data-template="domain-template">
           <legend>Dominios</legend>
 
           <div class="collection-list"></div>
@@ -103,7 +124,7 @@
           <button type="button" data-action="add-item">Añadir dominio</button>
         </fieldset>
 
-        <fieldset data-collection="links">
+        <fieldset data-collection="links" data-template="link-template">
           <legend>Documentación</legend>
 
           <div class="collection-list"></div>
@@ -112,7 +133,7 @@
             Añadir documentación
           </button>
         </fieldset>
-        <button type="submit">Guardar proyecto</button>
+        <button id="save-project" type="submit">Guardar proyecto</button>
       </form>
 
       <template id="environment-template">
