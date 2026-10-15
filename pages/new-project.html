@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear nuevo Proyecto</title>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/variables.css" />
+    <link rel="stylesheet" href="../css/base/global.css" />
+    <link rel="stylesheet" href="../css/components/header.css" />
+  </head>
+
+  <body>
+    <div id="header-container"></div>
+
+    <main class="new-project-page">
+      <div class="new-project-topbar">
+        <a class="back-link" href="../index.html">Volver a proyectos</a>
+      </div>
+
+      <header id="new-project-header">
+        <h2 class="new-project-title">Nuevo projecto</h2>
+        <p id="new-project-description">Crea tu nuevo proyecto</p>
+      </header>
+
+      <form id="project-form">
+        <fieldset>
+          <legend>Datos del proyecto</legend>
+          <label>
+            Nombre del proyecto
+            <input name="name" required />
+          </label>
+          <label>
+            Descripción
+            <input name="description" required />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Datos del cliente</legend>
+          <label>
+            Nombre del cliente asociado
+            <input name="name" required />
+          </label>
+          <label>
+            CIF
+            <input name="cif" required />
+          </label>
+          <label>
+            Teléfono
+            <input name="phone" required />
+          </label>
+        </fieldset>
+
+        <fieldset data-collection="environments">
+          <legend>Entornos</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">Añadir entorno</button>
+        </fieldset>
+
+        <fieldset data-collection="services">
+          <legend>Servicios</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">Añadir servicio</button>
+        </fieldset>
+
+        <fieldset data-collection="commands">
+          <legend>Comandos</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">Añadir comando</button>
+        </fieldset>
+
+        <fieldset data-collection="notes">
+          <legend>Notas</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">Añadir nota</button>
+        </fieldset>
+
+        <fieldset data-collection="repositories">
+          <legend>Repositorios</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">
+            Añadir repositorio
+          </button>
+        </fieldset>
+
+        <fieldset data-collection="domains">
+          <legend>Dominios</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">Añadir dominio</button>
+        </fieldset>
+
+        <fieldset data-collection="links">
+          <legend>Documentación</legend>
+
+          <div class="collection-list"></div>
+
+          <button type="button" data-action="add-item">
+            Añadir documentación
+          </button>
+        </fieldset>
+        <button type="submit">Guardar proyecto</button>
+      </form>
+
+      <template id="environment-template">
+        <section class="collection-item">
+          <label>
+            Tipo
+            <select name="environment-type" data-field="type" required>
+              <option value="">Selecciona un entorno</option>
+              <option value="development">Desarrollo</option>
+              <option value="test">Test</option>
+              <option value="staging">Staging</option>
+              <option value="production">Producción</option>
+            </select>
+          </label>
+
+          <label>
+            URL
+            <input
+              name="environment-url"
+              data-field="url"
+              type="url"
+              placeholder="https://erp.acme.es"
+              required
+            />
+          </label>
+
+          <button type="button" data-action="remove-item">
+            Eliminar entorno
+          </button>
+        </section>
+      </template>
+
+      <template id="repository-template">
+        <section class="collection-item">
+          <label>
+            Tipo
+            <select name="repository-type" data-field="type" required>
+              <option value="">Selecciona un tipo</option>
+              <option value="frontend">Frontend</option>
+              <option value="backend">Backend</option>
+              <option value="mobile">Mobile</option>
+              <option value="infrastructure">Infraestructura</option>
+            </select>
+          </label>
+
+          <label>
+            URL del repositorio
+            <input
+              name="repository-url"
+              data-field="url"
+              type="url"
+              placeholder="https://github.com/organizacion/repositorio"
+              required
+            />
+          </label>
+
+          <button type="button" data-action="remove-item">
+            Eliminar repositorio
+          </button>
+        </section>
+      </template>
+
+      <template id="service-template">
+        <section class="collection-item">
+          <label>
+            Nombre del servicio
+            <input
+              name="service-name"
+              data-field="name"
+              type="text"
+              placeholder="Ej.: Hetzner"
+              required
+            />
+          </label>
+
+          <button type="button" data-action="remove-item">
+            Eliminar servicio
+          </button>
+        </section>
+      </template>
+
+      <template id="domain-template">
+        <section class="collection-item">
+          <label>
+            URL del dominio
+            <input
+              name="domain-url"
+              data-field="url"
+              type="url"
+              placeholder="https://erp.acme.es"
+              required
+            />
+          </label>
+
+          <button type="button" data-action="remove-item">
+            Eliminar dominio
+          </button>
+        </section>
+      </template>
+
+      <template id="command-template">
+        <section class="collection-item">
+          <label>
+            Nombre del comando
+            <input
+              name="command-name"
+              data-field="name"
+              type="text"
+              placeholder="Ej.: Iniciar frontend"
+              required
+            />
+          </label>
+
+          <label>
+            Instrucción
+            <input
+              name="command-instruction"
+              data-field="instruction"
+              type="text"
+              placeholder="Ej.: npm run dev"
+              required
+            />
+          </label>
+
+          <button type="button" data-action="remove-item">
+            Eliminar comando
+          </button>
+        </section>
+      </template>
+
+      <template id="link-template">
+        <section class="collection-item">
+          <label>
+            Título
+            <input
+              name="link-title"
+              data-field="title"
+              type="text"
+              placeholder="Ej.: Guía de despliegue"
+              required
+            />
+          </label>
+
+          <label>
+            URL
+            <input
+              name="link-url"
+              data-field="url"
+              type="url"
+              placeholder="https://docs.example.com/guia"
+              required
+            />
+          </label>
+
+          <button type="button" data-action="remove-item">
+            Eliminar documentación
+          </button>
+        </section>
+      </template>
+
+      <template id="note-template">
+        <section class="collection-item">
+          <label>
+            Descripción
+            <input
+              name="note-description"
+              data-field="description"
+              type="text"
+              placeholder="Ej.: Acceso de producción"
+              required
+            />
+          </label>
+
+          <label>
+            Contenido
+            <textarea
+              name="note-content"
+              data-field="content"
+              rows="4"
+              placeholder="Escribe la nota..."
+              required
+            ></textarea>
+          </label>
+
+          <button type="button" data-action="remove-item">Eliminar nota</button>
+        </section>
+      </template>
+    </main>
+    <script type="module" src="../js/pages/new-project.js"></script>
+  </body>
+</html>
