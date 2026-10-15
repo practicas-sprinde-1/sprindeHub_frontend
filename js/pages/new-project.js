@@ -139,7 +139,7 @@ function configureClientSelection(form) {
     existingClientSelect.required = false;
     existingClientSelect.value = "";
 
-    newClientFields.hidden = false;
+    newClientFields.hidden = true;
 
     newClientInputs.forEach((input) => {
       input.disabled = false;

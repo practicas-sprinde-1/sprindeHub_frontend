@@ -256,6 +256,12 @@ createNewProjectButton.addEventListener("click", () => {
   window.location.href = "./pages/new-project.html";
 });
 
+const createNewClientButton = document.querySelector("#button-new-client");
+
+createNewClientButton.addEventListener("click", () => {
+  window.location.href = "./pages/new-client.html";
+});
+
 let openedDetailCard = null;
 
 function showDetailCard(row, title, items, projectId, contentType) {
