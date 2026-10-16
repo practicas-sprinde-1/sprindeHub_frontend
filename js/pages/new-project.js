@@ -14,12 +14,12 @@ function start() {
 export function configureProjectForm(form) {
   configureClientSelection(form);
 
-  //Selector de atributo. Un elemento cuyo atributo "data-action" sea "add-item".
+  // Botones que añaden una fila nueva a una colección del formulario.
   const addButtons = form.querySelectorAll('[data-action="add-item"]');
 
   addButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      //Busca en su componente padre más cercano mediante 'closest', el que contenga el elemento 'data-collection'
+      // Busca la colección a la que pertenece el botón pulsado.
       const fieldset = button.closest("[data-collection]");
       addItem(fieldset);
     });
@@ -29,8 +29,6 @@ export function configureProjectForm(form) {
     const removeButton = event.target.closest('[data-action="remove-item"]');
 
     if (!removeButton) return;
-
-    //Encuentra el elemento completo con .collection-item como clase.
 
     const item = removeButton.closest(".collection-item");
 
@@ -46,6 +44,7 @@ export function configureProjectForm(form) {
     const projectData = {
       name: form.elements["project-name"].value.trim(),
       description: form.elements.description.value.trim(),
+      is_active: true,
 
       environments: getCollectionData(form, "environments"),
       repositories: getCollectionData(form, "repositories"),
@@ -69,7 +68,7 @@ export function configureProjectForm(form) {
     try {
       console.log("Datos del proyecto preparados:", projectData);
 
-      //LLAMADA A LA API CON EL POST
+      //LLAMADA A LA API CON EL
     } catch (error) {
       alert("No se ha podido guardar el proyecto.");
     }
@@ -91,13 +90,8 @@ function getCollectionData(form, collectionName) {
 
   const items = fieldset.querySelectorAll(".collection-item");
 
-  const arrayItems = [];
-
-  for (const item of items) {
-    arrayItems.push(item);
-  }
-
-  return arrayItems.map((item) => {
+  // Convierte las filas visibles de una colección en objetos para el proyecto.
+  return Array.from(items).map((item) => {
     const fields = item.querySelectorAll("[data-field]");
     const itemData = {};
 
@@ -121,7 +115,7 @@ function configureClientSelection(form) {
   const newClientFields = form.querySelector("#new-client-fields");
   const newClientInputs = newClientFields.querySelectorAll("input");
 
-  //AQUÍ sustituir mockData por la llamada a la API.
+  // Aquí se sustituirá el mock por la llamada a la API.
 
   const clients = clientsMockData.filter((client) => client.id);
 
@@ -139,7 +133,7 @@ function configureClientSelection(form) {
     existingClientSelect.required = false;
     existingClientSelect.value = "";
 
-    newClientFields.hidden = true;
+    newClientFields.hidden = false;
 
     newClientInputs.forEach((input) => {
       input.disabled = false;
@@ -165,13 +159,7 @@ function configureClientSelection(form) {
       return client.id === selectedClientId;
     });
 
-    if (!client) {
-      newClientInputs.forEach((input) => {
-        input.value = "";
-      });
-
-      return;
-    }
+    if (!client) return;
 
     form.elements["client-name"].value = client.name;
     form.elements.cif.value = client.cif;

@@ -32,7 +32,54 @@
     color 0.2s ease;
 }
 
-.main-header-logout:hover {
+.main-header-clients {
+  padding: 8px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.main-header-projects {
+  padding: 8px 13px;
+  margin: 0 10px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.main-header-users {
+  padding: 8px 13px;
+  margin: 0 10px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.main-header-logout:hover,
+.main-header-projects:hover,
+.main-header-users:hover,
+.main-header-clients:hover {
   background-color: white;
   color: var(--navy);
 }

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clientes - Sprinde Hub</title>
+
+    <link rel="stylesheet" href="../css/base/variables.css" />
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/global.css" />
+    <link rel="stylesheet" href="../css/components/header.css" />
+    <link rel="stylesheet" href="../css/pages/clients.css" />
+
+    <script type="module" src="../js/pages/clients.js"></script>
+  </head>
+
+  <body>
+    <div id="header-container"></div>
+
+    <main>
+      <section class="clients-table" aria-labelledby="clients-title">
+        <header class="clients-table-header">
+          <div>
+            <a class="back-link" href="../index.html">Volver a proyectos</a>
+            <h1 id="clients-title">Clientes</h1>
+          </div>
+
+          <button class="button-new-client" id="button-new-client" type="button">
+            + Nuevo cliente
+          </button>
+        </header>
+
+        <label class="search" for="input-clients">
+          <span aria-hidden="true">⌕</span>
+          <input id="input-clients" type="search" placeholder="Buscar por cliente, CIF o teléfono" />
+        </label>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>CIF</th>
+                <th>Teléfono</th>
+                <th class="cell-centered">Proyectos</th>
+                <th class="cell-centered">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="clients-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <label for="records-per-page">
+            Mostrar
+            <select id="records-per-page">
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            clientes
+          </label>
+
+          <div>
+            <button type="button" id="previous-page">Anterior</button>
+            <span id="page-information" aria-live="polite"></span>
+            <button type="button" id="next-page">Siguiente</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

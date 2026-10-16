@@ -19,8 +19,6 @@ function start() {
   const projectId = Number(searchParams.get("id"));
 
   const project = projectDetailData.id === projectId ? projectDetailData : null;
-  //Validación para comprobar que el projectid sea numero mayor que 1.
-
   if (!Number.isInteger(projectId) || projectId < 1 || !project) {
     projectError.hidden = false;
     projectError.textContent =
@@ -43,8 +41,7 @@ function renderProject(project) {
   const status = document.querySelector("#project-status");
   status.textContent = project.is_active ? "Activo" : "Inactivo";
 
-  //Añade una clase con un condicional. .toogle lo que hace es según el condicional
-  //Lo suprime o añade al elemento.
+  // Muestra el estilo correspondiente al estado actual del proyecto.
   status.classList.toggle("project-status--active", project.is_active);
   status.classList.toggle("project-status--inactive", !project.is_active);
 

@@ -104,7 +104,8 @@ const notesMockData = [
   },
 ];
 
-async function getItemsByProject(items, projectId) {
+// Devuelve solo los elementos que pertenecen al proyecto solicitado.
+function getItemsByProject(items, projectId) {
   return items.filter((item) => item.project_id === Number(projectId));
 }
 

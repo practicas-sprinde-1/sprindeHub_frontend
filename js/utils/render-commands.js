@@ -17,6 +17,7 @@ export function renderCommands(list, commands) {
 
     copyButton.addEventListener("click", async () => {
       try {
+        // Copia el comando y recupera el texto del botón después de 1,5 segundos.
         await navigator.clipboard.writeText(command.instruction);
         copyButton.textContent = "Copiado";
 
