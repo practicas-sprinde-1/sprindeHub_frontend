@@ -208,20 +208,3 @@
 #project-form > button[type="submit"]:hover {
   background-color: var(--navy);
 }
-
-@media (max-width: 700px) {
-  .new-project-page {
-    width: auto;
-    margin: 0 20px;
-  }
-
-  #project-form {
-    grid-template-columns: 1fr;
-  }
-
-  #project-form fieldset:first-child,
-  #project-form fieldset:nth-child(2),
-  #project-form > button[type="submit"] {
-    grid-column: auto;
-  }
-}

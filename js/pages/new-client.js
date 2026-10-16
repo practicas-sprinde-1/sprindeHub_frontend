@@ -18,13 +18,17 @@ export function configureClientForm(form) {
       name: form.elements.name.value.trim(),
       cif: form.elements.cif.value.trim(),
       phone: form.elements.phone.value.trim(),
-      is_active: form.elements["is-active"].value === "true",
+      is_active: true,
     };
 
-    console.log("Datos del cliente preparados:", clientData);
+    try {
+      console.log("Datos del cliente preparados:", clientData);
 
-    // Aquí irá POST /clients con clientData.
-    // Después de guardar correctamente:
-    // window.location.href = "../index.html";
+      // Aquí irá POST /clients con clientData.
+      // Después de guardar correctamente:
+      window.location.href = "../index.html";
+    } catch (error) {
+      alert("No se ha podido guardar el cliente");
+    }
   });
 }

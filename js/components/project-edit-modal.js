@@ -1,4 +1,5 @@
 export function createEditModalProject(project) {
+  // Reúne en un solo modal las colecciones editables de un proyecto.
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 

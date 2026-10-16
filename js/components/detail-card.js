@@ -22,6 +22,7 @@ export function createDetailCard(title, items, projectUrl, contentType) {
   const list = document.createElement("ul");
   list.classList.add("info-card-list");
 
+  // Cada tipo de detalle se pinta con su formato propio.
   if (contentType === "commands") {
     renderCommands(list, items);
   } else if (contentType === "links") {

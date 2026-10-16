@@ -41,6 +41,46 @@ export const projectsMockData = {
       notes_count: 1,
     },
     {
+      id: 1,
+      name: "ERP corporativo",
+      client: {
+        id: 1,
+        name: "ACME",
+      },
+      environments: [
+        {
+          id: 1,
+          type: "production",
+          url: "https://erp.acme.es",
+        },
+        {
+          id: 2,
+          type: "staging",
+          url: "https://staging.erp.acme.es",
+        },
+      ],
+      repositories: [
+        {
+          id: 1,
+          type: "frontend",
+          url: "https://github.com/practicas-sprinde-1/acme-erp-frontend",
+        },
+        {
+          id: 2,
+          type: "backend",
+          url: "https://github.com/practicas-sprinde-1/acme-erp-backend",
+        },
+      ],
+      services: [
+        { id: 1, name: "Hetzner" },
+        { id: 2, name: "Mailgun" },
+      ],
+      domains: [{ id: 1, url: "erp.acme.es" }],
+      commands_count: 2,
+      links_count: 1,
+      notes_count: 1,
+    },
+    {
       id: 2,
       name: "Portal de clientes",
       client: {
