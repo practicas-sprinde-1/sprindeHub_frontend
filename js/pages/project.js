@@ -6,26 +6,27 @@ import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
 import { createAlertModal } from "../components/alert-modal.js";
 
-const headerContainer = document.querySelector("#header-container");
-headerContainer.append(createHeader("César", "./profile.html"));
+start();
 
-const projectDetail = document.querySelector("#project-detail");
-const projectError = document.querySelector("#project-error");
+function start() {
+  const headerContainer = document.querySelector("#header-container");
+  headerContainer.append(createHeader("César", "./profile.html"));
 
-const searchParams = new URLSearchParams(window.location.search);
-const projectId = Number(searchParams.get("id"));
+  const projectDetail = document.querySelector("#project-detail");
+  const projectError = document.querySelector("#project-error");
 
-const project = projectDetailData.id === projectId ? projectDetailData : null;
+  const searchParams = new URLSearchParams(window.location.search);
+  const projectId = Number(searchParams.get("id"));
 
-//Validación para comprobar que el projectid sea numero mayor que 1.
-
-if (!Number.isInteger(projectId) || projectId < 1 || !project) {
-  projectError.hidden = false;
-  projectError.textContent =
-    "Ha ocurrido algún error con este proyecto. Inténtelo de nuevo más tarde";
-} else {
-  renderProject(project);
-  projectDetail.hidden = false;
+  const project = projectDetailData.id === projectId ? projectDetailData : null;
+  if (!Number.isInteger(projectId) || projectId < 1 || !project) {
+    projectError.hidden = false;
+    projectError.textContent =
+      "Ha ocurrido algún error con este proyecto. Inténtelo de nuevo más tarde";
+  } else {
+    renderProject(project);
+    projectDetail.hidden = false;
+  }
 }
 
 function renderProject(project) {
@@ -40,8 +41,7 @@ function renderProject(project) {
   const status = document.querySelector("#project-status");
   status.textContent = project.is_active ? "Activo" : "Inactivo";
 
-  //Añade una clase con un condicional. .toogle lo que hace es según el condicional
-  //Lo suprime o añade al elemento.
+  // Muestra el estilo correspondiente al estado actual del proyecto.
   status.classList.toggle("project-status--active", project.is_active);
   status.classList.toggle("project-status--inactive", !project.is_active);
 

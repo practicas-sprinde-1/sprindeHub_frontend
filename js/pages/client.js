@@ -1,6 +1,6 @@
 import { createHeader } from "../components/header.js";
-import { clientMockData } from "../mockdata/client.mockdata.js";
-import { projectsByClientIdMockData } from "../mockdata/projectsByClientId.mockdata.js";
+import { clientsMockData } from "../mockdata/client.mockdata.js";
+import { projectsMockData } from "../mockdata/projects.mockdata.js";
 import { createAlertModal } from "../components/alert-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
 
@@ -14,7 +14,7 @@ const searchParams = new URLSearchParams(window.location.search);
 
 const clientId = Number(searchParams.get("id"));
 
-const client = clientMockData.id === clientId ? clientMockData : null;
+const client = clientsMockData.find((item) => item.id === clientId);
 
 if (!Number.isInteger(clientId) || clientId < 1 || !client) {
   clientError.hidden = false;
@@ -37,7 +37,9 @@ function renderClient(client) {
   status.classList.toggle("client-status--inactive", !client.is_active);
 
   const projectsList = document.querySelector("#client-list-projects");
-  const projects = projectsByClientIdMockData.items;
+  const projects = projectsMockData.items.filter(
+    (project) => project.client.id === client.id,
+  );
 
   projects.forEach((project) => {
     const listItem = document.createElement("li");

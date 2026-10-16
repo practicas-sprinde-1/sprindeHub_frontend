@@ -7,10 +7,7 @@ export function createAlertModal(title, description, onConfirm) {
 
   const titleElement = document.createElement("h1");
   titleElement.textContent = title;
-  titleElement.classList.add("alert-title");
-
-  const descriptionElement = document.createElement("p");
-  descriptionElement.textContent = description;
+  titleElement.classList.add("modal-title");
 
   const closeButton = document.createElement("button");
   closeButton.classList.add("modal-close-button");
@@ -22,13 +19,16 @@ export function createAlertModal(title, description, onConfirm) {
     overlay.remove();
   });
 
+  const descriptionElement = document.createElement("p");
+  descriptionElement.textContent = description;
+
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.textContent = "Borrar";
-  deleteButton.classList.add("alert-delete-button");
+  deleteButton.classList.add("modal-delete-button");
 
   deleteButton.addEventListener("click", async () => {
-    //llamada a la API
+    // Aquí irá la llamada a la API.
     deleteButton.disabled = true;
     await onConfirm();
     overlay.remove();
@@ -37,14 +37,14 @@ export function createAlertModal(title, description, onConfirm) {
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
   cancelButton.textContent = "Cancelar";
-  cancelButton.classList.add("alert-cancel-button");
+  cancelButton.classList.add("modal-cancel-button");
 
   cancelButton.addEventListener("click", () => {
     overlay.remove();
   });
 
   const modalActions = document.createElement("div");
-  modalActions.classList.add("alert-actions");
+  modalActions.classList.add("modal-actions");
   modalActions.append(deleteButton, cancelButton);
 
   modal.append(closeButton, titleElement, descriptionElement, modalActions);

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuevo cliente - Sprinde</title>
+
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/variables.css" />
+    <link rel="stylesheet" href="../css/base/global.css" />
+    <link rel="stylesheet" href="../css/components/header.css" />
+    <link rel="stylesheet" href="../css/pages/new-client.css" />
+  </head>
+
+  <body>
+    <div id="header-container"></div>
+
+    <main class="new-client-page">
+      <div class="new-client-topbar">
+        <a class="back-link" href="../index.html">Volver a proyectos</a>
+      </div>
+
+      <header id="new-client-header">
+        <h1 class="new-client-title">Nuevo cliente</h1>
+        <p id="new-client-description">Crea un cliente para tus proyectos.</p>
+      </header>
+
+      <form id="client-form">
+        <fieldset>
+          <legend>Datos del cliente</legend>
+
+          <label>
+            Nombre del cliente
+            <input name="name" type="text" required />
+          </label>
+
+          <label>
+            CIF
+            <input name="cif" type="text" required />
+          </label>
+
+          <label>
+            Teléfono
+            <input name="phone" type="tel" required />
+          </label>
+        </fieldset>
+
+        <button type="submit">Guardar cliente</button>
+      </form>
+    </main>
+
+    <script type="module" src="../js/pages/new-client.js"></script>
+  </body>
+</html>

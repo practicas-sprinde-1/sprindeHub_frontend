@@ -20,6 +20,7 @@ const recordsPerPageSelect = document.querySelector("#records-per-page");
 const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
+const searchInput = document.querySelector("#input-index");
 
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
@@ -42,20 +43,20 @@ function showTableRows() {
   nextPageButton.disabled = currentPage === totalPages;
 }
 
-recordsPerPageSelect.addEventListener("change", function () {
+recordsPerPageSelect.addEventListener("change", () => {
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
 
   showTableRows();
 });
 
-previousPageButton.addEventListener("click", function () {
+previousPageButton.addEventListener("click", () => {
   currentPage = currentPage - 1;
 
   showTableRows();
 });
 
-nextPageButton.addEventListener("click", function () {
+nextPageButton.addEventListener("click", () => {
   currentPage = currentPage + 1;
 
   showTableRows();
@@ -233,9 +234,6 @@ function renderTable(projects) {
 }
 renderTable(projects);
 showTableRows();
-
-const searchInput = document.querySelector("#input-index");
-
 searchInput.addEventListener("input", () => {
   const searched = searchInput.value.trim().toLowerCase();
 
@@ -250,6 +248,18 @@ searchInput.addEventListener("input", () => {
   showTableRows();
 });
 
+const createNewProjectButton = document.querySelector("#button-new-project");
+
+createNewProjectButton.addEventListener("click", () => {
+  window.location.href = "./pages/new-project.html";
+});
+
+const createNewClientButton = document.querySelector("#button-new-client");
+
+createNewClientButton.addEventListener("click", () => {
+  window.location.href = "./pages/new-client.html";
+});
+
 let openedDetailCard = null;
 
 function showDetailCard(row, title, items, projectId, contentType) {
@@ -262,6 +272,7 @@ function showDetailCard(row, title, items, projectId, contentType) {
   const detailCard = createDetailCard(title, items, projectUrl, contentType);
 
   projectsTable.append(detailCard);
+  // Sitúa la tarjeta a la misma altura que la fila que abrió el detalle.
   const tableTop = tableTitles.offsetTop;
   const rowTop = row.offsetTop;
   const cardTop = tableTop + rowTop;

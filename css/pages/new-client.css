@@ -1,0 +1,139 @@
+.new-client-page {
+  width: 58%;
+  margin: 0 auto;
+  padding: 40px 0 64px;
+  color: var(--text);
+}
+
+.new-client-topbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.new-client-page .back-link {
+  display: inline-block;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.new-client-page .back-link:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.new-client-page .back-link:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 3px;
+}
+
+#new-client-header {
+  margin-bottom: 20px;
+  padding: 24px 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--navy);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+}
+
+.new-client-title {
+  margin: 0;
+  color: var(--surface);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+#new-client-description {
+  margin: 8px 0 0;
+  color: var(--surface);
+  font-size: 15px;
+}
+
+#client-form {
+  display: grid;
+  gap: 20px;
+}
+
+#client-form fieldset {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: var(--surface);
+  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.05);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+#client-form fieldset:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.12);
+}
+
+#client-form legend {
+  padding: 0 6px;
+  color: var(--navy);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+#client-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#client-form input,
+#client-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+#client-form input:focus-visible,
+#client-form select:focus-visible,
+#client-form button:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+#client-form button {
+  justify-self: start;
+  min-width: 160px;
+  padding: 10px 14px;
+  border: 1px solid var(--blue);
+  border-radius: 7px;
+  background-color: var(--blue);
+  color: var(--surface);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+#client-form button:hover {
+  background-color: var(--navy);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 700px) {
+  .new-client-page {
+    width: auto;
+    margin: 0 20px;
+  }
+}

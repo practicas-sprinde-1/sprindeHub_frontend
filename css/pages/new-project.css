@@ -1,0 +1,210 @@
+.new-project-page {
+  width: 58%;
+  margin: 0 auto;
+  padding: 40px 0 64px;
+  color: var(--text);
+}
+
+.new-project-topbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.new-project-page .back-link {
+  display: inline-block;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.new-project-page .back-link:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.new-project-page .back-link:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 3px;
+}
+
+#new-project-header {
+  margin-bottom: 20px;
+  padding: 24px 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--navy);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+}
+
+.new-project-title {
+  margin: 0;
+  color: var(--surface);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+#new-project-description {
+  margin: 8px 0 0;
+  color: var(--surface);
+  font-size: 15px;
+}
+
+#project-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+#project-form fieldset {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: var(--surface);
+  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.05);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+#project-form fieldset:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.12);
+}
+
+#project-form fieldset:first-child,
+#project-form fieldset:nth-child(2),
+#project-form > button[type="submit"] {
+  grid-column: 1 / -1;
+}
+
+#project-form legend {
+  padding: 0 6px;
+  color: var(--navy);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+#project-form > fieldset > label,
+#new-client-fields label,
+#existing-client-container label,
+.collection-item > label {
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#project-form > fieldset > label + label {
+  margin-top: 14px;
+}
+
+#new-client-fields,
+#existing-client-container {
+  display: grid;
+  gap: 14px;
+}
+
+#existing-client-container {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--blue-light);
+}
+
+#existing-client-container[hidden] {
+  display: none;
+}
+
+#project-form input,
+#project-form select,
+#project-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+#project-form textarea {
+  resize: vertical;
+}
+
+#project-form input:focus-visible,
+#project-form select:focus-visible,
+#project-form textarea:focus-visible,
+#project-form button:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.collection-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.collection-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--background);
+}
+
+#project-form button {
+  padding: 10px 14px;
+  border: 1px solid var(--blue);
+  border-radius: 7px;
+  background-color: var(--surface);
+  color: var(--blue);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+#project-form button:hover {
+  background-color: var(--blue-light);
+  transform: translateY(-1px);
+}
+
+#use-existing-client,
+#project-form [data-action="add-item"],
+#cancel-existing-client {
+  justify-self: start;
+}
+
+#project-form [data-action="remove-item"] {
+  border-color: var(--test);
+  color: var(--test);
+}
+
+#project-form [data-action="remove-item"]:hover {
+  background-color: #fef2f2;
+}
+
+#project-form > button[type="submit"] {
+  justify-self: start;
+  min-width: 170px;
+  background-color: var(--blue);
+  color: var(--surface);
+}
+
+#project-form > button[type="submit"]:hover {
+  background-color: var(--navy);
+}
