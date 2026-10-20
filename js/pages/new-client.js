@@ -1,3 +1,4 @@
+import { setClient } from "../api/client.api.js";
 import { createHeader } from "../components/header.js";
 
 start();
@@ -11,7 +12,7 @@ function start() {
 }
 
 export function configureClientForm(form) {
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const clientData = {
@@ -22,10 +23,7 @@ export function configureClientForm(form) {
     };
 
     try {
-      console.log("Datos del cliente preparados:", clientData);
-
-      // Aquí irá POST /clients con clientData.
-      // Después de guardar correctamente:
+      await setClient(clientData);
       window.location.href = "../index.html";
     } catch (error) {
       alert("No se ha podido guardar el cliente");

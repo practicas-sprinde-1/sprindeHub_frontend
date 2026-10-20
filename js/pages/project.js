@@ -1,14 +1,14 @@
 import { createHeader } from "../components/header.js";
-import { projectDetailData } from "../mockdata/project-page.mockdata.js";
 import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
 import { createAlertModal } from "../components/alert-modal.js";
+import { getProjectById } from "../api/project.api.js";
 
 start();
 
-function start() {
+async function start() {
   const headerContainer = document.querySelector("#header-container");
   headerContainer.append(createHeader("César", "./profile.html"));
 
@@ -18,7 +18,13 @@ function start() {
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = Number(searchParams.get("id"));
 
-  const project = projectDetailData.id === projectId ? projectDetailData : null;
+  let project;
+
+  try {
+    project = await getProjectById(projectId);
+  } catch (error) {
+    project = null;
+  }
   if (!Number.isInteger(projectId) || projectId < 1 || !project) {
     projectError.hidden = false;
     projectError.textContent =

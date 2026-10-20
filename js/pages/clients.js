@@ -1,7 +1,6 @@
+import { getClients } from "../api/client.api.js";
+import { getProjectByClientId, getProjects } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
-import { clientsMockData } from "../mockdata/client.mockdata.js";
-import { projectsMockData } from "../mockdata/projects.mockdata.js";
-
 document
   .querySelector("#header-container")
   .append(createHeader("César", "./profile.html"));
@@ -16,18 +15,13 @@ const pageInformation = document.querySelector("#page-information");
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
-const clients = clientsMockData.filter((client) => client?.id && client.name);
-
-function getClientProjects(clientId) {
-  return projectsMockData.items.filter(
-    (project) => project.client.id === clientId,
-  );
-}
+const clientsResponse = await getClients();
+const clients = clientsResponse.items ?? clientsResponse;
 
 function renderTable(items) {
   tableBody.replaceChildren();
 
-  items.forEach((client) => {
+  items.forEach(async (client) => {
     const row = document.createElement("tr");
     const nameCell = document.createElement("td");
     const clientLink = document.createElement("a");
@@ -45,7 +39,10 @@ function renderTable(items) {
     const projectsCell = document.createElement("td");
     projectsCell.className = "client-projects";
 
-    getClientProjects(client.id).forEach((project) => {
+    const projectsResponse = await getProjectByClientId(client.id);
+    const projectsByClient = projectsResponse.items ?? projectsResponse;
+
+    projectsByClient.forEach((project) => {
       const projectLink = document.createElement("a");
       projectLink.className = "project-link";
       projectLink.href = `./project.html?id=${project.id}`;

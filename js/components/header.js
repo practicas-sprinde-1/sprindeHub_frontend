@@ -1,5 +1,4 @@
 import { logout } from "../api/session.js";
-import { userMockData } from "../mockdata/user.mockdata.js";
 
 export function createHeader(userName, profileUrl) {
   const header = document.createElement("header");
@@ -51,11 +50,7 @@ export function createHeader(userName, profileUrl) {
 
   actionButtons.append(projectButton, clientButton);
 
-  if (userMockData.role === "ADMIN") {
-    actionButtons.append(usersButton);
-  }
-
-  actionButtons.append(logoutButton);
+  actionButtons.append(usersButton, logoutButton);
 
   header.appendChild(profileLink);
   header.appendChild(actionButtons);

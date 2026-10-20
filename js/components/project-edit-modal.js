@@ -111,7 +111,12 @@ function createEnvironmentsRead(environments) {
   return section;
 }
 
-function createEnvironmentsEdit(listItem, environment, environments, isNew = false) {
+function createEnvironmentsEdit(
+  listItem,
+  environment,
+  environments,
+  isNew = false,
+) {
   listItem.replaceChildren();
 
   const typeInput = document.createElement("input");
@@ -173,7 +178,11 @@ function renderEnvironmentRead(listItem, environment, environments) {
     createEnvironmentsEdit(listItem, environment, environments);
   });
 
-  listItem.append(link, editButton, createDeleteButton(environments, environment, listItem));
+  listItem.append(
+    link,
+    editButton,
+    createDeleteButton(environments, environment, listItem),
+  );
 }
 
 function createRepositoriesRead(repositories) {
@@ -199,7 +208,12 @@ function createRepositoriesRead(repositories) {
   return section;
 }
 
-function createRepositoryEdit(listItem, repository, repositories, isNew = false) {
+function createRepositoryEdit(
+  listItem,
+  repository,
+  repositories,
+  isNew = false,
+) {
   listItem.replaceChildren();
 
   const typeInput = document.createElement("input");
@@ -256,7 +270,11 @@ function renderRepositoryRead(listItem, repository, repositories) {
     createRepositoryEdit(listItem, repository, repositories);
   });
 
-  listItem.append(link, editButton, createDeleteButton(repositories, repository, listItem));
+  listItem.append(
+    link,
+    editButton,
+    createDeleteButton(repositories, repository, listItem),
+  );
 }
 
 function createServicesRead(services) {
@@ -331,7 +349,11 @@ function renderServiceRead(listItem, service, services) {
     createServiceEdit(listItem, service, services);
   });
 
-  listItem.append(name, editButton, createDeleteButton(services, service, listItem));
+  listItem.append(
+    name,
+    editButton,
+    createDeleteButton(services, service, listItem),
+  );
 }
 
 function createDomainsRead(domains) {
@@ -409,7 +431,11 @@ function renderDomainRead(listItem, domain, domains) {
     createDomainEdit(listItem, domain, domains);
   });
 
-  listItem.append(link, editButton, createDeleteButton(domains, domain, listItem));
+  listItem.append(
+    link,
+    editButton,
+    createDeleteButton(domains, domain, listItem),
+  );
 }
 
 function createCommandsRead(commands) {
@@ -494,7 +520,11 @@ function renderCommandRead(listItem, command, commands) {
     createCommandEdit(listItem, command, commands);
   });
 
-  listItem.append(content, editButton, createDeleteButton(commands, command, listItem));
+  listItem.append(
+    content,
+    editButton,
+    createDeleteButton(commands, command, listItem),
+  );
 }
 
 function createLinksRead(links) {
@@ -582,7 +612,11 @@ function renderLinkRead(listItem, linkData, links) {
     createLinkEdit(listItem, linkData, links);
   });
 
-  listItem.append(content, editButton, createDeleteButton(links, linkData, listItem));
+  listItem.append(
+    content,
+    editButton,
+    createDeleteButton(links, linkData, listItem),
+  );
 }
 
 function createNotesRead(notes) {
@@ -667,7 +701,11 @@ function renderNoteRead(listItem, note, notes) {
     createNoteEdit(listItem, note, notes);
   });
 
-  listItem.append(content, editButton, createDeleteButton(notes, note, listItem));
+  listItem.append(
+    content,
+    editButton,
+    createDeleteButton(notes, note, listItem),
+  );
 }
 
 function createAddButton(text, onClick) {

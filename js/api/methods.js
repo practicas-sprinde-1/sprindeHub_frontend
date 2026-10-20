@@ -67,3 +67,20 @@ export async function deleteData(url, errorMessage) {
 
   return response.json();
 }
+
+//Envía los datos modificados del cliente al endpoint indicado
+export async function archiveOrRestoreData(url, errorMessage) {
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
