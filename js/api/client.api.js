@@ -38,3 +38,19 @@ export async function deleteClient(id) {
     "No se ha podido borrar el cliente",
   );
 }
+
+export async function archiveClient(id) {
+  return modifyData(
+    `${API_URL}/clients/${id}/archive`,
+    client,
+    "No se ha podido archivar el cliente.",
+  );
+}
+
+export async function restoreClient(id) {
+  return modifyData(
+    `${API_URL}/clients/${id}/restore`,
+    client,
+    "No se ha podido restaurar el cliente.",
+  );
+}
