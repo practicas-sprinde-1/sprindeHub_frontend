@@ -1,4 +1,6 @@
-export function createEditModalProject(project, onSave = () => {}) {
+import { modifyProject } from "../api/project.api.js";
+
+export function createEditModalProject(project, onSave) {
   // Reúne en un solo modal las colecciones editables de un proyecto.
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
@@ -25,11 +27,12 @@ export function createEditModalProject(project, onSave = () => {}) {
   saveButton.textContent = "Guardar";
   saveButton.classList.add("modal-save-button");
 
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     project.name = projectName.value.trim();
     project.description = projectDescription.value.trim();
     //llamada a la API
-    onSave(project);
+    await modifyProject(project, project.id);
+    await onSave(project);
     overlay.remove();
   });
 

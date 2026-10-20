@@ -1,4 +1,10 @@
-import { getData, sendData, modifyData, deleteData } from "./methods.js";
+import {
+  getData,
+  sendData,
+  modifyData,
+  deleteData,
+  archiveOrRestoreData,
+} from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
@@ -47,7 +53,7 @@ export async function modifyProject(project, id) {
   );
 }
 
-export async function deleteProject(id) {
+export async function deleteProjectById(id) {
   return deleteData(
     `${API_URL}/projects/${id}`,
     "No se ha podido borrar el proyecto",
@@ -55,17 +61,15 @@ export async function deleteProject(id) {
 }
 
 export async function archiveProject(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/projects/${id}/archive`,
-    {},
     "No se ha podido archivar el proyecto.",
   );
 }
 
 export async function restoreProject(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/projects/${id}/restore`,
-    {},
     "No se ha podido restaurar el proyecto.",
   );
 }

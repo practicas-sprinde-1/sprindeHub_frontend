@@ -110,5 +110,4 @@ document.querySelector("#button-new-client").addEventListener("click", () => {
   window.location.href = "./new-client.html";
 });
 
-renderTable(clients);
 showTableRows();

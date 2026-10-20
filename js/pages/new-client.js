@@ -24,7 +24,7 @@ export function configureClientForm(form) {
 
     try {
       await setClient(clientData);
-      window.location.href = "../index.html";
+      window.location.href = "./clients.html";
     } catch (error) {
       alert("No se ha podido guardar el cliente");
     }

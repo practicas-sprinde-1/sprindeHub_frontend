@@ -4,7 +4,7 @@ import { renderDocumentationLinks } from "../utils/render-documentation-links.js
 import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
 import { createAlertModal } from "../components/alert-modal.js";
-import { getProjectById } from "../api/project.api.js";
+import { deleteProjectById, getProjectById } from "../api/project.api.js";
 
 start();
 
@@ -18,13 +18,8 @@ async function start() {
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = Number(searchParams.get("id"));
 
-  let project;
+  const project = await getProjectById(projectId);
 
-  try {
-    project = await getProjectById(projectId);
-  } catch (error) {
-    project = null;
-  }
   if (!Number.isInteger(projectId) || projectId < 1 || !project) {
     projectError.hidden = false;
     projectError.textContent =
@@ -113,7 +108,7 @@ function renderProject(project) {
       "Borrar proyecto",
       `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?`,
       async () => {
-        // Aquí irá DELETE /projects/{project.id}.
+        await deleteProjectById(project.id);
       },
     );
 

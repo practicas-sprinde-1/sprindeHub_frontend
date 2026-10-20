@@ -1,7 +1,7 @@
 import { createHeader } from "../components/header.js";
 import { createAlertModal } from "../components/alert-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
-import { getClientById } from "../api/client.api.js";
+import { getClientById, deleteClientById } from "../api/client.api.js";
 import { getProjects } from "../api/project.api.js";
 
 const headerContainer = document.querySelector("#header-container");
@@ -37,6 +37,7 @@ async function renderClient(client) {
   status.classList.toggle("client-status--inactive", !client.is_active);
 
   const projectsList = document.querySelector("#client-list-projects");
+  projectsList?.replaceChildren();
   const projectsResponse = await getProjects();
   const projects = projectsResponse.items ?? projectsResponse;
   const filteredprojects = projects.filter(
@@ -60,7 +61,7 @@ async function renderClient(client) {
   modifyClient.addEventListener("click", () => {
     if (document.querySelector(".modal-overlay")) return;
 
-    document.body.append(createEditModalClient(client));
+    document.body.append(createEditModalClient(client, renderClient));
   });
 
   const deleteClient = document.querySelector(".button-delete-client");
@@ -71,7 +72,8 @@ async function renderClient(client) {
       "Borrar cliente",
       `¿Estás seguro de que deseas borrar el cliente "${client.name}"?`,
       async () => {
-        // Aquí irá DELETE /clients/{client.id}.
+        deleteClientById(client.id);
+        window.location.href = "./clients.html";
       },
     );
 

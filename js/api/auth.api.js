@@ -32,3 +32,33 @@ async function sendCredentials(url, credentials, errorMessage) {
 
   return response.json();
 }
+
+export async function refreshAccessToken() {
+  const refreshToken = sessionStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    throw new Error("No existe un refresh token");
+  }
+
+  const refreshTokenData = {
+    refresh_token: refreshToken,
+  };
+
+  const response = await fetch(`${API_URL}/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(refreshTokenData),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al refrescar la sesión");
+  }
+
+  const tokenData = await response.json();
+
+  sessionStorage.setItem("accessToken", tokenData.access_token);
+
+  return tokenData.access_token;
+}

@@ -1,4 +1,10 @@
-import { getData, sendData, modifyData, deleteData } from "./methods.js";
+import {
+  getData,
+  sendData,
+  modifyData,
+  deleteData,
+  archiveOrRestoreData,
+} from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
@@ -32,7 +38,7 @@ export async function modifyClient(client, id) {
   );
 }
 
-export async function deleteClient(id) {
+export async function deleteClientById(id) {
   return deleteData(
     `${API_URL}/clients/${id}`,
     "No se ha podido borrar el cliente",
@@ -40,17 +46,16 @@ export async function deleteClient(id) {
 }
 
 export async function archiveClient(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/clients/${id}/archive`,
-    {},
+
     "No se ha podido archivar el cliente.",
   );
 }
 
 export async function restoreClient(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/clients/${id}/restore`,
-    {},
     "No se ha podido restaurar el cliente.",
   );
 }

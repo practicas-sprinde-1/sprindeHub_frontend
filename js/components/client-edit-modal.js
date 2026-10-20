@@ -1,4 +1,6 @@
-export function createEditModalClient(client) {
+import { modifyClient } from "../api/client.api.js";
+
+export function createEditModalClient(client, onSave) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -58,13 +60,15 @@ export function createEditModalClient(client) {
   saveButton.textContent = "Guardar";
   saveButton.classList.add("modal-save-button");
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /clients/{client.id}.
+  saveButton.addEventListener("click", async () => {
     client.name = nameInput.value.trim();
     client.cif = cifInput.value.trim();
     client.phone = phoneInput.value.trim();
     client.is_active = statusInput.value === "true";
 
+    await modifyClient(client, client.id);
+
+    await onSave(client);
     overlay.remove();
   });
 
