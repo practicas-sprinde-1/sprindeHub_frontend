@@ -178,8 +178,14 @@ main {
   content: "";
 }
 
-.status--active { background: #dcfce7; color: #15803d; }
-.status--inactive { background: #fee2e2; color: var(--test); }
+.status--active {
+  background: #dcfce7;
+  color: #15803d;
+}
+.status--inactive {
+  background: #fee2e2;
+  color: var(--test);
+}
 
 .pagination {
   color: var(--muted);
@@ -203,13 +209,11 @@ main {
   font-size: 13px;
 }
 
-.pagination button:hover:not(:disabled) { background: var(--blue-light); }
-.pagination button:disabled { border-color: var(--border); color: #94a3b8; cursor: not-allowed; }
-
-@media (max-width: 640px) {
-  main { padding: 0 12px; }
-  .clients-table { margin: 20px 0; }
-  .clients-table-header, .pagination { align-items: flex-start; flex-direction: column; padding: 20px; }
-  .search { margin: 0 20px 20px; }
-  .pagination > div { width: 100%; }
+.pagination button:hover:not(:disabled) {
+  background: var(--blue-light);
+}
+.pagination button:disabled {
+  border-color: var(--border);
+  color: #94a3b8;
+  cursor: not-allowed;
 }

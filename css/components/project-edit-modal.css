@@ -209,13 +209,3 @@
 .project-edit-modal .modal-cancel-button {
   margin: 0;
 }
-
-@media (max-width: 700px) {
-  .project-edit-modal {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-actions {
-    grid-column: 1;
-  }
-}

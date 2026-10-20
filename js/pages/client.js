@@ -3,6 +3,7 @@ import { clientsMockData } from "../mockdata/client.mockdata.js";
 import { projectsMockData } from "../mockdata/projects.mockdata.js";
 import { createAlertModal } from "../components/alert-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
+import { getClientById } from "../api/client.api.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -14,7 +15,7 @@ const searchParams = new URLSearchParams(window.location.search);
 
 const clientId = Number(searchParams.get("id"));
 
-const client = clientsMockData.find((item) => item.id === clientId);
+const client = getClientById(clientId);
 
 if (!Number.isInteger(clientId) || clientId < 1 || !client) {
   clientError.hidden = false;

@@ -130,10 +130,3 @@
   background-color: var(--navy);
   transform: translateY(-1px);
 }
-
-@media (max-width: 700px) {
-  .new-client-page {
-    width: auto;
-    margin: 0 20px;
-  }
-}
