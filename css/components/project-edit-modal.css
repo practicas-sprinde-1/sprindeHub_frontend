@@ -82,7 +82,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   padding: 10px 12px;
   border-radius: 6px;
   background-color: var(--background);
@@ -91,6 +91,7 @@
 }
 
 .project-edit-modal li a {
+  flex: 1 1 0;
   min-width: 0;
   margin-right: auto;
   overflow-wrap: anywhere;
@@ -114,26 +115,34 @@
   font: inherit;
 }
 
-.project-edit-modal li > div {
+.project-edit-modal li div {
+  flex: 1 1 0;
   display: grid;
   min-width: 0;
   gap: 4px;
   margin-right: auto;
 }
 
-.project-edit-modal li > div strong {
+.project-edit-modal li span {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-right: auto;
+  overflow-wrap: anywhere;
+}
+
+.project-edit-modal li div strong {
   color: var(--navy);
   font-size: 13px;
 }
 
-.project-edit-modal li > div code {
+.project-edit-modal li div code {
   overflow-wrap: anywhere;
   color: var(--text);
   font-family: Consolas, "Courier New", monospace;
   font-size: 13px;
 }
 
-.project-edit-modal li > div p {
+.project-edit-modal li div p {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
@@ -171,6 +180,10 @@
   font-weight: 700;
 }
 
+.modal-add-button {
+  margin: 0 20px 20px;
+}
+
 .project-edit-modal button:hover {
   background-color: var(--blue-light);
 }
@@ -200,6 +213,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 4px;
 }
 
 .project-edit-modal .modal-save-button:hover {

@@ -82,22 +82,25 @@ function renderProject(project) {
   renderList("#project-services", servicesInfo);
   renderLinkList("#project-domains", domainsInfo);
   const commandsList = document.querySelector("#project-commands");
-  renderCommands(commandsList, commandsInfo);
   const documentationList = document.querySelector("#project-links");
   const notesList = document.querySelector("#project-notes");
 
+  commandsList.replaceChildren();
+  documentationList.replaceChildren();
+  notesList.replaceChildren();
+  renderCommands(commandsList, commandsInfo);
   renderDocumentationLinks(documentationList, linksInfo);
   renderNotes(notesList, notesInfo);
 
   const modifyProject = document.querySelector("#button-edit-project");
-  modifyProject.addEventListener("click", () => {
+  modifyProject.onclick = () => {
     if (document.querySelector(".modal-overlay")) return;
-    const modal = createEditModalProject(project);
+    const modal = createEditModalProject(project, renderProject);
     document.body.append(modal);
-  });
+  };
 
   const deleteProject = document.querySelector(".button-delete-project");
-  deleteProject.addEventListener("click", () => {
+  deleteProject.onclick = () => {
     if (document.querySelector(".alert-overlay")) return;
 
     const alertModal = createAlertModal(
@@ -109,11 +112,12 @@ function renderProject(project) {
     );
 
     document.body.append(alertModal);
-  });
+  };
 }
 
 function renderList(selector, texts) {
   const list = document.querySelector(selector);
+  list.replaceChildren();
 
   texts.forEach((text) => {
     const listItem = document.createElement("li");
@@ -124,6 +128,7 @@ function renderList(selector, texts) {
 
 function renderLinkList(selector, links) {
   const list = document.querySelector(selector);
+  list.replaceChildren();
 
   links.forEach((item) => {
     const listItem = document.createElement("li");

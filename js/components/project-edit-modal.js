@@ -1,4 +1,4 @@
-export function createEditModalProject(project) {
+export function createEditModalProject(project, onSave = () => {}) {
   // Reúne en un solo modal las colecciones editables de un proyecto.
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
@@ -26,7 +26,10 @@ export function createEditModalProject(project) {
   saveButton.classList.add("modal-save-button");
 
   saveButton.addEventListener("click", () => {
+    project.name = projectName.value.trim();
+    project.description = projectDescription.value.trim();
     //llamada a la API
+    onSave(project);
     overlay.remove();
   });
 
@@ -43,6 +46,12 @@ export function createEditModalProject(project) {
   projectName.type = "text";
   projectName.name = "name";
   projectName.value = project.name;
+
+  const projectDescription = document.createElement("input");
+  projectDescription.type = "text";
+  projectDescription.name = "description";
+  projectDescription.value = project.description;
+  projectDescription.placeholder = "Descripción del proyecto";
 
   const environmentsSection = createEnvironmentsRead(project.environments);
   const repositoriesSection = createRepositoriesRead(project.repositories);
@@ -61,6 +70,7 @@ export function createEditModalProject(project) {
     closeButton,
     title,
     projectName,
+    projectDescription,
     environmentsSection,
     repositoriesSection,
     servicesSection,
@@ -75,28 +85,33 @@ export function createEditModalProject(project) {
 
   return overlay;
 }
-
 function createEnvironmentsRead(environments) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Entornos";
 
   const environmentsList = document.createElement("ul");
+  const addButton = createAddButton("Añadir entorno", () => {
+    const environment = { type: "", url: "" };
+    const listItem = document.createElement("li");
+    environmentsList.append(listItem);
+    createEnvironmentsEdit(listItem, environment, environments, true);
+  });
 
   environments.forEach((environment) => {
     const listItem = document.createElement("li");
 
-    renderEnvironmentRead(listItem, environment);
+    renderEnvironmentRead(listItem, environment, environments);
 
     environmentsList.append(listItem);
   });
 
-  section.append(title, environmentsList);
+  section.append(title, environmentsList, addButton);
 
   return section;
 }
 
-function createEnvironmentsEdit(listItem, environment) {
+function createEnvironmentsEdit(listItem, environment, environments, isNew = false) {
   listItem.replaceChildren();
 
   const typeInput = document.createElement("input");
@@ -117,7 +132,11 @@ function createEnvironmentsEdit(listItem, environment) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderEnvironmentRead(listItem, environment);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderEnvironmentRead(listItem, environment, environments);
   });
 
   saveButton.addEventListener("click", () => {
@@ -130,13 +149,14 @@ function createEnvironmentsEdit(listItem, environment) {
     environment.type = updatedEnvironment.type;
     environment.url = updatedEnvironment.url;
 
-    renderEnvironmentRead(listItem, environment);
+    if (isNew) environments.push(environment);
+    renderEnvironmentRead(listItem, environment, environments);
   });
 
   listItem.append(typeInput, urlInput, saveButton, cancelButton);
 }
 
-function renderEnvironmentRead(listItem, environment) {
+function renderEnvironmentRead(listItem, environment, environments) {
   listItem.replaceChildren();
 
   const link = document.createElement("a");
@@ -150,10 +170,10 @@ function renderEnvironmentRead(listItem, environment) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createEnvironmentsEdit(listItem, environment);
+    createEnvironmentsEdit(listItem, environment, environments);
   });
 
-  listItem.append(link, editButton);
+  listItem.append(link, editButton, createDeleteButton(environments, environment, listItem));
 }
 
 function createRepositoriesRead(repositories) {
@@ -161,19 +181,25 @@ function createRepositoriesRead(repositories) {
   const title = document.createElement("h3");
   title.textContent = "Repositorios";
   const repositoriesList = document.createElement("ul");
+  const addButton = createAddButton("Añadir repositorio", () => {
+    const repository = { type: "", url: "" };
+    const listItem = document.createElement("li");
+    repositoriesList.append(listItem);
+    createRepositoryEdit(listItem, repository, repositories, true);
+  });
 
   repositories.forEach((repository) => {
     const listItem = document.createElement("li");
 
-    renderRepositoryRead(listItem, repository);
+    renderRepositoryRead(listItem, repository, repositories);
     repositoriesList.append(listItem);
   });
 
-  section.append(title, repositoriesList);
+  section.append(title, repositoriesList, addButton);
   return section;
 }
 
-function createRepositoryEdit(listItem, repository) {
+function createRepositoryEdit(listItem, repository, repositories, isNew = false) {
   listItem.replaceChildren();
 
   const typeInput = document.createElement("input");
@@ -194,7 +220,11 @@ function createRepositoryEdit(listItem, repository) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderRepositoryRead(listItem, repository);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderRepositoryRead(listItem, repository, repositories);
   });
 
   saveButton.addEventListener("click", () => {
@@ -202,13 +232,14 @@ function createRepositoryEdit(listItem, repository) {
     repository.type = typeInput.value.trim();
     repository.url = urlInput.value.trim();
 
-    renderRepositoryRead(listItem, repository);
+    if (isNew) repositories.push(repository);
+    renderRepositoryRead(listItem, repository, repositories);
   });
 
   listItem.append(typeInput, urlInput, saveButton, cancelButton);
 }
 
-function renderRepositoryRead(listItem, repository) {
+function renderRepositoryRead(listItem, repository, repositories) {
   listItem.replaceChildren();
 
   const link = document.createElement("a");
@@ -222,10 +253,10 @@ function renderRepositoryRead(listItem, repository) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createRepositoryEdit(listItem, repository);
+    createRepositoryEdit(listItem, repository, repositories);
   });
 
-  listItem.append(link, editButton);
+  listItem.append(link, editButton, createDeleteButton(repositories, repository, listItem));
 }
 
 function createServicesRead(services) {
@@ -233,19 +264,25 @@ function createServicesRead(services) {
   const title = document.createElement("h3");
   title.textContent = "Servicios";
   const servicesList = document.createElement("ul");
+  const addButton = createAddButton("Añadir servicio", () => {
+    const service = { name: "" };
+    const listItem = document.createElement("li");
+    servicesList.append(listItem);
+    createServiceEdit(listItem, service, services, true);
+  });
 
   services.forEach((service) => {
     const listItem = document.createElement("li");
 
-    renderServiceRead(listItem, service);
+    renderServiceRead(listItem, service, services);
     servicesList.append(listItem);
   });
 
-  section.append(title, servicesList);
+  section.append(title, servicesList, addButton);
   return section;
 }
 
-function createServiceEdit(listItem, service) {
+function createServiceEdit(listItem, service, services, isNew = false) {
   listItem.replaceChildren();
 
   const nameInput = document.createElement("input");
@@ -262,20 +299,25 @@ function createServiceEdit(listItem, service) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderServiceRead(listItem, service);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderServiceRead(listItem, service, services);
   });
 
   saveButton.addEventListener("click", () => {
     // Aquí irá PATCH /services/{service.id}.
     service.name = nameInput.value.trim();
 
-    renderServiceRead(listItem, service);
+    if (isNew) services.push(service);
+    renderServiceRead(listItem, service, services);
   });
 
   listItem.append(nameInput, saveButton, cancelButton);
 }
 
-function renderServiceRead(listItem, service) {
+function renderServiceRead(listItem, service, services) {
   listItem.replaceChildren();
 
   const name = document.createElement("span");
@@ -286,10 +328,10 @@ function renderServiceRead(listItem, service) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createServiceEdit(listItem, service);
+    createServiceEdit(listItem, service, services);
   });
 
-  listItem.append(name, editButton);
+  listItem.append(name, editButton, createDeleteButton(services, service, listItem));
 }
 
 function createDomainsRead(domains) {
@@ -297,19 +339,25 @@ function createDomainsRead(domains) {
   const title = document.createElement("h3");
   title.textContent = "Dominios";
   const domainsList = document.createElement("ul");
+  const addButton = createAddButton("Añadir dominio", () => {
+    const domain = { url: "" };
+    const listItem = document.createElement("li");
+    domainsList.append(listItem);
+    createDomainEdit(listItem, domain, domains, true);
+  });
 
   domains.forEach((domain) => {
     const listItem = document.createElement("li");
 
-    renderDomainRead(listItem, domain);
+    renderDomainRead(listItem, domain, domains);
     domainsList.append(listItem);
   });
 
-  section.append(title, domainsList);
+  section.append(title, domainsList, addButton);
   return section;
 }
 
-function createDomainEdit(listItem, domain) {
+function createDomainEdit(listItem, domain, domains, isNew = false) {
   listItem.replaceChildren();
 
   const urlInput = document.createElement("input");
@@ -326,20 +374,25 @@ function createDomainEdit(listItem, domain) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderDomainRead(listItem, domain);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderDomainRead(listItem, domain, domains);
   });
 
   saveButton.addEventListener("click", () => {
     // Aquí irá PATCH /domains/{domain.id}.
     domain.url = urlInput.value.trim();
 
-    renderDomainRead(listItem, domain);
+    if (isNew) domains.push(domain);
+    renderDomainRead(listItem, domain, domains);
   });
 
   listItem.append(urlInput, saveButton, cancelButton);
 }
 
-function renderDomainRead(listItem, domain) {
+function renderDomainRead(listItem, domain, domains) {
   listItem.replaceChildren();
 
   const link = document.createElement("a");
@@ -353,10 +406,10 @@ function renderDomainRead(listItem, domain) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createDomainEdit(listItem, domain);
+    createDomainEdit(listItem, domain, domains);
   });
 
-  listItem.append(link, editButton);
+  listItem.append(link, editButton, createDeleteButton(domains, domain, listItem));
 }
 
 function createCommandsRead(commands) {
@@ -364,19 +417,25 @@ function createCommandsRead(commands) {
   const title = document.createElement("h3");
   title.textContent = "Comandos";
   const commandsList = document.createElement("ul");
+  const addButton = createAddButton("Añadir comando", () => {
+    const command = { name: "", instruction: "" };
+    const listItem = document.createElement("li");
+    commandsList.append(listItem);
+    createCommandEdit(listItem, command, commands, true);
+  });
 
   commands.forEach((command) => {
     const listItem = document.createElement("li");
 
-    renderCommandRead(listItem, command);
+    renderCommandRead(listItem, command, commands);
     commandsList.append(listItem);
   });
 
-  section.append(title, commandsList);
+  section.append(title, commandsList, addButton);
   return section;
 }
 
-function createCommandEdit(listItem, command) {
+function createCommandEdit(listItem, command, commands, isNew = false) {
   listItem.replaceChildren();
 
   const nameInput = document.createElement("input");
@@ -397,7 +456,11 @@ function createCommandEdit(listItem, command) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderCommandRead(listItem, command);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderCommandRead(listItem, command, commands);
   });
 
   saveButton.addEventListener("click", () => {
@@ -405,13 +468,14 @@ function createCommandEdit(listItem, command) {
     command.name = nameInput.value.trim();
     command.instruction = instructionInput.value.trim();
 
-    renderCommandRead(listItem, command);
+    if (isNew) commands.push(command);
+    renderCommandRead(listItem, command, commands);
   });
 
   listItem.append(nameInput, instructionInput, saveButton, cancelButton);
 }
 
-function renderCommandRead(listItem, command) {
+function renderCommandRead(listItem, command, commands) {
   listItem.replaceChildren();
 
   const content = document.createElement("div");
@@ -427,10 +491,10 @@ function renderCommandRead(listItem, command) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createCommandEdit(listItem, command);
+    createCommandEdit(listItem, command, commands);
   });
 
-  listItem.append(content, editButton);
+  listItem.append(content, editButton, createDeleteButton(commands, command, listItem));
 }
 
 function createLinksRead(links) {
@@ -438,19 +502,25 @@ function createLinksRead(links) {
   const title = document.createElement("h3");
   title.textContent = "Documentación";
   const linksList = document.createElement("ul");
+  const addButton = createAddButton("Añadir documentación", () => {
+    const linkData = { title: "", url: "" };
+    const listItem = document.createElement("li");
+    linksList.append(listItem);
+    createLinkEdit(listItem, linkData, links, true);
+  });
 
   links.forEach((link) => {
     const listItem = document.createElement("li");
 
-    renderLinkRead(listItem, link);
+    renderLinkRead(listItem, link, links);
     linksList.append(listItem);
   });
 
-  section.append(title, linksList);
+  section.append(title, linksList, addButton);
   return section;
 }
 
-function createLinkEdit(listItem, linkData) {
+function createLinkEdit(listItem, linkData, links, isNew = false) {
   listItem.replaceChildren();
 
   const titleInput = document.createElement("input");
@@ -471,7 +541,11 @@ function createLinkEdit(listItem, linkData) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderLinkRead(listItem, linkData);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderLinkRead(listItem, linkData, links);
   });
 
   saveButton.addEventListener("click", () => {
@@ -479,13 +553,14 @@ function createLinkEdit(listItem, linkData) {
     linkData.title = titleInput.value.trim();
     linkData.url = urlInput.value.trim();
 
-    renderLinkRead(listItem, linkData);
+    if (isNew) links.push(linkData);
+    renderLinkRead(listItem, linkData, links);
   });
 
   listItem.append(titleInput, urlInput, saveButton, cancelButton);
 }
 
-function renderLinkRead(listItem, linkData) {
+function renderLinkRead(listItem, linkData, links) {
   listItem.replaceChildren();
 
   const content = document.createElement("div");
@@ -504,10 +579,10 @@ function renderLinkRead(listItem, linkData) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createLinkEdit(listItem, linkData);
+    createLinkEdit(listItem, linkData, links);
   });
 
-  listItem.append(content, editButton);
+  listItem.append(content, editButton, createDeleteButton(links, linkData, listItem));
 }
 
 function createNotesRead(notes) {
@@ -515,19 +590,25 @@ function createNotesRead(notes) {
   const title = document.createElement("h3");
   title.textContent = "Notas";
   const notesList = document.createElement("ul");
+  const addButton = createAddButton("Añadir nota", () => {
+    const note = { description: "", content: "" };
+    const listItem = document.createElement("li");
+    notesList.append(listItem);
+    createNoteEdit(listItem, note, notes, true);
+  });
 
   notes.forEach((note) => {
     const listItem = document.createElement("li");
 
-    renderNoteRead(listItem, note);
+    renderNoteRead(listItem, note, notes);
     notesList.append(listItem);
   });
 
-  section.append(title, notesList);
+  section.append(title, notesList, addButton);
   return section;
 }
 
-function createNoteEdit(listItem, note) {
+function createNoteEdit(listItem, note, notes, isNew = false) {
   listItem.replaceChildren();
 
   const descriptionInput = document.createElement("input");
@@ -548,7 +629,11 @@ function createNoteEdit(listItem, note) {
   cancelButton.textContent = "Cancelar";
 
   cancelButton.addEventListener("click", () => {
-    renderNoteRead(listItem, note);
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderNoteRead(listItem, note, notes);
   });
 
   saveButton.addEventListener("click", () => {
@@ -556,13 +641,14 @@ function createNoteEdit(listItem, note) {
     note.description = descriptionInput.value.trim();
     note.content = contentInput.value.trim();
 
-    renderNoteRead(listItem, note);
+    if (isNew) notes.push(note);
+    renderNoteRead(listItem, note, notes);
   });
 
   listItem.append(descriptionInput, contentInput, saveButton, cancelButton);
 }
 
-function renderNoteRead(listItem, note) {
+function renderNoteRead(listItem, note, notes) {
   listItem.replaceChildren();
 
   const content = document.createElement("div");
@@ -578,8 +664,30 @@ function renderNoteRead(listItem, note) {
   editButton.textContent = "Editar";
 
   editButton.addEventListener("click", () => {
-    createNoteEdit(listItem, note);
+    createNoteEdit(listItem, note, notes);
   });
 
-  listItem.append(content, editButton);
+  listItem.append(content, editButton, createDeleteButton(notes, note, listItem));
+}
+
+function createAddButton(text, onClick) {
+  const addButton = document.createElement("button");
+  addButton.type = "button";
+  addButton.classList.add("modal-add-button");
+  addButton.textContent = text;
+  addButton.addEventListener("click", onClick);
+  return addButton;
+}
+
+function createDeleteButton(collection, item, listItem) {
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.textContent = "Eliminar";
+
+  deleteButton.addEventListener("click", () => {
+    collection.splice(collection.indexOf(item), 1);
+    listItem.remove();
+  });
+
+  return deleteButton;
 }
