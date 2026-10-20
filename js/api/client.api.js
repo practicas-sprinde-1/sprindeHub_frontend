@@ -1,0 +1,40 @@
+import { getData, sendData, modifyData, deleteData } from "./methods.js";
+
+const API_URL = "http://127.0.0.1:8000/api/v1";
+
+export async function getClients() {
+  return getData(
+    `${API_URL}/clients`,
+    "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
+export async function getClientById(id) {
+  return getData(
+    `${API_URL}/clients/${id}`,
+    "No se ha podido obtener el cliente con ese id",
+  );
+}
+
+export async function setClient(client) {
+  return sendData(
+    `${API_URL}/clients`,
+    client,
+    "No se ha podido guardar el cliente. Inténtelo de nuevo.",
+  );
+}
+
+export async function modifyClient(client, id) {
+  return modifyData(
+    `${API_URL}/clients/${id}`,
+    client,
+    "No se ha podido modificar el cliente.",
+  );
+}
+
+export async function deleteClient(id) {
+  return deleteData(
+    `${API_URL}/clients/${id}`,
+    "No se ha podido borrar el cliente",
+  );
+}

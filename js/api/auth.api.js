@@ -1,6 +1,8 @@
+const API_URL = "http://127.0.0.1:8000/api/v1";
+
 export async function login(credentials) {
   return sendCredentials(
-    "http://127.0.0.1:8000/api/v1/auth/login",
+    `${API_URL}/auth/login`,
     credentials,
     "No se ha podido iniciar sesión.",
   );
@@ -8,7 +10,7 @@ export async function login(credentials) {
 
 export async function register(credentials) {
   return sendCredentials(
-    "http://127.0.0.1:8000/api/v1/auth/register",
+    `${API_URL}/auth/register`,
     credentials,
     "No se ha podido completar el registro.",
   );
