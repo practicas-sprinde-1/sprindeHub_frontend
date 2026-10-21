@@ -1,6 +1,11 @@
-import { modifyProject } from "../api/project.api.js";
+import { getClients } from "../api/client.api.js";
+import {
+  archiveProject,
+  modifyProject,
+  restoreProject,
+} from "../api/project.api.js";
 
-export function createEditModalProject(project, onSave) {
+export async function createEditModalProject(project, onSave) {
   // Reúne en un solo modal las colecciones editables de un proyecto.
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
@@ -30,9 +35,33 @@ export function createEditModalProject(project, onSave) {
   saveButton.addEventListener("click", async () => {
     project.name = projectName.value.trim();
     project.description = projectDescription.value.trim();
-    //llamada a la API
+    project.client_id = Number(clientSelect.value);
+
+    const previousState = project.is_active;
+    let selectedState;
+
+    if (statusSelect.value === "true") {
+      selectedState = true;
+    } else {
+      selectedState = false;
+    }
+
+    if (previousState !== selectedState) {
+      if (selectedState) {
+        await restoreProject(project.id);
+      } else {
+        await archiveProject(project.id);
+      }
+      project.is_active = selectedState;
+    }
+
+    //Metodo para que aparezca por pantalla el cliente nuevo seleccionado
+    project.client = clients.find((client) => client.id === project.client_id);
+
     await modifyProject(project, project.id);
+
     await onSave(project);
+
     overlay.remove();
   });
 
@@ -56,6 +85,33 @@ export function createEditModalProject(project, onSave) {
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
 
+  const clients = await getClients();
+
+  const clientSelect = document.createElement("select");
+  clientSelect.name = "client_id";
+
+  clients.forEach((client) => {
+    const option = document.createElement("option");
+    option.value = client.id;
+    option.textContent = client.name;
+    clientSelect.append(option);
+  });
+
+  clientSelect.value = project.client_id;
+
+  const statusSelect = document.createElement("select");
+  statusSelect.name = "is_active";
+
+  const activeOption = document.createElement("option");
+  activeOption.value = "true";
+  activeOption.textContent = "Activo";
+  const inactiveOption = document.createElement("option");
+  inactiveOption.value = "false";
+  inactiveOption.textContent = "Inactivo";
+
+  statusSelect.append(activeOption, inactiveOption);
+  statusSelect.value = project.is_active;
+
   const environmentsSection = createEnvironmentsRead(project.environments);
   const repositoriesSection = createRepositoriesRead(project.repositories);
   const servicesSection = createServicesRead(project.services);
@@ -74,6 +130,8 @@ export function createEditModalProject(project, onSave) {
     title,
     projectName,
     projectDescription,
+    clientSelect,
+    statusSelect,
     environmentsSection,
     repositoriesSection,
     servicesSection,

@@ -94,9 +94,9 @@ function renderProject(project) {
   renderNotes(notesList, notesInfo);
 
   const modifyProject = document.querySelector("#button-edit-project");
-  modifyProject.onclick = () => {
+  modifyProject.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
-    const modal = createEditModalProject(project, renderProject);
+    const modal = await createEditModalProject(project, renderProject);
     document.body.append(modal);
   };
 
