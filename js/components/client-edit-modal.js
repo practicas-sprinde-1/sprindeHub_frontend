@@ -1,6 +1,7 @@
 import { modifyClient } from "../api/client.api.js";
+import { getProjects, modifyProject } from "../api/project.api.js";
 
-export function createEditModalClient(client, onSave) {
+export async function createEditModalClient(client, onSave) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -55,6 +56,22 @@ export function createEditModalClient(client, onSave) {
   const phoneField = createClientField("Teléfono", phoneInput);
   const statusField = createClientField("Estado", statusInput);
 
+  const projectsResponse = await getProjects();
+  const projects = projectsResponse.items ?? projectsResponse;
+
+  const initialProjects = projects.filter((project) => {
+    const projectClientId = project.client_id ?? project.client?.id;
+
+    return Number(projectClientId) === Number(client.id);
+  });
+
+  const initialProjectsId = initialProjects.map((project) => project.id);
+
+  const projectCheckBoxList = createProjectCheckBoxList(
+    projects,
+    initialProjectsId,
+  );
+
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.textContent = "Guardar";
@@ -67,6 +84,38 @@ export function createEditModalClient(client, onSave) {
     client.is_active = statusInput.value === "true";
 
     await modifyClient(client, client.id);
+
+    const selectedProjectsIds = projectCheckBoxList.getSelectedProjectsId();
+
+    const addedProjectsid = selectedProjectsIds.filter((projectId) => {
+      return !initialProjectsId.includes(projectId);
+    });
+
+    const addedProjects = projects.filter((project) => {
+      return addedProjectsid.includes(project.id);
+    });
+
+    const removeProjectsIds = initialProjectsId.filter((projectId) => {
+      return !selectedProjectsIds.includes(projectId);
+    });
+
+    const removeProjects = projects.filter((project) => {
+      return removeProjectsIds.includes(project.id);
+    });
+
+    for (const project of addedProjects) {
+      const updatedProject = {
+        client_id: client.id,
+      };
+      await modifyProject(updatedProject, project.id);
+    }
+
+    for (const project of removeProjects) {
+      const updatedProject = {
+        client_id: null,
+      };
+      await modifyProject(updatedProject, project.id);
+    }
 
     await onSave(client);
     overlay.remove();
@@ -93,6 +142,7 @@ export function createEditModalClient(client, onSave) {
     phoneField,
     statusField,
     modalActions,
+    projectCheckBoxList.element,
   );
 
   overlay.append(modal);
@@ -110,4 +160,65 @@ function createClientField(labelText, input) {
 
   field.append(label, input);
   return field;
+}
+
+function createProjectCheckBoxList(projects, initialProjectsIds) {
+  const section = document.createElement("section");
+  const title = document.createElement("h2");
+  title.textContent = "Proyectos";
+
+  const list = document.createElement("ul");
+
+  let selectedProjectsIds = [...initialProjectsIds];
+
+  const assignedProjects = projects.filter((project) => {
+    return initialProjectsIds.includes(project.id);
+  });
+
+  const unassignedProjects = projects.filter((project) => {
+    return !initialProjectsIds.includes(project.id);
+  });
+
+  const orderedProjects = [...assignedProjects, ...unassignedProjects];
+
+  orderedProjects.forEach((project) => {
+    const listItem = document.createElement("li");
+    const label = document.createElement("label");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+
+    const projectName = document.createElement("span");
+    projectName.textContent = project.name;
+
+    checkbox.checked = initialProjectsIds.includes(project.id);
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        const selected = selectedProjectsIds.includes(project.id);
+
+        if (!selected) {
+          selectedProjectsIds.push(project.id);
+        }
+        return;
+      }
+
+      selectedProjectsIds = selectedProjectsIds.filter((projectId) => {
+        return projectId !== project.id;
+      });
+    });
+
+    label.append(checkbox, projectName);
+    listItem.append(label);
+    list.append(listItem);
+  });
+
+  section.append(title, list);
+
+  return {
+    element: section,
+    getSelectedProjectsId: () => {
+      return selectedProjectsIds;
+    },
+  };
 }

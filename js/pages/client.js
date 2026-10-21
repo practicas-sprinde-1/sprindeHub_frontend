@@ -40,9 +40,11 @@ async function renderClient(client) {
   projectsList?.replaceChildren();
   const projectsResponse = await getProjects();
   const projects = projectsResponse.items ?? projectsResponse;
-  const filteredprojects = projects.filter(
-    (project) => project.client.id === client.id,
-  );
+  const filteredprojects = projects.filter((project) => {
+    const projectClientId = project.client_id ?? project.client?.id;
+
+    return Number(projectClientId) === Number(client.id);
+  });
 
   filteredprojects.forEach((project) => {
     const listItem = document.createElement("li");
@@ -58,14 +60,16 @@ async function renderClient(client) {
   document.querySelector("#client-phone").textContent = client.phone;
 
   const modifyClient = document.querySelector(".button-edit-client");
-  modifyClient.addEventListener("click", () => {
+
+  modifyClient.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
 
-    document.body.append(createEditModalClient(client, renderClient));
-  });
+    const modal = await createEditModalClient(client, renderClient);
+    document.body.append(modal);
+  };
 
   const deleteClient = document.querySelector(".button-delete-client");
-  deleteClient.addEventListener("click", () => {
+  deleteClient.onclick = () => {
     if (document.querySelector(".alert-overlay")) return;
 
     const alertModal = createAlertModal(
@@ -78,5 +82,5 @@ async function renderClient(client) {
     );
 
     document.body.append(alertModal);
-  });
+  };
 }
