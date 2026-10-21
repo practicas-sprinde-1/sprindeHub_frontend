@@ -1,5 +1,20 @@
 import { getClients } from "../api/client.api.js";
 import {
+  deleteEnvironment,
+  modifyEnvironment,
+  setEnvironment,
+} from "../api/environment.api.js";
+import {
+  deleteRepository,
+  modifyRepository,
+  setRepository,
+} from "../api/repository.api.js";
+import { deleteService, modifyService, setService } from "../api/service.api.js";
+import { deleteDomain, modifyDomain, setDomain } from "../api/domain.api.js";
+import { deleteCommand, modifyCommand, setCommand } from "../api/command.api.js";
+import { deleteLink, modifyLink, setLink } from "../api/link.api.js";
+import { deleteNote, modifyNote, setNote } from "../api/note.api.js";
+import {
   archiveProject,
   modifyProject,
   restoreProject,
@@ -112,13 +127,19 @@ export async function createEditModalProject(project, onSave) {
   statusSelect.append(activeOption, inactiveOption);
   statusSelect.value = project.is_active;
 
-  const environmentsSection = createEnvironmentsRead(project.environments);
-  const repositoriesSection = createRepositoriesRead(project.repositories);
-  const servicesSection = createServicesRead(project.services);
-  const domainsSection = createDomainsRead(project.domains);
-  const commandsSection = createCommandsRead(project.commands);
-  const linksSection = createLinksRead(project.links);
-  const notesSection = createNotesRead(project.notes);
+  const environmentsSection = createEnvironmentsRead(
+    project.environments,
+    project.id,
+  );
+  const repositoriesSection = createRepositoriesRead(
+    project.repositories,
+    project.id,
+  );
+  const servicesSection = createServicesRead(project.services, project.id);
+  const domainsSection = createDomainsRead(project.domains, project.id);
+  const commandsSection = createCommandsRead(project.commands, project.id);
+  const linksSection = createLinksRead(project.links, project.id);
+  const notesSection = createNotesRead(project.notes, project.id);
 
   // Agrupa las acciones para colocarlas juntas en la primera columna del grid del modal.
   const modalActions = document.createElement("div");
@@ -146,14 +167,18 @@ export async function createEditModalProject(project, onSave) {
 
   return overlay;
 }
-function createEnvironmentsRead(environments) {
+function createEnvironmentsRead(environments, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Entornos";
 
   const environmentsList = document.createElement("ul");
   const addButton = createAddButton("Añadir entorno", () => {
-    const environment = { type: "", url: "" };
+    const environment = {
+      type: "",
+      url: "",
+      project_id: projectId,
+    };
     const listItem = document.createElement("li");
     environmentsList.append(listItem);
     createEnvironmentsEdit(listItem, environment, environments, true);
@@ -205,17 +230,24 @@ function createEnvironmentsEdit(
     renderEnvironmentRead(listItem, environment, environments);
   });
 
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     const updatedEnvironment = {
       ...environment,
       type: typeInput.value.trim(),
       url: urlInput.value.trim(),
     };
 
+    if (isNew) {
+      const createdEnvironment = await setEnvironment(updatedEnvironment);
+      environments.push(createdEnvironment);
+      renderEnvironmentRead(listItem, createdEnvironment, environments);
+      return;
+    }
+    await modifyEnvironment(updatedEnvironment, updatedEnvironment.id);
+
     environment.type = updatedEnvironment.type;
     environment.url = updatedEnvironment.url;
 
-    if (isNew) environments.push(environment);
     renderEnvironmentRead(listItem, environment, environments);
   });
 
@@ -242,17 +274,17 @@ function renderEnvironmentRead(listItem, environment, environments) {
   listItem.append(
     link,
     editButton,
-    createDeleteButton(environments, environment, listItem),
+    createDeleteButton(environments, environment, listItem, deleteEnvironment),
   );
 }
 
-function createRepositoriesRead(repositories) {
+function createRepositoriesRead(repositories, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Repositorios";
   const repositoriesList = document.createElement("ul");
   const addButton = createAddButton("Añadir repositorio", () => {
-    const repository = { type: "", url: "" };
+    const repository = { project_id: projectId, type: "", url: "" };
     const listItem = document.createElement("li");
     repositoriesList.append(listItem);
     createRepositoryEdit(listItem, repository, repositories, true);
@@ -302,12 +334,24 @@ function createRepositoryEdit(
     renderRepositoryRead(listItem, repository, repositories);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /repositories/{repository.id}.
-    repository.type = typeInput.value.trim();
-    repository.url = urlInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedRepository = {
+      ...repository,
+      type: typeInput.value.trim(),
+      url: urlInput.value.trim(),
+    };
 
-    if (isNew) repositories.push(repository);
+    if (isNew) {
+      const createdRepository = await setRepository(updatedRepository);
+      repositories.push(createdRepository);
+      renderRepositoryRead(listItem, createdRepository, repositories);
+      return;
+    }
+
+    await modifyRepository(updatedRepository, updatedRepository.id);
+
+    repository.type = updatedRepository.type;
+    repository.url = updatedRepository.url;
     renderRepositoryRead(listItem, repository, repositories);
   });
 
@@ -334,17 +378,17 @@ function renderRepositoryRead(listItem, repository, repositories) {
   listItem.append(
     link,
     editButton,
-    createDeleteButton(repositories, repository, listItem),
+    createDeleteButton(repositories, repository, listItem, deleteRepository),
   );
 }
 
-function createServicesRead(services) {
+function createServicesRead(services, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Servicios";
   const servicesList = document.createElement("ul");
   const addButton = createAddButton("Añadir servicio", () => {
-    const service = { name: "" };
+    const service = { project_id: projectId, name: "" };
     const listItem = document.createElement("li");
     servicesList.append(listItem);
     createServiceEdit(listItem, service, services, true);
@@ -385,11 +429,22 @@ function createServiceEdit(listItem, service, services, isNew = false) {
     renderServiceRead(listItem, service, services);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /services/{service.id}.
-    service.name = nameInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedService = {
+      ...service,
+      name: nameInput.value.trim(),
+    };
 
-    if (isNew) services.push(service);
+    if (isNew) {
+      const createdService = await setService(updatedService);
+      services.push(createdService);
+      renderServiceRead(listItem, createdService, services);
+      return;
+    }
+
+    await modifyService(updatedService, updatedService.id);
+
+    service.name = updatedService.name;
     renderServiceRead(listItem, service, services);
   });
 
@@ -413,17 +468,17 @@ function renderServiceRead(listItem, service, services) {
   listItem.append(
     name,
     editButton,
-    createDeleteButton(services, service, listItem),
+    createDeleteButton(services, service, listItem, deleteService),
   );
 }
 
-function createDomainsRead(domains) {
+function createDomainsRead(domains, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Dominios";
   const domainsList = document.createElement("ul");
   const addButton = createAddButton("Añadir dominio", () => {
-    const domain = { url: "" };
+    const domain = { project_id: projectId, url: "" };
     const listItem = document.createElement("li");
     domainsList.append(listItem);
     createDomainEdit(listItem, domain, domains, true);
@@ -464,11 +519,22 @@ function createDomainEdit(listItem, domain, domains, isNew = false) {
     renderDomainRead(listItem, domain, domains);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /domains/{domain.id}.
-    domain.url = urlInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedDomain = {
+      ...domain,
+      url: urlInput.value.trim(),
+    };
 
-    if (isNew) domains.push(domain);
+    if (isNew) {
+      const createdDomain = await setDomain(updatedDomain);
+      domains.push(createdDomain);
+      renderDomainRead(listItem, createdDomain, domains);
+      return;
+    }
+
+    await modifyDomain(updatedDomain, updatedDomain.id);
+
+    domain.url = updatedDomain.url;
     renderDomainRead(listItem, domain, domains);
   });
 
@@ -495,17 +561,17 @@ function renderDomainRead(listItem, domain, domains) {
   listItem.append(
     link,
     editButton,
-    createDeleteButton(domains, domain, listItem),
+    createDeleteButton(domains, domain, listItem, deleteDomain),
   );
 }
 
-function createCommandsRead(commands) {
+function createCommandsRead(commands, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Comandos";
   const commandsList = document.createElement("ul");
   const addButton = createAddButton("Añadir comando", () => {
-    const command = { name: "", instruction: "" };
+    const command = { project_id: projectId, name: "", instruction: "" };
     const listItem = document.createElement("li");
     commandsList.append(listItem);
     createCommandEdit(listItem, command, commands, true);
@@ -550,12 +616,24 @@ function createCommandEdit(listItem, command, commands, isNew = false) {
     renderCommandRead(listItem, command, commands);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /commands/{command.id}.
-    command.name = nameInput.value.trim();
-    command.instruction = instructionInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedCommand = {
+      ...command,
+      name: nameInput.value.trim(),
+      instruction: instructionInput.value.trim(),
+    };
 
-    if (isNew) commands.push(command);
+    if (isNew) {
+      const createdCommand = await setCommand(updatedCommand);
+      commands.push(createdCommand);
+      renderCommandRead(listItem, createdCommand, commands);
+      return;
+    }
+
+    await modifyCommand(updatedCommand, updatedCommand.id);
+
+    command.name = updatedCommand.name;
+    command.instruction = updatedCommand.instruction;
     renderCommandRead(listItem, command, commands);
   });
 
@@ -584,17 +662,17 @@ function renderCommandRead(listItem, command, commands) {
   listItem.append(
     content,
     editButton,
-    createDeleteButton(commands, command, listItem),
+    createDeleteButton(commands, command, listItem, deleteCommand),
   );
 }
 
-function createLinksRead(links) {
+function createLinksRead(links, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Documentación";
   const linksList = document.createElement("ul");
   const addButton = createAddButton("Añadir documentación", () => {
-    const linkData = { title: "", url: "" };
+    const linkData = { project_id: projectId, title: "", url: "" };
     const listItem = document.createElement("li");
     linksList.append(listItem);
     createLinkEdit(listItem, linkData, links, true);
@@ -639,12 +717,24 @@ function createLinkEdit(listItem, linkData, links, isNew = false) {
     renderLinkRead(listItem, linkData, links);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /links/{linkData.id}.
-    linkData.title = titleInput.value.trim();
-    linkData.url = urlInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedLink = {
+      ...linkData,
+      title: titleInput.value.trim(),
+      url: urlInput.value.trim(),
+    };
 
-    if (isNew) links.push(linkData);
+    if (isNew) {
+      const createdLink = await setLink(updatedLink);
+      links.push(createdLink);
+      renderLinkRead(listItem, createdLink, links);
+      return;
+    }
+
+    await modifyLink(updatedLink, updatedLink.id);
+
+    linkData.title = updatedLink.title;
+    linkData.url = updatedLink.url;
     renderLinkRead(listItem, linkData, links);
   });
 
@@ -676,17 +766,17 @@ function renderLinkRead(listItem, linkData, links) {
   listItem.append(
     content,
     editButton,
-    createDeleteButton(links, linkData, listItem),
+    createDeleteButton(links, linkData, listItem, deleteLink),
   );
 }
 
-function createNotesRead(notes) {
+function createNotesRead(notes, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Notas";
   const notesList = document.createElement("ul");
   const addButton = createAddButton("Añadir nota", () => {
-    const note = { description: "", content: "" };
+    const note = { project_id: projectId, description: "", content: "" };
     const listItem = document.createElement("li");
     notesList.append(listItem);
     createNoteEdit(listItem, note, notes, true);
@@ -731,12 +821,24 @@ function createNoteEdit(listItem, note, notes, isNew = false) {
     renderNoteRead(listItem, note, notes);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /notes/{note.id}.
-    note.description = descriptionInput.value.trim();
-    note.content = contentInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedNote = {
+      ...note,
+      description: descriptionInput.value.trim(),
+      content: contentInput.value.trim(),
+    };
 
-    if (isNew) notes.push(note);
+    if (isNew) {
+      const createdNote = await setNote(updatedNote);
+      notes.push(createdNote);
+      renderNoteRead(listItem, createdNote, notes);
+      return;
+    }
+
+    await modifyNote(updatedNote, updatedNote.id);
+
+    note.description = updatedNote.description;
+    note.content = updatedNote.content;
     renderNoteRead(listItem, note, notes);
   });
 
@@ -765,7 +867,7 @@ function renderNoteRead(listItem, note, notes) {
   listItem.append(
     content,
     editButton,
-    createDeleteButton(notes, note, listItem),
+    createDeleteButton(notes, note, listItem, deleteNote),
   );
 }
 
@@ -778,13 +880,18 @@ function createAddButton(text, onClick) {
   return addButton;
 }
 
-function createDeleteButton(collection, item, listItem) {
+function createDeleteButton(collection, item, listItem, deleteItemFromApi) {
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.textContent = "Eliminar";
 
-  deleteButton.addEventListener("click", () => {
-    collection.splice(collection.indexOf(item), 1);
+  deleteButton.addEventListener("click", async () => {
+    await deleteItemFromApi(item.id);
+    const itemPosition = collection.indexOf(item);
+
+    if (itemPosition !== -1) {
+      collection.splice(itemPosition, 1);
+    }
     listItem.remove();
   });
 
