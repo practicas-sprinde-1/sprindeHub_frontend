@@ -1,3 +1,5 @@
+import { modifyUser } from "../api/user.api.js";
+
 export function createEditUserModal(user, showUsers) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
@@ -32,7 +34,7 @@ export function createEditUserModal(user, showUsers) {
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     const email = emailInput.value.trim();
     const username = usernameInput.value.trim();
 
@@ -43,6 +45,9 @@ export function createEditUserModal(user, showUsers) {
     user.email = email;
     user.username = username;
     user.role = roleSelect.value;
+
+    console.log(user);
+    await modifyUser(user, user.id);
 
     showUsers();
     overlay.remove();

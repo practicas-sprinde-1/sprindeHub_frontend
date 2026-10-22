@@ -30,3 +30,10 @@ export async function modifyUser(user, id) {
     "No se ha podido modificar el usuario",
   );
 }
+
+export async function deleteUser(id) {
+  return deleteData(
+    `${API_URL}/admin/users/${id}`,
+    "No se ha podido eliminar el usuario",
+  );
+}

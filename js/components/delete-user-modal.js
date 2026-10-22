@@ -1,4 +1,4 @@
-import { usersMockData } from "../mockdata/user.mockdata.js";
+import { deleteUser } from "../api/user.api.js";
 
 export function createDeleteUserModal(user, showUsers) {
   const overlay = document.createElement("div");
@@ -20,13 +20,8 @@ export function createDeleteUserModal(user, showUsers) {
   deleteButton.type = "button";
   deleteButton.classList.add("modal-delete-button");
   deleteButton.textContent = "Borrar";
-  deleteButton.addEventListener("click", () => {
-    const userIndex = usersMockData.indexOf(user);
-
-    if (userIndex !== -1) {
-      usersMockData.splice(userIndex, 1);
-    }
-
+  deleteButton.addEventListener("click", async () => {
+    await deleteUser(user.id);
     showUsers();
     overlay.remove();
   });

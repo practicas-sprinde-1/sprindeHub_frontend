@@ -150,12 +150,6 @@ editUserButton.addEventListener("click", () => {
     return;
   }
 
-  if (!usersMockData.includes(selectedUser)) {
-    alert("El usuario seleccionado ya no está disponible.");
-    selectedUser = null;
-    return;
-  }
-
   const modal = createEditUserModal(selectedUser, showUsers);
   document.body.append(modal);
 });
@@ -169,13 +163,6 @@ deleteUserButton.addEventListener("click", () => {
     alert("Selecciona un usuario de la tabla antes de borrarlo.");
     return;
   }
-
-  if (!usersMockData.includes(selectedUser)) {
-    alert("El usuario seleccionado ya no está disponible.");
-    selectedUser = null;
-    return;
-  }
-
   const modal = createDeleteUserModal(selectedUser, showUsers);
   document.body.append(modal);
 });
