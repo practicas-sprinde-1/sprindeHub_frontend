@@ -9,9 +9,17 @@ import {
   modifyRepository,
   setRepository,
 } from "../api/repository.api.js";
-import { deleteService, modifyService, setService } from "../api/service.api.js";
+import {
+  deleteService,
+  modifyService,
+  setService,
+} from "../api/service.api.js";
 import { deleteDomain, modifyDomain, setDomain } from "../api/domain.api.js";
-import { deleteCommand, modifyCommand, setCommand } from "../api/command.api.js";
+import {
+  deleteCommand,
+  modifyCommand,
+  setCommand,
+} from "../api/command.api.js";
 import { deleteLink, modifyLink, setLink } from "../api/link.api.js";
 import { deleteNote, modifyNote, setNote } from "../api/note.api.js";
 import {
@@ -39,6 +47,7 @@ export async function createEditModalProject(project, onSave) {
   closeButton.setAttribute("aria-label", "Cerrar");
 
   closeButton.addEventListener("click", () => {
+    onSave(project);
     overlay.remove();
   });
 
@@ -205,13 +214,35 @@ function createEnvironmentsEdit(
 ) {
   listItem.replaceChildren();
 
-  const typeInput = document.createElement("input");
-  typeInput.type = "text";
-  typeInput.value = environment.type;
+  const typeSelect = document.createElement("select");
+  typeSelect.name = "type";
+
+  const optionDev = document.createElement("option");
+  const optionTest = document.createElement("option");
+  const optionStaging = document.createElement("option");
+  const optionProd = document.createElement("option");
+
+  optionDev.textContent = "Development";
+  optionDev.value = "development";
+  optionTest.textContent = "Test";
+  optionTest.value = "test";
+  optionStaging.textContent = "Staging";
+  optionStaging.value = "staging";
+  optionProd.textContent = "Production";
+  optionProd.value = "production";
+
+  typeSelect.append(optionDev, optionTest, optionStaging, optionProd);
+
+  if (environment.type === "") {
+    typeSelect.value = optionDev.value;
+  } else {
+    typeSelect.value = environment.type;
+  }
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.value = environment.url;
+  urlInput.placeholder = "Introduce una url válida";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -233,7 +264,7 @@ function createEnvironmentsEdit(
   saveButton.addEventListener("click", async () => {
     const updatedEnvironment = {
       ...environment,
-      type: typeInput.value.trim(),
+      type: typeSelect.value.trim(),
       url: urlInput.value.trim(),
     };
 
@@ -251,7 +282,7 @@ function createEnvironmentsEdit(
     renderEnvironmentRead(listItem, environment, environments);
   });
 
-  listItem.append(typeInput, urlInput, saveButton, cancelButton);
+  listItem.append(typeSelect, urlInput, saveButton, cancelButton);
 }
 
 function renderEnvironmentRead(listItem, environment, environments) {
@@ -309,13 +340,35 @@ function createRepositoryEdit(
 ) {
   listItem.replaceChildren();
 
-  const typeInput = document.createElement("input");
-  typeInput.type = "text";
-  typeInput.value = repository.type;
+  const typeSelect = document.createElement("select");
+  typeSelect.name = "type";
+
+  const optionBack = document.createElement("option");
+  const optionFront = document.createElement("option");
+  const optionDevOps = document.createElement("option");
+  const optionQa = document.createElement("option");
+
+  optionBack.textContent = "Backend";
+  optionBack.value = "backend";
+  optionFront.textContent = "Frontend";
+  optionFront.value = "frontend";
+  optionDevOps.textContent = "Devops";
+  optionDevOps.value = "devops";
+  optionQa.textContent = "QA";
+  optionQa.value = "qa";
+
+  typeSelect.append(optionBack, optionFront, optionDevOps, optionQa);
+
+  if (repository.type === "") {
+    typeSelect.value = optionBack.value;
+  } else {
+    typeSelect.value = repository.type;
+  }
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.value = repository.url;
+  urlInput.placeholder = "Introduce una url válida";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -337,7 +390,7 @@ function createRepositoryEdit(
   saveButton.addEventListener("click", async () => {
     const updatedRepository = {
       ...repository,
-      type: typeInput.value.trim(),
+      type: typeSelect.value.trim(),
       url: urlInput.value.trim(),
     };
 
@@ -355,7 +408,7 @@ function createRepositoryEdit(
     renderRepositoryRead(listItem, repository, repositories);
   });
 
-  listItem.append(typeInput, urlInput, saveButton, cancelButton);
+  listItem.append(typeSelect, urlInput, saveButton, cancelButton);
 }
 
 function renderRepositoryRead(listItem, repository, repositories) {
