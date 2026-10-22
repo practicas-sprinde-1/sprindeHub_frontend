@@ -86,7 +86,7 @@ function renderTable(projects) {
     // Cliente
     const clientCell = document.createElement("td");
     const clientName = document.createElement("strong");
-    clientName.textContent = project.client.name;
+    clientName.textContent = project.client?.name ?? "No asignado";
     clientCell.append(clientName);
 
     // Proyecto

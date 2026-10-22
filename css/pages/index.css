@@ -76,6 +76,25 @@ main {
 }
 
 /* Buscador. */
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 22px 28px;
+}
+
+.table-controls .search {
+  flex: 1;
+  margin: 0;
+}
+
+.table-controls .status-filter {
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+
 .search {
   display: flex;
   align-items: center;
@@ -266,7 +285,9 @@ td.repositories-cell a,
   color: var(--text);
 }
 
-.pagination button {
+.pagination button,
+.archived-projects,
+.actived-projects {
   margin-left: 8px;
   padding: 7px 11px;
   border: 1px solid var(--blue);
@@ -274,11 +295,14 @@ td.repositories-cell a,
   background-color: white;
   color: var(--blue);
   cursor: pointer;
+  white-space: nowrap;
   font-size: 13px;
   font-weight: 600;
 }
 /*Comportamiento cuando pasas el ratón sobre un botón que esté activado*/
-.pagination button:hover:not(:disabled) {
+.pagination button:hover:not(:disabled),
+.archived-projects:hover,
+.actived-projects:hover {
   background-color: var(--blue-light);
 }
 
