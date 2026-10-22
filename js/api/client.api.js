@@ -15,6 +15,13 @@ export async function getClients() {
   );
 }
 
+export async function getArchivedClients() {
+  return getData(
+    `${API_URL}/clients/archived`,
+    "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
 export async function getClientById(id) {
   return getData(
     `${API_URL}/clients/${id}`,

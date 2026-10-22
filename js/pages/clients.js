@@ -1,4 +1,4 @@
-import { getClients } from "../api/client.api.js";
+import { getArchivedClients, getClients } from "../api/client.api.js";
 import { getProjectByClientId, getProjects } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
 document
@@ -12,16 +12,20 @@ const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
 
+const showArchivedButton = document.querySelector("#archived-clients");
+const showActivedButton = document.querySelector("#actived-clients");
+
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
 const clientsResponse = await getClients();
-const clients = clientsResponse.items ?? clientsResponse;
+let clients = clientsResponse.items ?? clientsResponse;
+const archivedClients = await getArchivedClients();
 
-function renderTable(items) {
+function renderTable(clients) {
   tableBody.replaceChildren();
 
-  items.forEach(async (client) => {
+  clients.forEach(async (client) => {
     const row = document.createElement("tr");
     const nameCell = document.createElement("td");
     const clientLink = document.createElement("a");
@@ -110,4 +114,12 @@ document.querySelector("#button-new-client").addEventListener("click", () => {
   window.location.href = "./new-client.html";
 });
 
-showTableRows();
+showArchivedButton.onclick = async () => {
+  clients = archivedClients.items;
+  renderTable(clients);
+};
+
+showActivedButton.onclick = async () => {
+  clients = clientsResponse.items;
+  renderTable(clients);
+};

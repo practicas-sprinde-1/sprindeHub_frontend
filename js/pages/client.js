@@ -76,7 +76,7 @@ async function renderClient(client) {
       "Borrar cliente",
       `¿Estás seguro de que deseas borrar el cliente "${client.name}"?`,
       async () => {
-        deleteClientById(client.id);
+        await deleteClientById(client.id);
         window.location.href = "./clients.html";
       },
     );
