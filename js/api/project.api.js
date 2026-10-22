@@ -15,6 +15,13 @@ export async function getProjects() {
   );
 }
 
+export async function getArchivedProjects() {
+  return getData(
+    `${API_URL}/projects/archived`,
+    "No se ha podido obtener los proyectos del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
 export async function getProjectById(id) {
   return getData(
     `${API_URL}/projects/${id}`,

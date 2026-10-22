@@ -1,7 +1,7 @@
 import { checkToken } from "../api/session.js";
 import { createHeader } from "../components/header.js";
 import { createDetailCard } from "../components/detail-card.js";
-import { getProjects } from "../api/project.api.js";
+import { getArchivedProjects, getProjects } from "../api/project.api.js";
 import { getEnvironmentsByProjectId } from "../api/environment.api.js";
 import { getRepositoriesByProjectId } from "../api/repository.api.js";
 import { getServicesByProjectId } from "../api/service.api.js";
@@ -23,6 +23,8 @@ const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
 const searchInput = document.querySelector("#input-index");
+const showArchivedButton = document.querySelector("#archived-projects");
+const showActivedButton = document.querySelector("#actived-projects");
 
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
@@ -68,7 +70,7 @@ nextPageButton.addEventListener("click", () => {
 
 const projectsTableRead = await getProjects();
 
-const projects = projectsTableRead.items;
+let projects = projectsTableRead.items;
 
 const tableBody = document.querySelector("#projects-table-body");
 const projectsTable = document.querySelector(".projects-table");
@@ -280,7 +282,7 @@ createNewClientButton.addEventListener("click", () => {
   window.location.href = "./pages/new-client.html";
 });
 
-let openedDetailCard = null;
+let openedDetailCard;
 
 function showDetailCard(row, title, items, projectId, contentType) {
   if (openedDetailCard) {
@@ -301,3 +303,15 @@ function showDetailCard(row, title, items, projectId, contentType) {
 
   openedDetailCard = detailCard;
 }
+
+showArchivedButton.onclick = async () => {
+  const archivedProjects = await getArchivedProjects();
+
+  projects = archivedProjects.items;
+  renderTable(projects);
+};
+
+showActivedButton.onclick = async () => {
+  projects = projectsTableRead.items;
+  renderTable(projects);
+};
