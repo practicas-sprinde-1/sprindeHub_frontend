@@ -1,13 +1,10 @@
 import { createHeader } from "../components/header.js";
-import { userMockData, usersMockData } from "../mockdata/user.mockdata.js";
 import { createNewUserModal } from "../components/create-user-modal.js";
 import { createEditUserModal } from "../components/edit-user-modal.js";
 import { createDeleteUserModal } from "../components/delete-user-modal.js";
+import { getUsers } from "../api/user.api.js";
 
 // Solo los administradores pueden consultar esta página.
-if (userMockData.role !== "ADMIN") {
-  window.location.href = "../index.html";
-}
 
 const headerContainer = document.querySelector("#header-container");
 const header = createHeader("César", "./profile.html");
@@ -95,13 +92,15 @@ function showTableRows() {
   nextPageButton.disabled = currentPage === totalPages;
 }
 
-function showUsers() {
-  if (!usersMockData.includes(selectedUser)) {
+async function showUsers() {
+  const users = await getUsers();
+
+  if (!users.includes(selectedUser)) {
     selectedUser = null;
   }
 
   const textToSearch = searchInput.value.trim().toLowerCase();
-  const usersToShow = usersMockData.filter(function (user) {
+  const usersToShow = users.filter(function (user) {
     return (
       user.email.toLowerCase().includes(textToSearch) ||
       user.username.toLowerCase().includes(textToSearch) ||

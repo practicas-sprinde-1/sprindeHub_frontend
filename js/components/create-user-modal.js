@@ -1,4 +1,4 @@
-import { usersMockData } from "../mockdata/user.mockdata.js";
+import { setUser } from "../api/user.api.js";
 
 export function createNewUserModal(showUsers) {
   const overlay = document.createElement("div");
@@ -25,28 +25,35 @@ export function createNewUserModal(showUsers) {
   usernameInput.id = "new-user-username";
   usernameInput.required = true;
 
+  const passwordInput = document.createElement("input");
+  passwordInput.type = "password";
+  passwordInput.name = "password";
+  passwordInput.id = "new-user-password";
+  passwordInput.required = true;
+
   const roleSelect = createRoleSelect("new-user-role");
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     const email = emailInput.value.trim();
     const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
 
     if (email === "" || username === "") {
       return;
     }
 
     const newUser = {
-      id: getNextUserId(),
       email: email,
       username: username,
+      password: password,
       role: roleSelect.value,
     };
 
-    usersMockData.push(newUser);
+    await setUser(newUser);
     showUsers();
     overlay.remove();
   });
@@ -61,23 +68,12 @@ export function createNewUserModal(showUsers) {
   modal.append(title);
   modal.append(createField("Email", emailInput));
   modal.append(createField("Nombre de usuario", usernameInput));
+  modal.append(createField("Password", passwordInput));
   modal.append(createField("Rol", roleSelect));
   modal.append(actions);
 
   overlay.append(modal);
   return overlay;
-}
-
-function getNextUserId() {
-  let highestId = 0;
-
-  for (const user of usersMockData) {
-    if (user.id > highestId) {
-      highestId = user.id;
-    }
-  }
-
-  return highestId + 1;
 }
 
 function createRoleSelect(id) {
