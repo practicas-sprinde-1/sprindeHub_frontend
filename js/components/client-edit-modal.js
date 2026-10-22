@@ -144,8 +144,8 @@ export async function createEditModalClient(client, onSave) {
     cifField,
     phoneField,
     statusField,
-    modalActions,
     projectCheckBoxList.element,
+    modalActions,
   );
 
   overlay.append(modal);

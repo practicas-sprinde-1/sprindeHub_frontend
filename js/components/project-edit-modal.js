@@ -37,7 +37,7 @@ export async function createEditModalProject(project, onSave) {
   modal.classList.add("project-edit-modal");
 
   const title = document.createElement("h1");
-  title.textContent = `Editando proyecto :${project.name}`;
+  title.textContent = `Editando proyecto: ${project.name}`;
   title.classList.add("modal-title");
 
   const closeButton = document.createElement("button");
@@ -109,7 +109,8 @@ export async function createEditModalProject(project, onSave) {
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
 
-  const clients = await getClients();
+  const clientResponse = await getClients();
+  const clients = clientResponse.items;
 
   const clientSelect = document.createElement("select");
   clientSelect.name = "client_id";
@@ -136,6 +137,14 @@ export async function createEditModalProject(project, onSave) {
   statusSelect.append(activeOption, inactiveOption);
   statusSelect.value = project.is_active;
 
+  const projectNameField = createProjectField("Nombre del proyecto", projectName);
+  const projectDescriptionField = createProjectField(
+    "Descripción",
+    projectDescription,
+  );
+  const clientField = createProjectField("Cliente", clientSelect);
+  const statusField = createProjectField("Estado", statusSelect);
+
   const environmentsSection = createEnvironmentsRead(
     project.environments,
     project.id,
@@ -158,10 +167,10 @@ export async function createEditModalProject(project, onSave) {
   modal.append(
     closeButton,
     title,
-    projectName,
-    projectDescription,
-    clientSelect,
-    statusSelect,
+    projectNameField,
+    projectDescriptionField,
+    clientField,
+    statusField,
     environmentsSection,
     repositoriesSection,
     servicesSection,
@@ -176,6 +185,20 @@ export async function createEditModalProject(project, onSave) {
 
   return overlay;
 }
+
+function createProjectField(labelText, input) {
+  const field = document.createElement("div");
+  field.classList.add("user-modal-field");
+
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  label.htmlFor = input.name;
+  input.id = input.name;
+
+  field.append(label, input);
+  return field;
+}
+
 function createEnvironmentsRead(environments, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");

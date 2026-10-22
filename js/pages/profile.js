@@ -1,33 +1,33 @@
 import { createHeader } from "../components/header.js";
-import { userMockData } from "../mockdata/user.mockdata.js";
-import { projectsMockData } from "../mockdata/projects.mockdata.js";
-import { createEditProfileModal } from "../components/edit-profile-modal.js";
+import { createEditProfileModal } from "../components/profile-edit-modal.js";
+import { clientsMockData } from "../mockdata/client.mockdata.js";
+import { getProfile } from "../api/profile.api.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
 
-const user = userMockData;
+const user = await getProfile();
 
 function renderUser(user) {
   document.title = `${user.username} - Sprinde`;
 
   document.querySelector("#user-title").textContent = user.email;
 
-  const projectsList = document.querySelector("#user-list-projects");
-  projectsList.replaceChildren();
+  const clientsList = document.querySelector("#user-list-clients");
+  clientsList.replaceChildren();
 
-  const projects = projectsMockData.items;
+  const clients = clientsMockData; //LLAMADA A USER_CLIENT PARA SABER QUÉ CLIENTES TIENE ASIGNADO.
 
-  projects.forEach((project) => {
+  clients.forEach((client) => {
     const listItem = document.createElement("li");
     const link = document.createElement("a");
 
-    link.href = `./project.html?id=${project.id}`;
-    link.textContent = project.name;
+    link.href = `./client.html?id=${client.id}`;
+    link.textContent = client.name;
 
     listItem.append(link);
 
-    projectsList.append(listItem);
+    clientsList.append(listItem);
   });
 
   document.querySelector("#user-email").textContent = user.email;
