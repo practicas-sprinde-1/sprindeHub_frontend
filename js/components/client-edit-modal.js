@@ -85,8 +85,6 @@ export async function createEditModalClient(client, onSave) {
 
     await modifyClient(client, client.id);
 
-    console.log(client.is_active);
-
     const selectedProjectsIds = projectCheckBoxList.getSelectedProjectsId();
 
     const addedProjectsid = selectedProjectsIds.filter((projectId) => {
@@ -120,7 +118,6 @@ export async function createEditModalClient(client, onSave) {
     }
 
     await onSave(client);
-    console.log(client.is_active);
     overlay.remove();
   });
 

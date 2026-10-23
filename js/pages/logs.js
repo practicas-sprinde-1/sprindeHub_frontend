@@ -26,6 +26,7 @@ let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
 const logs = await getLogs();
+console.log(logs);
 const users = await getUsers();
 
 function renderTable(logs, users) {
@@ -65,7 +66,10 @@ function renderTable(logs, users) {
     if (entity.project_id) {
       project = await findEntity("PROJECT", entity.project_id);
       const projectLink = document.createElement("a");
-      projectLink.href = projectCell.textContent = project.name;
+      projectLink.href = `./project.html?id=${entity.project_id}`;
+      projectLink.className = "project-link";
+      projectLink.textContent = project.name;
+      projectCell.append(projectLink);
     }
     const dateCell = document.createElement("td");
     dateCell.textContent = log.created_at;
@@ -137,7 +141,6 @@ searchInput.addEventListener("input", async () => {
         entityUrl?.includes(searched) ||
         date.includes(searched)
       ) {
-        console.log(filteredLogs);
         filteredLogs.push(log);
       }
     }

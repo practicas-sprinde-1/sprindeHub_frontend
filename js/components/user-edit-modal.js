@@ -1,6 +1,12 @@
+import { getClients } from "../api/client.api.js";
 import { modifyUser } from "../api/user.api.js";
+import {
+  assignUserToClient,
+  getRelationshipByUser,
+  revokeClientAccess,
+} from "../api/user_client.api.js";
 
-export function createEditUserModal(user, showUsers) {
+export async function createEditUserModal(user, showUsers) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -30,6 +36,20 @@ export function createEditUserModal(user, showUsers) {
   usernameInput.value = user.username;
   roleSelect.value = user.role;
 
+  const clientsResponse = await getClients();
+  const relationships = await getRelationshipByUser(user.id);
+
+  const clients = clientsResponse.items ?? clientsResponse;
+
+  //ME FALTA CREAR UN BUCLE PARA FILTRAR LOS CLIENTES INICIALES QUE YA TIENEN LA RELACIÓN CREADA.
+
+  const initialClientsId = initialClients.map((client) => client.id);
+
+  const clientCheckBoxList = createClientCheckBoxList(
+    clients,
+    initialClientsId,
+  );
+
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
@@ -46,8 +66,38 @@ export function createEditUserModal(user, showUsers) {
     user.username = username;
     user.role = roleSelect.value;
 
-    console.log(user);
     await modifyUser(user, user.id);
+
+    const selectedClientsId = clientCheckBoxList.getSelectedClientsId();
+
+    const addedClientsId = selectedClientsId.filter((clientId) => {
+      return !initialClientsId.includes(clientId);
+    });
+
+    const addedClients = clients.filter((client) => {
+      return addedClientsId.includes(client.id);
+    });
+
+    const removeClientsId = initialClientsId.filter((client) => {
+      return !selectedClientsId.includes(client.id);
+    });
+
+    const removeClients = clients.filter((client) => {
+      return removeClientsId.includes(client.id);
+    });
+
+    console.log(selectedClientsId);
+
+    for (const client of addedClients) {
+      const updatedRelationship = {
+        client_id: client.id,
+      };
+      await assignUserToClient(updatedRelationship, user.id);
+    }
+
+    for (const client of removeClients) {
+      await revokeClientAccess(user.id, client.id);
+    }
 
     showUsers();
     overlay.remove();
@@ -64,6 +114,7 @@ export function createEditUserModal(user, showUsers) {
   modal.append(createField("Email", emailInput));
   modal.append(createField("Nombre de usuario", usernameInput));
   modal.append(createField("Rol", roleSelect));
+  modal.append(clientCheckBoxList.element);
   modal.append(actions);
 
   overlay.append(modal);
@@ -120,4 +171,65 @@ function createCancelButton(overlay) {
     overlay.remove();
   });
   return cancelButton;
+}
+
+function createClientCheckBoxList(clients, initialClientsId) {
+  const section = document.createElement("section");
+  const title = document.createElement("h2");
+  title.textContent = "Clientes";
+
+  const list = document.createElement("ul");
+
+  let selectedClientsId = [...initialClientsId];
+
+  const assignedClients = clients.filter((client) => {
+    return initialClientsId.includes(client.id);
+  });
+
+  const unassignedClients = clients.filter((client) => {
+    return !initialClientsId.includes(client.id);
+  });
+
+  const orderedClients = [...assignedClients, ...unassignedClients];
+
+  orderedClients.forEach((client) => {
+    const listItem = document.createElement("li");
+    const label = document.createElement("label");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+
+    const clientName = document.createElement("span");
+    clientName.textContent = client.name;
+
+    checkbox.checked = initialClientsId.includes(client.id);
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        const selected = selectedClientsId.includes(client.id);
+
+        if (!selected) {
+          selectedClientsId.push(client.id);
+        }
+        return;
+      }
+
+      selectedClientsId = selectedClientsId.filter((clientId) => {
+        return clientId !== client.id;
+      });
+    });
+
+    label.append(checkbox, clientName);
+    listItem.append(label);
+    list.append(listItem);
+  });
+
+  section.append(title, list);
+
+  return {
+    element: section,
+    getSelectedClientsId: () => {
+      return initialClientsId;
+    },
+  };
 }

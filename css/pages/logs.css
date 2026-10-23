@@ -171,3 +171,19 @@ main {
   color: #94a3b8;
   cursor: not-allowed;
 }
+
+.project-link {
+  display: block;
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.project-link + .project-link {
+  margin-top: 6px;
+}
+
+.project-link:hover {
+  color: var(--navy);
+  text-decoration: underline;
+}

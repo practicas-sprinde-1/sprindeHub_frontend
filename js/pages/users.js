@@ -140,7 +140,7 @@ createUserButton.addEventListener("click", () => {
   document.body.append(modal);
 });
 
-editUserButton.addEventListener("click", () => {
+editUserButton.addEventListener("click", async () => {
   if (document.querySelector(".modal-overlay")) {
     return;
   }
@@ -150,7 +150,7 @@ editUserButton.addEventListener("click", () => {
     return;
   }
 
-  const modal = createEditUserModal(selectedUser, showUsers);
+  const modal = await createEditUserModal(selectedUser, showUsers);
   document.body.append(modal);
 });
 
