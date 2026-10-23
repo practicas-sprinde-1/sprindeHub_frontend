@@ -45,12 +45,21 @@ export function createHeader(userName, profileUrl) {
     window.location.href = getPageUrl(profileUrl, "users.html");
   });
 
+  const logsButton = document.createElement("button");
+  logsButton.classList.add("main-header-logs");
+  logsButton.type = "button";
+  logsButton.textContent = "Registros";
+
+  logsButton.addEventListener("click", () => {
+    window.location.href = getPageUrl(profileUrl, "logs.html");
+  });
+
   const actionButtons = document.createElement("div");
   actionButtons.classList.add("action-buttons");
 
   actionButtons.append(projectButton, clientButton);
 
-  actionButtons.append(usersButton, logoutButton);
+  actionButtons.append(usersButton, logsButton, logoutButton);
 
   header.appendChild(profileLink);
   header.appendChild(actionButtons);

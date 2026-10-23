@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registros - Sprinde Hub</title>
+
+    <link rel="stylesheet" href="../css/base/variables.css" />
+    <link rel="stylesheet" href="../css/base/reset.css" />
+    <link rel="stylesheet" href="../css/base/global.css" />
+    <link rel="stylesheet" href="../css/components/header.css" />
+    <link rel="stylesheet" href="../css/pages/logs.css" />
+
+    <script type="module" src="../js/pages/logs.js"></script>
+  </head>
+
+  <body>
+    <div id="header-container"></div>
+    <main>
+      <section class="logs-table" aria-labelledby="logs-title">
+        <header class="logs-table-header">
+          <div>
+            <a class="back-link" href="../index.html">Volver a proyectos</a>
+            <h1 id="logs-title">Logs</h1>
+          </div>
+        </header>
+
+        <div class="table-controls">
+          <label class="search" for="input-logs">
+            <span aria-hidden="true">⌕</span>
+            <input
+              id="input-logs"
+              type="search"
+              placeholder="Buscar por entidad,fecha,usuario o acción..."
+            />
+          </label>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Tipo de entidad</th>
+                <th>Entidad afectada</th>
+                <th>Fecha</th>
+                <th>Projecto asignado</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <label for="records-per-page">
+            Mostrar
+            <select id="records-per-page">
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            registros
+          </label>
+
+          <div>
+            <button type="button" id="previous-page">Anterior</button>
+            <span id="page-information" aria-live="polite"></span>
+            <button type="button" id="next-page">Siguiente</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 import { getArchivedClients, getClients } from "../api/client.api.js";
-import { getProjectByClientId, getProjects } from "../api/project.api.js";
+import { getProjectByClientId } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
 document
   .querySelector("#header-container")
