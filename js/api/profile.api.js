@@ -22,7 +22,7 @@ export async function modifyProfile(profile) {
 
 export async function modifyPassword(password) {
   return modifyData(
-    `${API_URL}/users/me`,
+    `${API_URL}/users/me/password`,
     password,
     "No se ha podido actualizar tu contraseña",
   );

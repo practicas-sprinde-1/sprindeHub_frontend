@@ -1,7 +1,7 @@
 import { createHeader } from "../components/header.js";
-import { createNewUserModal } from "../components/create-user-modal.js";
-import { createEditUserModal } from "../components/edit-user-modal.js";
-import { createDeleteUserModal } from "../components/delete-user-modal.js";
+import { createNewUserModal } from "../components/user-create-modal.js";
+import { createEditUserModal } from "../components/user-edit-modal.js";
+import { createDeleteUserModal } from "../components/user-delete-modal.js";
 import { getUsers } from "../api/user.api.js";
 
 // Solo los administradores pueden consultar esta página.

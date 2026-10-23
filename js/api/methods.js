@@ -9,6 +9,10 @@ export async function getData(url, errorMessage) {
     },
   });
 
+  if (response.status == 403) {
+    throw new Error("No has podido acceder a estos archivos");
+  }
+
   if (!response.ok) {
     throw new Error(errorMessage);
   }
