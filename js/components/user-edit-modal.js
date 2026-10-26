@@ -37,7 +37,7 @@ export async function createEditUserModal(user, showUsers) {
   usernameInput.value = user.username;
   roleSelect.value = user.role;
 
-  const clientsResponse = await getClients();
+  const clientsResponse = await getClients("clients", 20, 0);
   const relationships = await getRelationshipByUser(user.id);
 
   const clients = clientsResponse.items ?? clientsResponse;

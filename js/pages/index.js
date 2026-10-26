@@ -1,11 +1,6 @@
-import { checkToken } from "../api/session.js";
 import { createHeader } from "../components/header.js";
 import { createDetailCard } from "../components/detail-card.js";
 import { getArchivedProjects, getProjects } from "../api/project.api.js";
-import { getEnvironmentsByProjectId } from "../api/environment.api.js";
-import { getRepositoriesByProjectId } from "../api/repository.api.js";
-import { getServicesByProjectId } from "../api/service.api.js";
-import { getDomainsByProjectId } from "../api/domain.api.js";
 import { getCommandsByProjectId } from "../api/command.api.js";
 import { getLinksByProjectId } from "../api/link.api.js";
 import { getNotesByProjectId } from "../api/note.api.js";
@@ -29,6 +24,10 @@ const showActivedButton = document.querySelector("#actived-projects");
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
+const projectsTableRead = await getProjects("projects", 20, 0);
+
+let projects = projectsTableRead.items;
+
 function showTableRows() {
   const tableRows = document.querySelectorAll("#projects-table-body tr");
 
@@ -39,38 +38,49 @@ function showTableRows() {
     row.hidden = index < firstRow || index >= lastRow;
   });
 
-  const totalPages = Math.ceil(tableRows.length / recordsPerPage);
-
-  pageInformation.textContent = "Página " + currentPage + " de " + totalPages;
+  pageInformation.textContent = "Página " + currentPage;
 
   previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage === totalPages;
+  nextPageButton.disabled = projects.length !== recordsPerPage;
+  renderTable(projects);
 }
 
-recordsPerPageSelect.addEventListener("change", () => {
+recordsPerPageSelect.addEventListener("change", async () => {
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
-
+  const response = await getProjects(
+    "projects",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  projects = response.items;
+  renderTable(projects);
   showTableRows();
 });
 
-previousPageButton.addEventListener("click", () => {
+previousPageButton.addEventListener("click", async () => {
   if (currentPage === 1) return;
-  currentPage = currentPage - 1;
-
+  currentPage -= 1;
+  const response = await getProjects(
+    "projects",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  projects = response.items;
   showTableRows();
 });
 
-nextPageButton.addEventListener("click", () => {
+nextPageButton.addEventListener("click", async () => {
   if (projects.length < 0) return;
-  currentPage = currentPage + 1;
-
+  currentPage += 1;
+  const response = await getProjects(
+    "projects",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  projects = response.items;
   showTableRows();
 });
-
-const projectsTableRead = await getProjects();
-
-let projects = projectsTableRead.items;
 
 const tableBody = document.querySelector("#projects-table-body");
 const projectsTable = document.querySelector(".projects-table");

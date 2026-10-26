@@ -19,7 +19,7 @@ let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
 const clientsResponse = await getClients("clients", 20, 0);
-let clients = clientsResponse.items ?? clientsResponse;
+let clients = clientsResponse.items;
 const archivedClients = await getArchivedClients();
 
 function renderTable(clients) {
@@ -67,19 +67,21 @@ function renderTable(clients) {
 }
 
 function showTableRows() {
-  const rows = [...tableBody.querySelectorAll("tr")];
-  const totalPages = Math.max(1, Math.ceil(rows.length / recordsPerPage));
-  currentPage = Math.min(currentPage, totalPages);
+  console.log(clients.length);
+  const tableRows = document.querySelectorAll("#projects-table-body tr");
 
-  rows.forEach((row, index) => {
-    row.hidden =
-      index < (currentPage - 1) * recordsPerPage ||
-      index >= currentPage * recordsPerPage;
+  const firstRow = (currentPage - 1) * recordsPerPage;
+  const lastRow = firstRow + recordsPerPage;
+
+  tableRows.forEach(function (row, index) {
+    row.hidden = index < firstRow || index >= lastRow;
   });
 
-  pageInformation.textContent = `Página ${currentPage} de ${totalPages}`;
+  pageInformation.textContent = "Página " + currentPage;
+
   previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage === totalPages;
+  nextPageButton.disabled = clients.length !== recordsPerPage;
+  renderTable(clients);
 }
 
 renderTable(clients);
@@ -106,25 +108,27 @@ recordsPerPageSelect.addEventListener("change", async () => {
     (currentPage - 1) * recordsPerPage,
   );
   clients = response.items;
-  renderTable(clients);
   showTableRows();
 });
 previousPageButton.addEventListener("click", async () => {
   currentPage -= 1;
-  clients = await getClients(
+  const response = await getClients(
     "clients",
     recordsPerPage,
     (currentPage - 1) * recordsPerPage,
   );
+  clients = response.items;
   showTableRows();
 });
 nextPageButton.addEventListener("click", async () => {
   currentPage += 1;
-  clients = await getClients(
+  const response = await getClients(
     "clients",
     recordsPerPage,
     (currentPage - 1) * recordsPerPage,
   );
+  clients = response.items;
+  console.log(clients);
   showTableRows();
 });
 document.querySelector("#button-new-client").addEventListener("click", () => {

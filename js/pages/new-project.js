@@ -156,7 +156,7 @@ async function configureClientSelection(form) {
   });
 
   try {
-    const clientsResponse = await getClients();
+    const clientsResponse = await getClients("clients", 20, 0);
     clients = (clientsResponse.items ?? clientsResponse).filter(
       (client) => client.id && client.name,
     );

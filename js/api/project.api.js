@@ -4,13 +4,16 @@ import {
   modifyData,
   deleteData,
   archiveOrRestoreData,
+  getPaginatedData,
 } from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getProjects() {
-  return getData(
-    `${API_URL}/projects`,
+export async function getProjects(entity, limit, offset) {
+  return getPaginatedData(
+    entity,
+    limit,
+    offset,
     "No se ha podido obtener los proyectos del servidor. Inténtelo de nuevo más tarde",
   );
 }

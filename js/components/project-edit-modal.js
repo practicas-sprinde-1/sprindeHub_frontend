@@ -109,7 +109,7 @@ export async function createEditModalProject(project, onSave) {
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
 
-  const clientResponse = await getClients("clients");
+  const clientResponse = await getClients("clients", 20, 0);
   const clients = clientResponse.items;
 
   const clientSelect = document.createElement("select");
