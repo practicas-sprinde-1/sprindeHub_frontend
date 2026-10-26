@@ -109,7 +109,7 @@ export async function createEditModalProject(project, onSave) {
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
 
-  const clientResponse = await getClients();
+  const clientResponse = await getClients("clients");
   const clients = clientResponse.items;
 
   const clientSelect = document.createElement("select");
@@ -137,7 +137,10 @@ export async function createEditModalProject(project, onSave) {
   statusSelect.append(activeOption, inactiveOption);
   statusSelect.value = project.is_active;
 
-  const projectNameField = createProjectField("Nombre del proyecto", projectName);
+  const projectNameField = createProjectField(
+    "Nombre del proyecto",
+    projectName,
+  );
   const projectDescriptionField = createProjectField(
     "Descripción",
     projectDescription,

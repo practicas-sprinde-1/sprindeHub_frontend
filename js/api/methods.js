@@ -20,6 +20,50 @@ export async function getData(url, errorMessage) {
   return response.json();
 }
 
+export async function getPaginatedData(entity, limit, offset, errorMessage) {
+  const response = await requestWithToken(
+    `http://127.0.0.1:8000/api/v1/${entity}?limit=${limit}&offset=${offset}`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  if (response.status == 403) {
+    throw new Error("No has podido acceder a estos archivos");
+  }
+
+  if (!response.ok) {
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+export async function getUsersData(entity, limit, offset, errorMessage) {
+  const response = await requestWithToken(
+    `http://127.0.0.1:8000/api/v1/admin/${entity}?limit=${limit}&offset=${offset}`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  if (response.status == 403) {
+    throw new Error("No has podido acceder a estos archivos");
+  }
+
+  if (!response.ok) {
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
 //Envía los datos del cliente al endpoint indicado
 export async function sendData(url, data, errorMessage) {
   const response = await requestWithToken(url, {

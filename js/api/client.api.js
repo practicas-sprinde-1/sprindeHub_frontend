@@ -4,13 +4,16 @@ import {
   modifyData,
   deleteData,
   archiveOrRestoreData,
+  getPaginatedData,
 } from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getClients() {
-  return getData(
-    `${API_URL}/clients`,
+export async function getClients(entity, limit, offset) {
+  return getPaginatedData(
+    entity,
+    limit,
+    offset,
     "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
   );
 }

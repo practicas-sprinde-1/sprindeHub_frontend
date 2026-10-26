@@ -18,7 +18,7 @@ const showActivedButton = document.querySelector("#actived-clients");
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
-const clientsResponse = await getClients();
+const clientsResponse = await getClients("clients", 20, 0);
 let clients = clientsResponse.items ?? clientsResponse;
 const archivedClients = await getArchivedClients();
 
@@ -97,17 +97,34 @@ searchInput.addEventListener("input", () => {
   renderTable(filteredClients);
   showTableRows();
 });
-recordsPerPageSelect.addEventListener("change", () => {
+recordsPerPageSelect.addEventListener("change", async () => {
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
+  const response = await getClients(
+    "clients",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  clients = response.items;
+  renderTable(clients);
   showTableRows();
 });
-previousPageButton.addEventListener("click", () => {
+previousPageButton.addEventListener("click", async () => {
   currentPage -= 1;
+  clients = await getClients(
+    "clients",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
   showTableRows();
 });
-nextPageButton.addEventListener("click", () => {
+nextPageButton.addEventListener("click", async () => {
   currentPage += 1;
+  clients = await getClients(
+    "clients",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
   showTableRows();
 });
 document.querySelector("#button-new-client").addEventListener("click", () => {
