@@ -2,6 +2,7 @@ import { getClients } from "../api/client.api.js";
 import { modifyUser } from "../api/user.api.js";
 import {
   assignUserToClient,
+  getRelationshipByClient,
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
@@ -43,6 +44,14 @@ export async function createEditUserModal(user, showUsers) {
 
   //ME FALTA CREAR UN BUCLE PARA FILTRAR LOS CLIENTES INICIALES QUE YA TIENEN LA RELACIÓN CREADA.
 
+  const clientsWithRelation = new Set(
+    relationships.map((rel) => rel.client_id),
+  );
+
+  const initialClients = clients.filter((client) =>
+    clientsWithRelation.has(client.id),
+  );
+
   const initialClientsId = initialClients.map((client) => client.id);
 
   const clientCheckBoxList = createClientCheckBoxList(
@@ -74,19 +83,17 @@ export async function createEditUserModal(user, showUsers) {
       return !initialClientsId.includes(clientId);
     });
 
-    const addedClients = clients.filter((client) => {
-      return addedClientsId.includes(client.id);
-    });
+    const addedClients = clients.filter((client) =>
+      addedClientsId.includes(client.id),
+    );
 
-    const removeClientsId = initialClientsId.filter((client) => {
-      return !selectedClientsId.includes(client.id);
+    const removeClientsId = initialClientsId.filter((clientId) => {
+      return !selectedClientsId.includes(clientId);
     });
 
     const removeClients = clients.filter((client) => {
       return removeClientsId.includes(client.id);
     });
-
-    console.log(selectedClientsId);
 
     for (const client of addedClients) {
       const updatedRelationship = {
@@ -229,7 +236,7 @@ function createClientCheckBoxList(clients, initialClientsId) {
   return {
     element: section,
     getSelectedClientsId: () => {
-      return initialClientsId;
+      return selectedClientsId;
     },
   };
 }
