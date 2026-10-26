@@ -62,7 +62,7 @@ export async function createEditModalClient(client, onSave) {
   const phoneField = createClientField("Teléfono", phoneInput);
   const statusField = createClientField("Estado", statusInput);
 
-  const projectsResponse = await getProjects();
+  const projectsResponse = await getProjects("projects", 20, 0);
   const projects = projectsResponse.items ?? projectsResponse;
 
   const initialProjects = projects.filter((project) => {

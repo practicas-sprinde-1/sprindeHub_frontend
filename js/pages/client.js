@@ -2,7 +2,7 @@ import { createHeader } from "../components/header.js";
 import { createAlertModal } from "../components/alert-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
 import { getClientById, deleteClientById } from "../api/client.api.js";
-import { getProjects } from "../api/project.api.js";
+import { getProjectByClientId } from "../api/project.api.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -38,15 +38,9 @@ async function renderClient(client) {
 
   const projectsList = document.querySelector("#client-list-projects");
   projectsList?.replaceChildren();
-  const projectsResponse = await getProjects();
-  const projects = projectsResponse.items ?? projectsResponse;
-  const filteredprojects = projects.filter((project) => {
-    const projectClientId = project.client_id ?? project.client?.id;
-
-    return Number(projectClientId) === Number(client.id);
-  });
-
-  filteredprojects.forEach((project) => {
+  const projectsResponse = await getProjectByClientId(client.id);
+  const projects = projectsResponse.items;
+  projects.forEach((project) => {
     const listItem = document.createElement("li");
     const link = document.createElement("a");
 

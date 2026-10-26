@@ -91,13 +91,18 @@ searchInput.addEventListener("input", () => {
   const searched = searchInput.value.trim().toLowerCase();
   const filteredClients = clients.filter((client) => {
     const name = client.name.toLowerCase();
-    const cif = client.cif.toLocaleLowerCase();
-    return name.includes(searched) || cif.includes(searched);
+    const cif = client.cif.toLowerCase();
+    const phone = client.phone.toLowerCase();
+
+    return (
+      name.includes(searched) ||
+      cif.includes(searched) ||
+      phone.includes(searched)
+    );
   });
 
   currentPage = 1;
   renderTable(filteredClients);
-  showTableRows();
 });
 recordsPerPageSelect.addEventListener("change", async () => {
   recordsPerPage = Number(recordsPerPageSelect.value);

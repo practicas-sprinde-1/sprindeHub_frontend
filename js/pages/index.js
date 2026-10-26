@@ -276,8 +276,8 @@ searchInput.addEventListener("input", () => {
     return client.includes(searched) || projectName.includes(searched);
   });
   currentPage = 1;
+  console.log(filteredProjects);
   renderTable(filteredProjects);
-  showTableRows();
 });
 
 const createNewProjectButton = document.querySelector("#button-new-project");
