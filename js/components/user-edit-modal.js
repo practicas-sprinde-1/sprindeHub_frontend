@@ -41,9 +41,6 @@ export async function createEditUserModal(user, showUsers) {
   const relationships = await getRelationshipByUser(user.id);
 
   const clients = clientsResponse.items ?? clientsResponse;
-
-  //ME FALTA CREAR UN BUCLE PARA FILTRAR LOS CLIENTES INICIALES QUE YA TIENEN LA RELACIÓN CREADA.
-
   const clientsWithRelation = relationships.map(
     (relationship) => relationship.client_id,
   );

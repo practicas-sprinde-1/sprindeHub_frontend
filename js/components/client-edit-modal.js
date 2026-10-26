@@ -1,5 +1,11 @@
 import { modifyClient } from "../api/client.api.js";
+import { getProfile } from "../api/profile.api.js";
 import { getProjects, modifyProject } from "../api/project.api.js";
+import {
+  getRelationshipByClient,
+  getRelationshipByUser,
+  revokeClientAccess,
+} from "../api/user_client.api.js";
 
 export async function createEditModalClient(client, onSave) {
   const overlay = document.createElement("div");
@@ -72,6 +78,25 @@ export async function createEditModalClient(client, onSave) {
     initialProjectsId,
   );
 
+  const user = await getProfile();
+
+  const userName = user.username;
+
+  const userRelationship = await getRelationshipByUser(user.id);
+
+  const userRelationshipClientsId = userRelationship.map((r) => r.client_id);
+
+  const individualRelationshipClientId = userRelationshipClientsId.filter(
+    (id) => id === client.id,
+  );
+
+  console.log(individualRelationshipClientId);
+
+  const userCheckBoxList = createUserCheckBoxList(
+    userName,
+    individualRelationshipClientId,
+  );
+
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.textContent = "Guardar";
@@ -117,6 +142,14 @@ export async function createEditModalClient(client, onSave) {
       await modifyProject(updatedProject, project.id);
     }
 
+    const stateCheckBox = userCheckBoxList.getState();
+
+    if (stateCheckBox === true) {
+      return;
+    } else {
+      await revokeClientAccess(user.id, client.id);
+    }
+
     await onSave(client);
     overlay.remove();
   });
@@ -134,16 +167,30 @@ export async function createEditModalClient(client, onSave) {
   modalActions.classList.add("modal-actions");
   modalActions.append(saveButton, cancelButton);
 
-  modal.append(
-    closeButton,
-    title,
-    nameField,
-    cifField,
-    phoneField,
-    statusField,
-    projectCheckBoxList.element,
-    modalActions,
-  );
+  if (individualRelationshipClientId.length <= 0) {
+    modal.append(
+      closeButton,
+      title,
+      nameField,
+      cifField,
+      phoneField,
+      statusField,
+      projectCheckBoxList.element,
+      modalActions,
+    );
+  } else {
+    modal.append(
+      closeButton,
+      title,
+      nameField,
+      cifField,
+      phoneField,
+      statusField,
+      projectCheckBoxList.element,
+      userCheckBoxList.element,
+      modalActions,
+    );
+  }
 
   overlay.append(modal);
   return overlay;
@@ -219,6 +266,47 @@ function createProjectCheckBoxList(projects, initialProjectsIds) {
     element: section,
     getSelectedProjectsId: () => {
       return selectedProjectsIds;
+    },
+  };
+}
+
+function createUserCheckBoxList(userName, relationship) {
+  const section = document.createElement("section");
+  const title = document.createElement("h2");
+  title.textContent = "Usuarios";
+
+  const label = document.createElement("label");
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+
+  const spanUserName = document.createElement("span");
+  spanUserName.textContent = userName;
+
+  let state;
+  if (relationship.length > 0) {
+    state = true;
+  } else {
+    state = false;
+  }
+
+  checkbox.checked = state;
+
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) {
+      state = true;
+    } else {
+      state = false;
+    }
+  });
+
+  label.append(checkbox, userName);
+
+  section.append(title, label);
+
+  return {
+    element: section,
+    getState: () => {
+      return state;
     },
   };
 }
