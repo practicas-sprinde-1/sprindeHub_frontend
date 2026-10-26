@@ -44,12 +44,12 @@ export async function createEditUserModal(user, showUsers) {
 
   //ME FALTA CREAR UN BUCLE PARA FILTRAR LOS CLIENTES INICIALES QUE YA TIENEN LA RELACIÓN CREADA.
 
-  const clientsWithRelation = new Set(
-    relationships.map((rel) => rel.client_id),
+  const clientsWithRelation = relationships.map(
+    (relationship) => relationship.client_id,
   );
 
   const initialClients = clients.filter((client) =>
-    clientsWithRelation.has(client.id),
+    clientsWithRelation.includes(client.id),
   );
 
   const initialClientsId = initialClients.map((client) => client.id);
