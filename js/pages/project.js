@@ -33,8 +33,12 @@ async function start() {
 function renderProject(project) {
   document.title = `${project.name} - Sprinde`;
   const clientLink = document.querySelector("#project-client");
-  clientLink.textContent = project.client.name;
-  clientLink.href = `./client.html?id=${project.client.id}`;
+  if (project.client !== null) {
+    clientLink.textContent = project.client?.name ?? "No asignado";
+    clientLink.href = null;
+    clientLink.href = `./client.html?id=${project.client?.id}`;
+  }
+
   document.querySelector("#project-name").textContent = project.name;
   document.querySelector("#project-description").textContent =
     project.description;
