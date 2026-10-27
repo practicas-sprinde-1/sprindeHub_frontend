@@ -130,40 +130,8 @@ let timeOut;
 searchInput.addEventListener("input", async () => {
   clearTimeout(timeOut);
   timeOut = setTimeout(async () => {
-    const searched = searchInput.value.toLowerCase();
-    const filteredLogs = [];
-
-    for (const log of logs) {
-      const user = users.find((user) => user.id === log.user_id);
-
-      let username;
-      if (user) {
-        username = user.username;
-      }
-
-      const action = log.action.toLowerCase();
-      const typeEntity = log.affected_entity.toLowerCase();
-      const date = log.created_at;
-
-      const entity = await findEntity(
-        log.affected_entity,
-        log.affected_entity_id,
-      );
-      const entityName = entity.name.toLowerCase();
-
-      const entityUrl = entity.url;
-
-      if (
-        username.includes(searched) ||
-        action.includes(searched) ||
-        typeEntity.includes(searched) ||
-        entityName.includes(searched) ||
-        entityUrl?.includes(searched) ||
-        date.includes(searched)
-      ) {
-        filteredLogs.push(log);
-      }
-    }
+    const searched = searchInput.value;
+    const filteredLogs = await getLogs("logs", 20, 0, searched);
 
     currentPage = 1;
     renderTable(filteredLogs, users);

@@ -139,11 +139,10 @@ export async function createEditModalClient(
       await modifyProject(updatedProject, project.id);
     }
 
-    const stateCheckBox = userCheckBoxList.getState();
+    const hadAccess = individualRelationshipClientId.length > 0;
+    const hasAccess = userCheckBoxList.getState();
 
-    if (stateCheckBox === true) {
-      return;
-    } else {
+    if (hadAccess && !hasAccess) {
       await revokeClientAccess(user.id, client.id);
     }
 

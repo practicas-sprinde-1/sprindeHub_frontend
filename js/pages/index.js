@@ -271,17 +271,11 @@ let timeOut;
 searchInput.addEventListener("input", () => {
   clearTimeout(timeOut);
 
-  timeout = setTimeout(() => {
+  timeOut = setTimeout(async () => {
     const searched = searchInput.value.trim().toLowerCase();
+    const response = await getProjects("projects", 100, 0, searched);
+    const filteredProjects = response.items;
 
-    const filteredProjects = projects.filter((project) => {
-      const client = project.client.name.toLowerCase();
-      const projectName = project.name.toLowerCase();
-
-      return client.includes(searched) || projectName.includes(searched);
-    });
-    currentPage = 1;
-    console.log(filteredProjects);
     renderTable(filteredProjects);
   }, 500);
 });

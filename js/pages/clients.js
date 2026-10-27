@@ -90,19 +90,11 @@ let timeOut;
 searchInput.addEventListener("input", () => {
   clearTimeout(timeOut);
 
-  timeOut = setTimeout(() => {
+  timeOut = setTimeout(async () => {
     const searched = searchInput.value.trim().toLowerCase();
-    const filteredClients = clients.filter((client) => {
-      const name = client.name.toLowerCase();
-      const cif = client.cif.toLowerCase();
-      const phone = client.phone.toLowerCase();
-
-      return (
-        name.includes(searched) ||
-        cif.includes(searched) ||
-        phone.includes(searched)
-      );
-    });
+    const response = await getClients("clients", 100, 0, searched);
+    const filteredClients = response.items;
+    console.log(searched);
 
     currentPage = 1;
     renderTable(filteredClients);

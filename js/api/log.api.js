@@ -9,11 +9,12 @@ import {
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getLogs(entity, limit, offset) {
+export async function getLogs(entity, limit, offset, search) {
   return getAdminData(
     entity,
     limit,
     offset,
+    search,
     "No se han podido cargar los registros",
   );
 }

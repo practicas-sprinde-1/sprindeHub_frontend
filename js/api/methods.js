@@ -20,9 +20,22 @@ export async function getData(url, errorMessage) {
   return response.json();
 }
 
-export async function getPaginatedData(entity, limit, offset, errorMessage) {
+export async function getPaginatedData(
+  entity,
+  limit,
+  offset,
+  search,
+  errorMessage,
+) {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (search !== null && search !== undefined && search !== "") {
+    params.set("search", search);
+  }
   const response = await requestWithToken(
-    `http://127.0.0.1:8000/api/v1/${entity}?limit=${limit}&offset=${offset}`,
+    `http://127.0.0.1:8000/api/v1/${entity}?${params}`,
     {
       method: "GET",
       headers: {
@@ -43,15 +56,25 @@ export async function getPaginatedData(entity, limit, offset, errorMessage) {
 }
 
 export async function getLightData(entity, errorMessage) {
-  return getData(
-    `http://127.0.0.1:8000/api/v1/${entity}/light`,
-    errorMessage,
-  );
+  return getData(`http://127.0.0.1:8000/api/v1/${entity}/light`, errorMessage);
 }
 
-export async function getAdminData(entity, limit, offset, errorMessage) {
+export async function getAdminData(
+  entity,
+  limit,
+  offset,
+  search,
+  errorMessage,
+) {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (search !== undefined && search !== null && search !== "") {
+    params.set("search", search);
+  }
   const response = await requestWithToken(
-    `http://127.0.0.1:8000/api/v1/admin/${entity}?limit=${limit}&offset=${offset}`,
+    `http://127.0.0.1:8000/api/v1/admin/${entity}?${params}`,
     {
       method: "GET",
       headers: {

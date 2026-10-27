@@ -10,11 +10,12 @@ import {
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getClients(entity, limit, offset) {
+export async function getClients(entity, limit, offset, search) {
   return getPaginatedData(
     entity,
     limit,
     offset,
+    search,
     "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
   );
 }
