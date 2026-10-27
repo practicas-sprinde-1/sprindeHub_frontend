@@ -25,11 +25,10 @@ const pageInformation = document.querySelector("#page-information");
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
-const logs = await getLogs();
-console.log(logs);
+let logs = await getLogs("logs", 20, 0);
 const users = await getUsers();
 
-function renderTable(logs, users) {
+async function renderTable(logs, users) {
   tableBody.replaceChildren();
 
   logs.forEach(async (log) => {
@@ -51,26 +50,50 @@ function renderTable(logs, users) {
 
     const entityCell = document.createElement("td");
 
-    if (entity.name) {
-      entityCell.textContent = entity.name;
-    }
-    if (entity.url) {
-      entityCell.textContent = entity.url;
-    }
-    if (entity.description) {
-      entityCell.textContent = entity.description;
+    if (entity) {
+      if (entity.name) {
+        entityCell.textContent = entity.name;
+      }
+      if (entity.url) {
+        entityCell.textContent = entity.url;
+      }
+      if (entity.description) {
+        entityCell.textContent = entity.description;
+      }
+    } else {
+      entityCell.textContent = "Entidad eliminada";
     }
 
-    const projectCell = document.createElement("td");
-    let project;
-    if (entity.project_id) {
-      project = await findEntity("PROJECT", entity.project_id);
-      const projectLink = document.createElement("a");
-      projectLink.href = `./project.html?id=${entity.project_id}`;
-      projectLink.className = "project-link";
-      projectLink.textContent = project.name;
-      projectCell.append(projectLink);
+    const linksCell = document.createElement("td");
+    if (entity?.project_id) {
+      const project = await findEntity("PROJECT", entity.project_id);
+      if (project) {
+        const projectLink = document.createElement("a");
+        projectLink.href = `./project.html?id=${entity.project_id}`;
+        projectLink.className = "project-link";
+        projectLink.textContent = project.name;
+        linksCell.append(projectLink);
+      } else {
+        linksCell.textContent = "Proyecto eliminado";
+      }
     }
+
+    if (log.affected_entity === "CLIENT") {
+      const clientLink = document.createElement("a");
+      clientLink.href = `./client.html?id=${entity.id}`;
+      clientLink.className = "project-link";
+      clientLink.textContent = entity.name;
+      linksCell.append(clientLink);
+    }
+
+    if (log.affected_entity === "PROJECT") {
+      const projectLink = document.createElement("a");
+      projectLink.href = `./project.html?id=${entity.id}`;
+      projectLink.className = "project-link";
+      projectLink.textContent = entity.name;
+      linksCell.append(projectLink);
+    }
+
     const dateCell = document.createElement("td");
     dateCell.textContent = log.created_at;
 
@@ -80,36 +103,33 @@ function renderTable(logs, users) {
       typeEntityCell,
       entityCell,
       dateCell,
-      projectCell,
+      linksCell,
     );
     tableBody.append(row);
   });
 }
 
-function showTableRows() {
-  const rows = [...tableBody.querySelectorAll("tr")];
-  const totalPages = Math.max(1, Math.ceil(rows.length / recordsPerPage));
-  currentPage = Math.min(currentPage, totalPages);
+async function showTableRows() {
+  const rows = document.querySelectorAll("#logs-table-body tr");
+  const firstRow = (currentPage - 1) * recordsPerPage;
+  const lastRow = firstRow + recordsPerPage;
 
-  rows.forEach((row, index) => {
-    row.hidden =
-      index < (currentPage - 1) * recordsPerPage ||
-      index >= currentPage * recordsPerPage;
+  rows.forEach(function (row, index) {
+    row.hidden = index < firstRow || index >= lastRow;
   });
 
-  pageInformation.textContent = `Página ${currentPage} de ${totalPages}`;
+  pageInformation.textContent = "Página " + currentPage;
   previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage === totalPages;
+  nextPageButton.disabled = logs.length !== recordsPerPage;
+  await renderTable(logs, users);
 }
-
-renderTable(logs, users);
 showTableRows();
 
-let cooldown;
+let timeOut;
 
 searchInput.addEventListener("input", async () => {
-  clearTimeout(cooldown);
-  cooldown = setTimeout(async () => {
+  clearTimeout(timeOut);
+  timeOut = setTimeout(async () => {
     const searched = searchInput.value.toLowerCase();
     const filteredLogs = [];
 
@@ -147,42 +167,63 @@ searchInput.addEventListener("input", async () => {
 
     currentPage = 1;
     renderTable(filteredLogs, users);
-    showTableRows();
   }, 500);
 });
-recordsPerPageSelect.addEventListener("change", () => {
+recordsPerPageSelect.addEventListener("change", async () => {
   recordsPerPage = Number(recordsPerPageSelect.value);
+
   currentPage = 1;
+  logs = await getLogs(
+    "logs",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  console.log(logs.length);
+
   showTableRows();
 });
-previousPageButton.addEventListener("click", () => {
+previousPageButton.addEventListener("click", async () => {
   currentPage -= 1;
+  logs = await getLogs(
+    "logs",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
   showTableRows();
 });
-nextPageButton.addEventListener("click", () => {
+nextPageButton.addEventListener("click", async () => {
   currentPage += 1;
+  logs = await getLogs(
+    "logs",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
   showTableRows();
 });
 
 export async function findEntity(entity, id) {
-  switch (entity) {
-    case "CLIENT":
-      return await getClientById(id);
-    case "PROJECT":
-      return await getProjectById(id);
-    case "COMMAND":
-      return await getCommandById(id);
-    case "DOMAIN":
-      return await getDomainById(id);
-    case "ENVIRONMENT":
-      return await getEnvironmentById(id);
-    case "LINK":
-      return await getLinkById(id);
-    case "NOTE":
-      return await getNoteById(id);
-    case "REPOSITORY":
-      return await getRepositoryById(id);
-    case "SERVICE":
-      return await getServiceById(id);
+  try {
+    switch (entity) {
+      case "CLIENT":
+        return await getClientById(id);
+      case "PROJECT":
+        return await getProjectById(id);
+      case "COMMAND":
+        return await getCommandById(id);
+      case "DOMAIN":
+        return await getDomainById(id);
+      case "ENVIRONMENT":
+        return await getEnvironmentById(id);
+      case "LINK":
+        return await getLinkById(id);
+      case "NOTE":
+        return await getNoteById(id);
+      case "REPOSITORY":
+        return await getRepositoryById(id);
+      case "SERVICE":
+        return await getServiceById(id);
+    }
+  } catch (error) {
+    return null;
   }
 }

@@ -83,8 +83,6 @@ function showTableRows() {
   nextPageButton.disabled = clients.length !== recordsPerPage;
   renderTable(clients);
 }
-
-renderTable(clients);
 showTableRows();
 
 let timeOut;
