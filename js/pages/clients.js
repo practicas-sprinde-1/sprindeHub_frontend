@@ -87,23 +87,30 @@ function showTableRows() {
 renderTable(clients);
 showTableRows();
 
+let timeOut;
+
 searchInput.addEventListener("input", () => {
-  const searched = searchInput.value.trim().toLowerCase();
-  const filteredClients = clients.filter((client) => {
-    const name = client.name.toLowerCase();
-    const cif = client.cif.toLowerCase();
-    const phone = client.phone.toLowerCase();
+  clearTimeout(timeOut);
 
-    return (
-      name.includes(searched) ||
-      cif.includes(searched) ||
-      phone.includes(searched)
-    );
-  });
+  timeOut = setTimeout(() => {
+    const searched = searchInput.value.trim().toLowerCase();
+    const filteredClients = clients.filter((client) => {
+      const name = client.name.toLowerCase();
+      const cif = client.cif.toLowerCase();
+      const phone = client.phone.toLowerCase();
 
-  currentPage = 1;
-  renderTable(filteredClients);
+      return (
+        name.includes(searched) ||
+        cif.includes(searched) ||
+        phone.includes(searched)
+      );
+    });
+
+    currentPage = 1;
+    renderTable(filteredClients);
+  }, 500);
 });
+
 recordsPerPageSelect.addEventListener("change", async () => {
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;

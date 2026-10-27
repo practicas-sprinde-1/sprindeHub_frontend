@@ -266,18 +266,24 @@ function renderTable(projects) {
 }
 renderTable(projects);
 showTableRows();
+
+let timeOut;
 searchInput.addEventListener("input", () => {
-  const searched = searchInput.value.trim().toLowerCase();
+  clearTimeout(timeOut);
 
-  const filteredProjects = projects.filter((project) => {
-    const client = project.client.name.toLowerCase();
-    const projectName = project.name.toLowerCase();
+  timeout = setTimeout(() => {
+    const searched = searchInput.value.trim().toLowerCase();
 
-    return client.includes(searched) || projectName.includes(searched);
-  });
-  currentPage = 1;
-  console.log(filteredProjects);
-  renderTable(filteredProjects);
+    const filteredProjects = projects.filter((project) => {
+      const client = project.client.name.toLowerCase();
+      const projectName = project.name.toLowerCase();
+
+      return client.includes(searched) || projectName.includes(searched);
+    });
+    currentPage = 1;
+    console.log(filteredProjects);
+    renderTable(filteredProjects);
+  }, 500);
 });
 
 const createNewProjectButton = document.querySelector("#button-new-project");
