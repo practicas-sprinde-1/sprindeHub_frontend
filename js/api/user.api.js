@@ -4,13 +4,16 @@ import {
   modifyData,
   deleteData,
   archiveOrRestoreData,
+  getAdminData,
 } from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getUsers() {
-  return getData(
-    `${API_URL}/admin/users`,
+export async function getUsers(entity, limit, offset) {
+  return getAdminData(
+    entity,
+    limit,
+    offset,
     "No se han podido cargar los usuarios",
   );
 }

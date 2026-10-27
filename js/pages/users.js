@@ -24,6 +24,8 @@ let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 let selectedUser = null;
 
+let users = await getUsers("users", 20, 0);
+
 function renderTable(users) {
   tableBody.replaceChildren();
 
@@ -74,11 +76,6 @@ function selectUser(user, row) {
 
 function showTableRows() {
   const rows = tableBody.querySelectorAll("tr");
-  const totalPages = Math.max(1, Math.ceil(rows.length / recordsPerPage));
-
-  if (currentPage > totalPages) {
-    currentPage = totalPages;
-  }
 
   const firstRow = (currentPage - 1) * recordsPerPage;
   const lastRow = firstRow + recordsPerPage;
@@ -87,14 +84,13 @@ function showTableRows() {
     row.hidden = index < firstRow || index >= lastRow;
   });
 
-  pageInformation.textContent = `Página ${currentPage} de ${totalPages}`;
+  pageInformation.textContent = "Página " + currentPage;
   previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage === totalPages;
+  nextPageButton.disabled = users.length !== recordsPerPage;
+  renderTable(users);
 }
 
 async function showUsers() {
-  const users = await getUsers();
-
   if (!users.includes(selectedUser)) {
     selectedUser = null;
   }
@@ -107,27 +103,42 @@ async function showUsers() {
       user.role.toLowerCase().includes(textToSearch)
     );
   });
-
-  currentPage = 1;
   renderTable(usersToShow);
   showTableRows();
 }
 
 searchInput.addEventListener("input", showUsers);
 
-recordsPerPageSelect.addEventListener("change", () => {
+recordsPerPageSelect.addEventListener("change", async () => {
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
+  users = await getUsers(
+    "users",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+
   showTableRows();
 });
 
-previousPageButton.addEventListener("click", () => {
+previousPageButton.addEventListener("click", async () => {
   currentPage = currentPage - 1;
+  users = await getUsers(
+    "users",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+
   showTableRows();
 });
 
-nextPageButton.addEventListener("click", () => {
+nextPageButton.addEventListener("click", async () => {
   currentPage = currentPage + 1;
+  users = await getUsers(
+    "users",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
   showTableRows();
 });
 
