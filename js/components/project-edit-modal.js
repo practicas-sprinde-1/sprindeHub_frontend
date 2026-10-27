@@ -1,4 +1,4 @@
-import { getClients } from "../api/client.api.js";
+import { getLightClients } from "../api/client.api.js";
 import {
   deleteEnvironment,
   modifyEnvironment,
@@ -109,8 +109,7 @@ export async function createEditModalProject(project, onSave) {
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
 
-  const clientResponse = await getClients("clients", 20, 0);
-  const clients = clientResponse.items;
+  const clients = await getLightClients("clients");
 
   const clientSelect = document.createElement("select");
   clientSelect.name = "client_id";

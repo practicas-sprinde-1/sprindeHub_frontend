@@ -26,12 +26,12 @@ let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 
 let logs = await getLogs("logs", 20, 0);
-const users = await getUsers();
+const users = await getUsers("users", 100, 0);
 
 async function renderTable(logs, users) {
   tableBody.replaceChildren();
 
-  logs.forEach(async (log) => {
+  for (const log of logs) {
     const row = document.createElement("tr");
     const userCell = document.createElement("td");
     const user = users.find((user) => user.id === log.user_id);
@@ -106,7 +106,7 @@ async function renderTable(logs, users) {
       linksCell,
     );
     tableBody.append(row);
-  });
+  }
 }
 
 async function showTableRows() {

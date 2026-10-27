@@ -1,4 +1,4 @@
-import { getClients } from "../api/client.api.js";
+import { getLightClients } from "../api/client.api.js";
 import { setFullProject } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
 
@@ -151,13 +151,10 @@ async function configureClientSelection(form) {
     if (!client) return;
 
     form.elements["client-name"].value = client.name;
-    form.elements.cif.value = client.cif;
-    form.elements.phone.value = client.phone;
   });
 
   try {
-    const clientsResponse = await getClients("clients", 20, 0);
-    clients = (clientsResponse.items ?? clientsResponse).filter(
+    clients = (await getLightClients("clients")).filter(
       (client) => client.id && client.name,
     );
 

@@ -1,13 +1,17 @@
 import { modifyClient } from "../api/client.api.js";
 import { getProfile } from "../api/profile.api.js";
-import { getProjects, modifyProject } from "../api/project.api.js";
+import { getLightProjects, modifyProject } from "../api/project.api.js";
 import {
   getRelationshipByClient,
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
 
-export async function createEditModalClient(client, onSave) {
+export async function createEditModalClient(
+  client,
+  onSave,
+  assignedProjects = [],
+) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -62,16 +66,9 @@ export async function createEditModalClient(client, onSave) {
   const phoneField = createClientField("Teléfono", phoneInput);
   const statusField = createClientField("Estado", statusInput);
 
-  const projectsResponse = await getProjects("projects", 20, 0);
-  const projects = projectsResponse.items ?? projectsResponse;
+  const projects = await getLightProjects("projects");
 
-  const initialProjects = projects.filter((project) => {
-    const projectClientId = project.client_id ?? project.client?.id;
-
-    return Number(projectClientId) === Number(client.id);
-  });
-
-  const initialProjectsId = initialProjects.map((project) => project.id);
+  const initialProjectsId = assignedProjects.map((project) => project.id);
 
   const projectCheckBoxList = createProjectCheckBoxList(
     projects,

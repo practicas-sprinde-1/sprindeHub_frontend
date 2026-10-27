@@ -1,4 +1,4 @@
-import { getClients } from "../api/client.api.js";
+import { getLightClients } from "../api/client.api.js";
 import { modifyUser } from "../api/user.api.js";
 import {
   assignUserToClient,
@@ -37,10 +37,9 @@ export async function createEditUserModal(user, showUsers) {
   usernameInput.value = user.username;
   roleSelect.value = user.role;
 
-  const clientsResponse = await getClients("clients", 20, 0);
+  const clients = await getLightClients("clients");
   const relationships = await getRelationshipByUser(user.id);
 
-  const clients = clientsResponse.items ?? clientsResponse;
   const clientsWithRelation = relationships.map(
     (relationship) => relationship.client_id,
   );

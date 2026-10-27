@@ -58,7 +58,7 @@ async function renderClient(client) {
   modifyClient.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
 
-    const modal = await createEditModalClient(client, renderClient);
+    const modal = await createEditModalClient(client, renderClient, projects);
     document.body.append(modal);
   };
 

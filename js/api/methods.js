@@ -42,6 +42,13 @@ export async function getPaginatedData(entity, limit, offset, errorMessage) {
   return response.json();
 }
 
+export async function getLightData(entity, errorMessage) {
+  return getData(
+    `http://127.0.0.1:8000/api/v1/${entity}/light`,
+    errorMessage,
+  );
+}
+
 export async function getAdminData(entity, limit, offset, errorMessage) {
   const response = await requestWithToken(
     `http://127.0.0.1:8000/api/v1/admin/${entity}?limit=${limit}&offset=${offset}`,

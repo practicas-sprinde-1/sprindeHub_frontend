@@ -4,6 +4,7 @@ import {
   modifyData,
   deleteData,
   archiveOrRestoreData,
+  getLightData,
   getPaginatedData,
 } from "./methods.js";
 
@@ -15,6 +16,13 @@ export async function getClients(entity, limit, offset) {
     limit,
     offset,
     "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
+export async function getLightClients(entity) {
+  return getLightData(
+    entity,
+    "No se han podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
   );
 }
 
