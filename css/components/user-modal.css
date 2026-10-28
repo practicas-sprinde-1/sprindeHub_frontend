@@ -113,3 +113,40 @@
 .user-modal .modal-delete-button:hover {
   background-color: #b91c1c;
 }
+
+.user-client-access {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.user-client-access h2 {
+  margin: 0;
+  padding: 14px 20px;
+  background-color: var(--navy);
+  color: var(--surface);
+  font-size: 17px;
+}
+
+.user-client-access-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 20px 20px;
+  list-style: none;
+}
+
+.user-client-access-list li {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: var(--background);
+}
+
+.user-client-access-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+}

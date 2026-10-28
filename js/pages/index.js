@@ -1,12 +1,9 @@
-import { checkToken } from "../api/session.js";
 import { createHeader } from "../components/header.js";
-import { projectsMockData } from "../mockdata/projects.mockdata.js";
 import { createDetailCard } from "../components/detail-card.js";
-import {
-  getCommands,
-  getLinks,
-  getNotes,
-} from "../mockdata/list-details.mockdata.js";
+import { getArchivedProjects, getProjects } from "../api/project.api.js";
+import { getCommandsByProjectId } from "../api/command.api.js";
+import { getLinksByProjectId } from "../api/link.api.js";
+import { getNotesByProjectId } from "../api/note.api.js";
 // checkToken();
 
 //Devuelve el primer elemento que tenga ese #id o .clase
@@ -21,9 +18,16 @@ const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
 const searchInput = document.querySelector("#input-index");
+const showArchivedButton = document.querySelector("#archived-projects");
+const showActivedButton = document.querySelector("#actived-projects");
 
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
+let search = "";
+
+const projectsTableRead = await getProjects("projects", 20, 0);
+
+let projects = projectsTableRead.items;
 
 function showTableRows() {
   const tableRows = document.querySelectorAll("#projects-table-body tr");
@@ -35,34 +39,52 @@ function showTableRows() {
     row.hidden = index < firstRow || index >= lastRow;
   });
 
-  const totalPages = Math.ceil(tableRows.length / recordsPerPage);
-
-  pageInformation.textContent = "Página " + currentPage + " de " + totalPages;
+  pageInformation.textContent = "Página " + currentPage;
 
   previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage === totalPages;
+  nextPageButton.disabled = projects.length !== recordsPerPage;
+  renderTable(projects);
 }
 
-recordsPerPageSelect.addEventListener("change", () => {
+recordsPerPageSelect.addEventListener("change", async () => {
+  if (search !== "") {
+    return;
+  }
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
-
+  const response = await getProjects(
+    "projects",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  projects = response.items;
+  renderTable(projects);
   showTableRows();
 });
 
-previousPageButton.addEventListener("click", () => {
-  currentPage = currentPage - 1;
-
+previousPageButton.addEventListener("click", async () => {
+  if (currentPage === 1) return;
+  currentPage -= 1;
+  const response = await getProjects(
+    "projects",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  projects = response.items;
   showTableRows();
 });
 
-nextPageButton.addEventListener("click", () => {
-  currentPage = currentPage + 1;
-
+nextPageButton.addEventListener("click", async () => {
+  if (projects.length < 0) return;
+  currentPage += 1;
+  const response = await getProjects(
+    "projects",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+  projects = response.items;
   showTableRows();
 });
-
-const projects = projectsMockData.items;
 
 const tableBody = document.querySelector("#projects-table-body");
 const projectsTable = document.querySelector(".projects-table");
@@ -71,14 +93,14 @@ const tableTitles = document.querySelector(".table-titles");
 function renderTable(projects) {
   tableBody.replaceChildren();
 
-  projects.forEach((project) => {
+  projects.forEach(async (project) => {
     // Creamos la fila
     const row = document.createElement("tr");
 
     // Cliente
     const clientCell = document.createElement("td");
     const clientName = document.createElement("strong");
-    clientName.textContent = project.client.name;
+    clientName.textContent = project.client?.name ?? "No asignado";
     clientCell.append(clientName);
 
     // Proyecto
@@ -93,7 +115,9 @@ function renderTable(projects) {
     const environmentsCell = document.createElement("td");
     environmentsCell.classList.add("cell-centered");
 
-    project.environments.forEach((environment) => {
+    const environments = project.environments;
+
+    environments.forEach((environment) => {
       const environmentLabel = document.createElement("span");
 
       environmentLabel.classList.add("environment");
@@ -108,9 +132,12 @@ function renderTable(projects) {
     repositoriesCell.classList.add("cell-centered");
     repositoriesCell.classList.add("repositories-cell");
 
-    project.repositories.forEach((repository) => {
+    const repositories = project.repositories;
+
+    repositories.forEach((repository) => {
       const repositoryLink = document.createElement("a");
 
+      repositoryLink.classList.add("repository-link");
       repositoryLink.href = repository.url;
       repositoryLink.textContent = repository.type;
 
@@ -121,7 +148,9 @@ function renderTable(projects) {
     const servicesCell = document.createElement("td");
     servicesCell.classList.add("cell-centered");
 
-    project.services.forEach((service) => {
+    const services = project.services;
+
+    services.forEach((service) => {
       const serviceTag = document.createElement("span");
 
       serviceTag.classList.add("tag");
@@ -134,7 +163,9 @@ function renderTable(projects) {
     const domainsCell = document.createElement("td");
     domainsCell.classList.add("cell-centered");
 
-    project.domains.forEach((domain) => {
+    const domains = project.domains;
+
+    domains.forEach((domain) => {
       const domainLink = document.createElement("a");
 
       domainLink.classList.add("domain-link");
@@ -146,6 +177,8 @@ function renderTable(projects) {
       domainsCell.append(domainLink);
     });
 
+    //Comandos
+
     const commandsCell = document.createElement("td");
     commandsCell.classList.add("cell-centered");
 
@@ -155,7 +188,7 @@ function renderTable(projects) {
     commandsButton.textContent = `${project.commands_count} comandos`;
 
     commandsButton.addEventListener("click", async () => {
-      const commands = await getCommands(project.id);
+      const commands = await getCommandsByProjectId(project.id);
 
       const commandTexts = commands.map((command) => {
         return {
@@ -169,6 +202,8 @@ function renderTable(projects) {
 
     commandsCell.append(commandsButton);
 
+    //Links
+
     const linksCell = document.createElement("td");
     linksCell.classList.add("cell-centered");
 
@@ -178,7 +213,7 @@ function renderTable(projects) {
     linksButton.textContent = `${project.links_count} enlaces`;
 
     linksButton.addEventListener("click", async () => {
-      const links = await getLinks(project.id);
+      const links = await getLinksByProjectId(project.id);
 
       const linksText = links.map((link) => {
         return {
@@ -192,6 +227,8 @@ function renderTable(projects) {
 
     linksCell.append(linksButton);
 
+    //Notas
+
     const notesCell = document.createElement("td");
     notesCell.classList.add("cell-centered");
 
@@ -201,7 +238,7 @@ function renderTable(projects) {
     notesButton.textContent = `${project.notes_count} notas`;
 
     notesButton.addEventListener("click", async () => {
-      const notes = await getNotes(project.id);
+      const notes = await getNotesByProjectId(project.id);
 
       const notesText = notes.map((note) => {
         return {
@@ -234,18 +271,26 @@ function renderTable(projects) {
 }
 renderTable(projects);
 showTableRows();
+
+let timeOut;
 searchInput.addEventListener("input", () => {
-  const searched = searchInput.value.trim().toLowerCase();
+  clearTimeout(timeOut);
 
-  const filteredProjects = projects.filter((project) => {
-    const client = project.client.name.toLowerCase();
-    const projectName = project.name.toLowerCase();
+  timeOut = setTimeout(async () => {
+    search = searchInput.value.trim().toLowerCase();
+    if (search === "") {
+      showTableRows();
+      return;
+    }
+    const response = await getProjects("projects", 100, 0, search);
+    const filteredProjects = response.items;
 
-    return client.includes(searched) || projectName.includes(searched);
-  });
-  currentPage = 1;
-  renderTable(filteredProjects);
-  showTableRows();
+    currentPage = 1;
+    previousPageButton.disabled = currentPage === 1;
+    nextPageButton.disabled = filteredProjects.length !== recordsPerPage;
+
+    renderTable(filteredProjects);
+  }, 500);
 });
 
 const createNewProjectButton = document.querySelector("#button-new-project");
@@ -260,7 +305,7 @@ createNewClientButton.addEventListener("click", () => {
   window.location.href = "./pages/new-client.html";
 });
 
-let openedDetailCard = null;
+let openedDetailCard;
 
 function showDetailCard(row, title, items, projectId, contentType) {
   if (openedDetailCard) {
@@ -281,3 +326,15 @@ function showDetailCard(row, title, items, projectId, contentType) {
 
   openedDetailCard = detailCard;
 }
+
+showArchivedButton.onclick = async () => {
+  const archivedProjects = await getArchivedProjects();
+
+  projects = archivedProjects.items;
+  renderTable(projects);
+};
+
+showActivedButton.onclick = async () => {
+  projects = projectsTableRead.items;
+  renderTable(projects);
+};

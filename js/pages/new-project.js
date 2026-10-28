@@ -1,5 +1,6 @@
+import { getLightClients } from "../api/client.api.js";
+import { setFullProject } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
-import { clientsMockData } from "../mockdata/client.mockdata.js";
 
 start();
 
@@ -35,7 +36,7 @@ export function configureProjectForm(form) {
     item.remove();
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const selectedClientId =
@@ -66,9 +67,8 @@ export function configureProjectForm(form) {
     }
 
     try {
-      console.log("Datos del proyecto preparados:", projectData);
-
-      //LLAMADA A LA API CON EL
+      await setFullProject(projectData);
+      window.location.href = "../index.html";
     } catch (error) {
       alert("No se ha podido guardar el proyecto.");
     }
@@ -103,7 +103,7 @@ function getCollectionData(form, collectionName) {
   });
 }
 
-function configureClientSelection(form) {
+async function configureClientSelection(form) {
   const cancelExistingClientButton = form.querySelector(
     "#cancel-existing-client",
   );
@@ -115,18 +115,7 @@ function configureClientSelection(form) {
   const newClientFields = form.querySelector("#new-client-fields");
   const newClientInputs = newClientFields.querySelectorAll("input");
 
-  // Aquí se sustituirá el mock por la llamada a la API.
-
-  const clients = clientsMockData.filter((client) => client.id);
-
-  clients.forEach((client) => {
-    const option = document.createElement("option");
-
-    option.value = client.id;
-    option.textContent = client.name;
-
-    existingClientSelect.append(option);
-  });
+  let clients = [];
 
   cancelExistingClientButton.addEventListener("click", () => {
     existingClientContainer.hidden = true;
@@ -162,7 +151,23 @@ function configureClientSelection(form) {
     if (!client) return;
 
     form.elements["client-name"].value = client.name;
-    form.elements.cif.value = client.cif;
-    form.elements.phone.value = client.phone;
   });
+
+  try {
+    clients = (await getLightClients("clients")).filter(
+      (client) => client.id && client.name,
+    );
+
+    clients.forEach((client) => {
+      const option = document.createElement("option");
+
+      option.value = client.id;
+      option.textContent = client.name;
+
+      existingClientSelect.append(option);
+    });
+  } catch (error) {
+    console.error("No se han podido cargar los clientes existentes.", error);
+    existingClientButton.disabled = true;
+  }
 }

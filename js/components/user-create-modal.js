@@ -1,4 +1,6 @@
-export function createEditUserModal(user, showUsers) {
+import { setUser } from "../api/user.api.js";
+
+export function createNewUserModal(showUsers) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -7,43 +9,51 @@ export function createEditUserModal(user, showUsers) {
 
   const title = document.createElement("h1");
   title.classList.add("modal-title");
-  title.textContent = `Modificando usuario: ${user.username}`;
+  title.textContent = "Crear usuario";
 
   const closeButton = createCloseButton(overlay);
 
   const emailInput = document.createElement("input");
   emailInput.type = "email";
   emailInput.name = "email";
-  emailInput.id = "edit-user-email";
+  emailInput.id = "new-user-email";
   emailInput.required = true;
 
   const usernameInput = document.createElement("input");
   usernameInput.type = "text";
   usernameInput.name = "username";
-  usernameInput.id = "edit-user-username";
+  usernameInput.id = "new-user-username";
   usernameInput.required = true;
 
-  const roleSelect = createRoleSelect();
-  emailInput.value = user.email;
-  usernameInput.value = user.username;
-  roleSelect.value = user.role;
+  const passwordInput = document.createElement("input");
+  passwordInput.type = "password";
+  passwordInput.name = "password";
+  passwordInput.id = "new-user-password";
+  passwordInput.required = true;
+
+  const roleSelect = createRoleSelect("new-user-role");
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     const email = emailInput.value.trim();
     const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
 
     if (email === "" || username === "") {
       return;
     }
 
-    user.email = email;
-    user.username = username;
-    user.role = roleSelect.value;
+    const newUser = {
+      email: email,
+      username: username,
+      password: password,
+      role: roleSelect.value,
+    };
 
+    await setUser(newUser);
     showUsers();
     overlay.remove();
   });
@@ -58,6 +68,7 @@ export function createEditUserModal(user, showUsers) {
   modal.append(title);
   modal.append(createField("Email", emailInput));
   modal.append(createField("Nombre de usuario", usernameInput));
+  modal.append(createField("Password", passwordInput));
   modal.append(createField("Rol", roleSelect));
   modal.append(actions);
 
@@ -65,10 +76,10 @@ export function createEditUserModal(user, showUsers) {
   return overlay;
 }
 
-function createRoleSelect() {
+function createRoleSelect(id) {
   const select = document.createElement("select");
   select.name = "role";
-  select.id = "edit-user-role";
+  select.id = id;
 
   const adminOption = document.createElement("option");
   adminOption.value = "ADMIN";

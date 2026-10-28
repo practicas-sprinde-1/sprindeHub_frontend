@@ -73,13 +73,15 @@
   font-weight: 700;
 }
 
-.button-edit-user {
+.button-edit-user,
+.button-edit-password {
   border: 1px solid var(--blue);
   background-color: var(--blue);
   color: var(--surface);
 }
 
-.button-edit-user:hover {
+.button-edit-user:hover,
+.button-edit-password:hover {
   background-color: var(--navy);
 }
 

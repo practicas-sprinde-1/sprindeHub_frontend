@@ -25,15 +25,40 @@
             <h1 id="clients-title">Clientes</h1>
           </div>
 
-          <button class="button-new-client" id="button-new-client" type="button">
+          <button
+            class="button-new-client"
+            id="button-new-client"
+            type="button"
+          >
             + Nuevo cliente
           </button>
         </header>
 
-        <label class="search" for="input-clients">
-          <span aria-hidden="true">⌕</span>
-          <input id="input-clients" type="search" placeholder="Buscar por cliente, CIF o teléfono" />
-        </label>
+        <div class="table-controls">
+          <label class="search" for="input-clients">
+            <span aria-hidden="true">⌕</span>
+
+            <input
+              id="input-clients"
+              type="search"
+              placeholder="Buscar por cliente, CIF o teléfono"
+            />
+          </label>
+
+          <div
+            class="pagination status-filter"
+            aria-label="Filtrar clientes por estado"
+          >
+            <div>
+              <button class="archived-clients" id="archived-clients">
+                Mostrar archivados
+              </button>
+              <button class="actived-clients" id="actived-clients">
+                Mostrar activos
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div class="table-wrapper">
           <table>

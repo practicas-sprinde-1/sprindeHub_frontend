@@ -21,6 +21,7 @@ loginForm.addEventListener("submit", async (event) => {
     const tokenData = await login(credentials);
 
     sessionStorage.setItem("accessToken", tokenData.access_token);
+    sessionStorage.setItem("refreshToken", tokenData.refresh_token);
 
     console.log(tokenData);
 

@@ -1,14 +1,14 @@
 import { createHeader } from "../components/header.js";
-import { projectDetailData } from "../mockdata/project-page.mockdata.js";
 import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
 import { createAlertModal } from "../components/alert-modal.js";
+import { deleteProjectById, getProjectById } from "../api/project.api.js";
 
 start();
 
-function start() {
+async function start() {
   const headerContainer = document.querySelector("#header-container");
   headerContainer.append(createHeader("César", "./profile.html"));
 
@@ -18,7 +18,8 @@ function start() {
   const searchParams = new URLSearchParams(window.location.search);
   const projectId = Number(searchParams.get("id"));
 
-  const project = projectDetailData.id === projectId ? projectDetailData : null;
+  const project = await getProjectById(projectId);
+
   if (!Number.isInteger(projectId) || projectId < 1 || !project) {
     projectError.hidden = false;
     projectError.textContent =
@@ -32,8 +33,12 @@ function start() {
 function renderProject(project) {
   document.title = `${project.name} - Sprinde`;
   const clientLink = document.querySelector("#project-client");
-  clientLink.textContent = project.client.name;
-  clientLink.href = `./client.html?id=${project.client.id}`;
+  if (project.client !== null) {
+    clientLink.textContent = project.client?.name ?? "No asignado";
+    clientLink.href = null;
+    clientLink.href = `./client.html?id=${project.client?.id}`;
+  }
+
   document.querySelector("#project-name").textContent = project.name;
   document.querySelector("#project-description").textContent =
     project.description;
@@ -93,9 +98,9 @@ function renderProject(project) {
   renderNotes(notesList, notesInfo);
 
   const modifyProject = document.querySelector("#button-edit-project");
-  modifyProject.onclick = () => {
+  modifyProject.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
-    const modal = createEditModalProject(project, renderProject);
+    const modal = await createEditModalProject(project, renderProject);
     document.body.append(modal);
   };
 
@@ -107,7 +112,8 @@ function renderProject(project) {
       "Borrar proyecto",
       `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?`,
       async () => {
-        // Aquí irá DELETE /projects/{project.id}.
+        await deleteProjectById(project.id);
+        window.location.href = "../index.html";
       },
     );
 

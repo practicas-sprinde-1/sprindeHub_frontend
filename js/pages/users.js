@@ -1,13 +1,10 @@
 import { createHeader } from "../components/header.js";
-import { userMockData, usersMockData } from "../mockdata/user.mockdata.js";
-import { createNewUserModal } from "../components/create-user-modal.js";
-import { createEditUserModal } from "../components/edit-user-modal.js";
-import { createDeleteUserModal } from "../components/delete-user-modal.js";
+import { createNewUserModal } from "../components/user-create-modal.js";
+import { createEditUserModal } from "../components/user-edit-modal.js";
+import { createDeleteUserModal } from "../components/user-delete-modal.js";
+import { getUsers } from "../api/user.api.js";
 
 // Solo los administradores pueden consultar esta página.
-if (userMockData.role !== "ADMIN") {
-  window.location.href = "../index.html";
-}
 
 const headerContainer = document.querySelector("#header-container");
 const header = createHeader("César", "./profile.html");
@@ -26,6 +23,8 @@ const deleteUserButton = document.querySelector("#button-delete-user");
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 let selectedUser = null;
+let search = "";
+let users = await getUsers("users", 20, 0);
 
 function renderTable(users) {
   tableBody.replaceChildren();
@@ -77,11 +76,6 @@ function selectUser(user, row) {
 
 function showTableRows() {
   const rows = tableBody.querySelectorAll("tr");
-  const totalPages = Math.max(1, Math.ceil(rows.length / recordsPerPage));
-
-  if (currentPage > totalPages) {
-    currentPage = totalPages;
-  }
 
   const firstRow = (currentPage - 1) * recordsPerPage;
   const lastRow = firstRow + recordsPerPage;
@@ -90,45 +84,60 @@ function showTableRows() {
     row.hidden = index < firstRow || index >= lastRow;
   });
 
-  pageInformation.textContent = `Página ${currentPage} de ${totalPages}`;
+  pageInformation.textContent = "Página " + currentPage;
   previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage === totalPages;
+  nextPageButton.disabled = users.length !== recordsPerPage;
 }
+let timeOut;
+async function showUsers() {
+  clearTimeout(timeOut);
+  timeOut = setTimeout(async () => {
+    if (!users.includes(selectedUser)) {
+      selectedUser = null;
+    }
 
-function showUsers() {
-  if (!usersMockData.includes(selectedUser)) {
-    selectedUser = null;
-  }
-
-  const textToSearch = searchInput.value.trim().toLowerCase();
-  const usersToShow = usersMockData.filter(function (user) {
-    return (
-      user.email.toLowerCase().includes(textToSearch) ||
-      user.username.toLowerCase().includes(textToSearch) ||
-      user.role.toLowerCase().includes(textToSearch)
-    );
-  });
-
-  currentPage = 1;
-  renderTable(usersToShow);
-  showTableRows();
+    search = searchInput.value.trim().toLowerCase();
+    const filteredUsers = await getUsers("users", 100, 0, search);
+    renderTable(filteredUsers);
+    showTableRows();
+  }, 250);
 }
 
 searchInput.addEventListener("input", showUsers);
 
-recordsPerPageSelect.addEventListener("change", () => {
+recordsPerPageSelect.addEventListener("change", async () => {
+  if (search !== "") {
+    return;
+  }
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
+  users = await getUsers(
+    "users",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+
   showTableRows();
 });
 
-previousPageButton.addEventListener("click", () => {
+previousPageButton.addEventListener("click", async () => {
   currentPage = currentPage - 1;
+  users = await getUsers(
+    "users",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
+
   showTableRows();
 });
 
-nextPageButton.addEventListener("click", () => {
+nextPageButton.addEventListener("click", async () => {
   currentPage = currentPage + 1;
+  users = await getUsers(
+    "users",
+    recordsPerPage,
+    (currentPage - 1) * recordsPerPage,
+  );
   showTableRows();
 });
 
@@ -141,7 +150,7 @@ createUserButton.addEventListener("click", () => {
   document.body.append(modal);
 });
 
-editUserButton.addEventListener("click", () => {
+editUserButton.addEventListener("click", async () => {
   if (document.querySelector(".modal-overlay")) {
     return;
   }
@@ -151,13 +160,7 @@ editUserButton.addEventListener("click", () => {
     return;
   }
 
-  if (!usersMockData.includes(selectedUser)) {
-    alert("El usuario seleccionado ya no está disponible.");
-    selectedUser = null;
-    return;
-  }
-
-  const modal = createEditUserModal(selectedUser, showUsers);
+  const modal = await createEditUserModal(selectedUser, showUsers);
   document.body.append(modal);
 });
 
@@ -170,13 +173,6 @@ deleteUserButton.addEventListener("click", () => {
     alert("Selecciona un usuario de la tabla antes de borrarlo.");
     return;
   }
-
-  if (!usersMockData.includes(selectedUser)) {
-    alert("El usuario seleccionado ya no está disponible.");
-    selectedUser = null;
-    return;
-  }
-
   const modal = createDeleteUserModal(selectedUser, showUsers);
   document.body.append(modal);
 });

@@ -43,15 +43,28 @@
           </div>
         </header>
 
-        <label class="search">
-          <span>⌕</span>
+        <div class="table-controls">
+          <label class="search">
+            <span>⌕</span>
 
-          <input
-            id="input-index"
-            type="search"
-            placeholder="Buscar por cliente o proyecto"
-          />
-        </label>
+            <input
+              id="input-index"
+              type="search"
+              placeholder="Buscar por cliente o proyecto"
+            />
+          </label>
+
+          <div class="pagination status-filter" aria-label="Filtrar proyectos por estado">
+            <div>
+              <button class="archived-projects" id="archived-projects">
+                Mostrar archivados
+              </button>
+              <button class="actived-projects" id="actived-projects">
+                Mostrar activos
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div class="table-titles">
           <table>

@@ -37,8 +37,20 @@
   line-height: 1.15;
 }
 
-.project-edit-modal > input {
-  grid-column: 1 / -1;
+.project-edit-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.project-edit-field label {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-edit-field input,
+.project-edit-field select {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 12px;
@@ -49,10 +61,33 @@
   font: inherit;
 }
 
-.project-edit-modal > input:focus-visible,
-.project-edit-modal li input:focus-visible {
+.project-edit-field input:focus-visible,
+.project-edit-field select:focus-visible,
+.project-edit-modal li input:focus-visible,
+.project-edit-modal li select:focus-visible {
   outline: 3px solid rgba(37, 99, 168, 0.32);
   outline-offset: 2px;
+}
+
+.project-status-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-status-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.project-status-indicator--active {
+  background-color: var(--production);
+}
+
+.project-status-indicator--inactive {
+  background-color: var(--test);
 }
 
 .project-edit-modal section {
@@ -105,7 +140,8 @@
   text-decoration: underline;
 }
 
-.project-edit-modal li input {
+.project-edit-modal li input,
+.project-edit-modal li select {
   min-width: 0;
   padding: 7px 9px;
   border: 1px solid var(--border);

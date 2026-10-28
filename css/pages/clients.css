@@ -47,7 +47,9 @@ main {
 }
 
 .button-new-client,
-.pagination button {
+.pagination button,
+.archived-clients,
+.actived-clients {
   border: 1px solid var(--blue);
   border-radius: 7px;
   background-color: var(--blue);
@@ -63,6 +65,25 @@ main {
 
 .button-new-client:hover {
   background-color: var(--navy);
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 28px 22px;
+}
+
+.table-controls .search {
+  flex: 1;
+  margin: 0;
+}
+
+.table-controls .status-filter {
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
 }
 
 .search {
@@ -201,15 +222,20 @@ main {
   color: var(--text);
 }
 
-.pagination button {
+.pagination button,
+.archived-clients,
+.actived-clients {
   margin-left: 8px;
   padding: 7px 11px;
   background: white;
   color: var(--blue);
   font-size: 13px;
+  white-space: nowrap;
 }
 
-.pagination button:hover:not(:disabled) {
+.pagination button:hover:not(:disabled),
+.archived-clients:hover,
+.actived-clients:hover {
   background: var(--blue-light);
 }
 .pagination button:disabled {

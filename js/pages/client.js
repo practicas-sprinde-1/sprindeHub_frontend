@@ -1,9 +1,8 @@
 import { createHeader } from "../components/header.js";
-import { clientsMockData } from "../mockdata/client.mockdata.js";
-import { projectsMockData } from "../mockdata/projects.mockdata.js";
 import { createAlertModal } from "../components/alert-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
-import { getClientById } from "../api/client.api.js";
+import { getClientById, deleteClientById } from "../api/client.api.js";
+import { getProjectByClientId } from "../api/project.api.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -15,7 +14,7 @@ const searchParams = new URLSearchParams(window.location.search);
 
 const clientId = Number(searchParams.get("id"));
 
-const client = getClientById(clientId);
+const client = await getClientById(clientId);
 
 if (!Number.isInteger(clientId) || clientId < 1 || !client) {
   clientError.hidden = false;
@@ -26,7 +25,7 @@ if (!Number.isInteger(clientId) || clientId < 1 || !client) {
   clientDetail.hidden = false;
 }
 
-function renderClient(client) {
+async function renderClient(client) {
   document.title = `${client.name} - Sprinde`;
 
   document.querySelector("#client-title").textContent = client.name;
@@ -38,10 +37,9 @@ function renderClient(client) {
   status.classList.toggle("client-status--inactive", !client.is_active);
 
   const projectsList = document.querySelector("#client-list-projects");
-  const projects = projectsMockData.items.filter(
-    (project) => project.client.id === client.id,
-  );
-
+  projectsList?.replaceChildren();
+  const projectsResponse = await getProjectByClientId(client.id);
+  const projects = projectsResponse.items;
   projects.forEach((project) => {
     const listItem = document.createElement("li");
     const link = document.createElement("a");
@@ -56,24 +54,27 @@ function renderClient(client) {
   document.querySelector("#client-phone").textContent = client.phone;
 
   const modifyClient = document.querySelector(".button-edit-client");
-  modifyClient.addEventListener("click", () => {
+
+  modifyClient.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
 
-    document.body.append(createEditModalClient(client));
-  });
+    const modal = await createEditModalClient(client, renderClient, projects);
+    document.body.append(modal);
+  };
 
   const deleteClient = document.querySelector(".button-delete-client");
-  deleteClient.addEventListener("click", () => {
+  deleteClient.onclick = () => {
     if (document.querySelector(".alert-overlay")) return;
 
     const alertModal = createAlertModal(
       "Borrar cliente",
       `¿Estás seguro de que deseas borrar el cliente "${client.name}"?`,
       async () => {
-        // Aquí irá DELETE /clients/{client.id}.
+        await deleteClientById(client.id);
+        window.location.href = "./clients.html";
       },
     );
 
     document.body.append(alertModal);
-  });
+  };
 }

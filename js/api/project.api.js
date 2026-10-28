@@ -1,10 +1,35 @@
-import { getData, sendData, modifyData, deleteData } from "./methods.js";
+import {
+  getData,
+  sendData,
+  modifyData,
+  deleteData,
+  archiveOrRestoreData,
+  getLightData,
+  getPaginatedData,
+} from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getProjects() {
+export async function getProjects(entity, limit, offset, search) {
+  return getPaginatedData(
+    entity,
+    limit,
+    offset,
+    search,
+    "No se ha podido obtener los proyectos del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
+export async function getLightProjects(entity) {
+  return getLightData(
+    entity,
+    "No se han podido obtener los proyectos del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
+export async function getArchivedProjects() {
   return getData(
-    `${API_URL}/projects`,
+    `${API_URL}/projects/archived`,
     "No se ha podido obtener los proyectos del servidor. Inténtelo de nuevo más tarde",
   );
 }
@@ -26,7 +51,7 @@ export async function getProjectByClientId(id) {
 export async function setProject(project) {
   return sendData(
     `${API_URL}/projects`,
-    client,
+    project,
     "No se ha podido guardar el proyecto. Inténtelo de nuevo.",
   );
 }
@@ -34,7 +59,7 @@ export async function setProject(project) {
 export async function setFullProject(project) {
   return sendData(
     `${API_URL}/projects/create-completed-project`,
-    client,
+    project,
     "No se ha podido guardar el proyecto. Inténtelo de nuevo.",
   );
 }
@@ -42,12 +67,12 @@ export async function setFullProject(project) {
 export async function modifyProject(project, id) {
   return modifyData(
     `${API_URL}/projects/${id}`,
-    client,
+    project,
     "No se ha podido modificar el proyecto.",
   );
 }
 
-export async function deleteProject(id) {
+export async function deleteProjectById(id) {
   return deleteData(
     `${API_URL}/projects/${id}`,
     "No se ha podido borrar el proyecto",
@@ -55,17 +80,15 @@ export async function deleteProject(id) {
 }
 
 export async function archiveProject(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/projects/${id}/archive`,
-    client,
     "No se ha podido archivar el proyecto.",
   );
 }
 
 export async function restoreProject(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/projects/${id}/restore`,
-    client,
     "No se ha podido restaurar el proyecto.",
   );
 }

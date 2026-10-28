@@ -1,4 +1,34 @@
-export function createEditModalProject(project, onSave = () => {}) {
+import { getLightClients } from "../api/client.api.js";
+import {
+  deleteEnvironment,
+  modifyEnvironment,
+  setEnvironment,
+} from "../api/environment.api.js";
+import {
+  deleteRepository,
+  modifyRepository,
+  setRepository,
+} from "../api/repository.api.js";
+import {
+  deleteService,
+  modifyService,
+  setService,
+} from "../api/service.api.js";
+import { deleteDomain, modifyDomain, setDomain } from "../api/domain.api.js";
+import {
+  deleteCommand,
+  modifyCommand,
+  setCommand,
+} from "../api/command.api.js";
+import { deleteLink, modifyLink, setLink } from "../api/link.api.js";
+import { deleteNote, modifyNote, setNote } from "../api/note.api.js";
+import {
+  archiveProject,
+  modifyProject,
+  restoreProject,
+} from "../api/project.api.js";
+
+export async function createEditModalProject(project, onSave) {
   // Reúne en un solo modal las colecciones editables de un proyecto.
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
@@ -7,7 +37,7 @@ export function createEditModalProject(project, onSave = () => {}) {
   modal.classList.add("project-edit-modal");
 
   const title = document.createElement("h1");
-  title.textContent = `Editando proyecto :${project.name}`;
+  title.textContent = `Editando proyecto: ${project.name}`;
   title.classList.add("modal-title");
 
   const closeButton = document.createElement("button");
@@ -17,6 +47,7 @@ export function createEditModalProject(project, onSave = () => {}) {
   closeButton.setAttribute("aria-label", "Cerrar");
 
   closeButton.addEventListener("click", () => {
+    onSave(project);
     overlay.remove();
   });
 
@@ -25,11 +56,36 @@ export function createEditModalProject(project, onSave = () => {}) {
   saveButton.textContent = "Guardar";
   saveButton.classList.add("modal-save-button");
 
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     project.name = projectName.value.trim();
     project.description = projectDescription.value.trim();
-    //llamada a la API
-    onSave(project);
+    project.client_id = Number(clientSelect.value);
+
+    const previousState = project.is_active;
+    let selectedState;
+
+    if (statusSelect.value === "true") {
+      selectedState = true;
+    } else {
+      selectedState = false;
+    }
+
+    if (previousState !== selectedState) {
+      if (selectedState) {
+        await restoreProject(project.id);
+      } else {
+        await archiveProject(project.id);
+      }
+      project.is_active = selectedState;
+    }
+
+    //Metodo para que aparezca por pantalla el cliente nuevo seleccionado
+    project.client = clients.find((client) => client.id === project.client_id);
+
+    await modifyProject(project, project.id);
+
+    await onSave(project);
+
     overlay.remove();
   });
 
@@ -53,13 +109,57 @@ export function createEditModalProject(project, onSave = () => {}) {
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
 
-  const environmentsSection = createEnvironmentsRead(project.environments);
-  const repositoriesSection = createRepositoriesRead(project.repositories);
-  const servicesSection = createServicesRead(project.services);
-  const domainsSection = createDomainsRead(project.domains);
-  const commandsSection = createCommandsRead(project.commands);
-  const linksSection = createLinksRead(project.links);
-  const notesSection = createNotesRead(project.notes);
+  const clients = await getLightClients("clients");
+
+  const clientSelect = document.createElement("select");
+  clientSelect.name = "client_id";
+
+  clients.forEach((client) => {
+    const option = document.createElement("option");
+    option.value = client.id;
+    option.textContent = client.name;
+    clientSelect.append(option);
+  });
+
+  clientSelect.value = project.client_id;
+
+  const statusSelect = document.createElement("select");
+  statusSelect.name = "is_active";
+
+  const activeOption = document.createElement("option");
+  activeOption.value = "true";
+  activeOption.textContent = "Activo";
+  const inactiveOption = document.createElement("option");
+  inactiveOption.value = "false";
+  inactiveOption.textContent = "Inactivo";
+
+  statusSelect.append(activeOption, inactiveOption);
+  statusSelect.value = project.is_active;
+
+  const projectNameField = createProjectField(
+    "Nombre del proyecto",
+    projectName,
+  );
+  const projectDescriptionField = createProjectField(
+    "Descripción",
+    projectDescription,
+  );
+  const clientField = createProjectField("Cliente", clientSelect);
+  const statusField = createStatusField(statusSelect);
+
+  const environmentsSection = createEnvironmentsRead(
+    project.environments,
+    project.id,
+  );
+  const repositoriesSection = createRepositoriesRead(
+    project.repositories,
+    project.id,
+  );
+  const servicesSection = createServicesRead(project.services, project.id);
+  const domainsSection = createDomainsRead(project.domains, project.id);
+  const commandsSection = createCommandsRead(project.commands, project.id);
+  const linksSection = createLinksRead(project.links, project.id);
+  const notesSection = createNotesRead(project.notes, project.id);
 
   // Agrupa las acciones para colocarlas juntas en la primera columna del grid del modal.
   const modalActions = document.createElement("div");
@@ -69,8 +169,10 @@ export function createEditModalProject(project, onSave = () => {}) {
   modal.append(
     closeButton,
     title,
-    projectName,
-    projectDescription,
+    projectNameField,
+    projectDescriptionField,
+    clientField,
+    statusField,
     environmentsSection,
     repositoriesSection,
     servicesSection,
@@ -85,14 +187,62 @@ export function createEditModalProject(project, onSave = () => {}) {
 
   return overlay;
 }
-function createEnvironmentsRead(environments) {
+
+function createProjectField(labelText, input) {
+  const field = document.createElement("div");
+  field.classList.add("project-edit-field");
+
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  label.htmlFor = input.name;
+  input.id = input.name;
+
+  field.append(label, input);
+  return field;
+}
+
+function createStatusField(statusSelect) {
+  const field = document.createElement("div");
+  field.classList.add("project-edit-field");
+
+  const label = document.createElement("label");
+  label.textContent = "Estado";
+  label.htmlFor = statusSelect.name;
+  statusSelect.id = statusSelect.name;
+
+  const control = document.createElement("div");
+  control.classList.add("project-status-control");
+
+  const indicator = document.createElement("span");
+  indicator.classList.add("project-status-indicator");
+  indicator.setAttribute("aria-hidden", "true");
+
+  const updateIndicator = () => {
+    const isActive = statusSelect.value === "true";
+    indicator.classList.toggle("project-status-indicator--active", isActive);
+    indicator.classList.toggle("project-status-indicator--inactive", !isActive);
+  };
+
+  statusSelect.addEventListener("change", updateIndicator);
+  updateIndicator();
+
+  control.append(indicator, statusSelect);
+  field.append(label, control);
+  return field;
+}
+
+function createEnvironmentsRead(environments, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Entornos";
 
   const environmentsList = document.createElement("ul");
   const addButton = createAddButton("Añadir entorno", () => {
-    const environment = { type: "", url: "" };
+    const environment = {
+      type: "",
+      url: "",
+      project_id: projectId,
+    };
     const listItem = document.createElement("li");
     environmentsList.append(listItem);
     createEnvironmentsEdit(listItem, environment, environments, true);
@@ -111,16 +261,43 @@ function createEnvironmentsRead(environments) {
   return section;
 }
 
-function createEnvironmentsEdit(listItem, environment, environments, isNew = false) {
+function createEnvironmentsEdit(
+  listItem,
+  environment,
+  environments,
+  isNew = false,
+) {
   listItem.replaceChildren();
 
-  const typeInput = document.createElement("input");
-  typeInput.type = "text";
-  typeInput.value = environment.type;
+  const typeSelect = document.createElement("select");
+  typeSelect.name = "type";
+
+  const optionDev = document.createElement("option");
+  const optionTest = document.createElement("option");
+  const optionStaging = document.createElement("option");
+  const optionProd = document.createElement("option");
+
+  optionDev.textContent = "Development";
+  optionDev.value = "development";
+  optionTest.textContent = "Test";
+  optionTest.value = "test";
+  optionStaging.textContent = "Staging";
+  optionStaging.value = "staging";
+  optionProd.textContent = "Production";
+  optionProd.value = "production";
+
+  typeSelect.append(optionDev, optionTest, optionStaging, optionProd);
+
+  if (environment.type === "") {
+    typeSelect.value = optionDev.value;
+  } else {
+    typeSelect.value = environment.type;
+  }
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.value = environment.url;
+  urlInput.placeholder = "Introduce una url válida";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -139,21 +316,28 @@ function createEnvironmentsEdit(listItem, environment, environments, isNew = fal
     renderEnvironmentRead(listItem, environment, environments);
   });
 
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     const updatedEnvironment = {
       ...environment,
-      type: typeInput.value.trim(),
+      type: typeSelect.value.trim(),
       url: urlInput.value.trim(),
     };
+
+    if (isNew) {
+      const createdEnvironment = await setEnvironment(updatedEnvironment);
+      environments.push(createdEnvironment);
+      renderEnvironmentRead(listItem, createdEnvironment, environments);
+      return;
+    }
+    await modifyEnvironment(updatedEnvironment, updatedEnvironment.id);
 
     environment.type = updatedEnvironment.type;
     environment.url = updatedEnvironment.url;
 
-    if (isNew) environments.push(environment);
     renderEnvironmentRead(listItem, environment, environments);
   });
 
-  listItem.append(typeInput, urlInput, saveButton, cancelButton);
+  listItem.append(typeSelect, urlInput, saveButton, cancelButton);
 }
 
 function renderEnvironmentRead(listItem, environment, environments) {
@@ -173,16 +357,20 @@ function renderEnvironmentRead(listItem, environment, environments) {
     createEnvironmentsEdit(listItem, environment, environments);
   });
 
-  listItem.append(link, editButton, createDeleteButton(environments, environment, listItem));
+  listItem.append(
+    link,
+    editButton,
+    createDeleteButton(environments, environment, listItem, deleteEnvironment),
+  );
 }
 
-function createRepositoriesRead(repositories) {
+function createRepositoriesRead(repositories, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Repositorios";
   const repositoriesList = document.createElement("ul");
   const addButton = createAddButton("Añadir repositorio", () => {
-    const repository = { type: "", url: "" };
+    const repository = { project_id: projectId, type: "", url: "" };
     const listItem = document.createElement("li");
     repositoriesList.append(listItem);
     createRepositoryEdit(listItem, repository, repositories, true);
@@ -199,16 +387,43 @@ function createRepositoriesRead(repositories) {
   return section;
 }
 
-function createRepositoryEdit(listItem, repository, repositories, isNew = false) {
+function createRepositoryEdit(
+  listItem,
+  repository,
+  repositories,
+  isNew = false,
+) {
   listItem.replaceChildren();
 
-  const typeInput = document.createElement("input");
-  typeInput.type = "text";
-  typeInput.value = repository.type;
+  const typeSelect = document.createElement("select");
+  typeSelect.name = "type";
+
+  const optionBack = document.createElement("option");
+  const optionFront = document.createElement("option");
+  const optionDevOps = document.createElement("option");
+  const optionQa = document.createElement("option");
+
+  optionBack.textContent = "Backend";
+  optionBack.value = "backend";
+  optionFront.textContent = "Frontend";
+  optionFront.value = "frontend";
+  optionDevOps.textContent = "Devops";
+  optionDevOps.value = "devops";
+  optionQa.textContent = "QA";
+  optionQa.value = "qa";
+
+  typeSelect.append(optionBack, optionFront, optionDevOps, optionQa);
+
+  if (repository.type === "") {
+    typeSelect.value = optionBack.value;
+  } else {
+    typeSelect.value = repository.type;
+  }
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.value = repository.url;
+  urlInput.placeholder = "Introduce una url válida";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -227,16 +442,28 @@ function createRepositoryEdit(listItem, repository, repositories, isNew = false)
     renderRepositoryRead(listItem, repository, repositories);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /repositories/{repository.id}.
-    repository.type = typeInput.value.trim();
-    repository.url = urlInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedRepository = {
+      ...repository,
+      type: typeSelect.value.trim(),
+      url: urlInput.value.trim(),
+    };
 
-    if (isNew) repositories.push(repository);
+    if (isNew) {
+      const createdRepository = await setRepository(updatedRepository);
+      repositories.push(createdRepository);
+      renderRepositoryRead(listItem, createdRepository, repositories);
+      return;
+    }
+
+    await modifyRepository(updatedRepository, updatedRepository.id);
+
+    repository.type = updatedRepository.type;
+    repository.url = updatedRepository.url;
     renderRepositoryRead(listItem, repository, repositories);
   });
 
-  listItem.append(typeInput, urlInput, saveButton, cancelButton);
+  listItem.append(typeSelect, urlInput, saveButton, cancelButton);
 }
 
 function renderRepositoryRead(listItem, repository, repositories) {
@@ -256,16 +483,20 @@ function renderRepositoryRead(listItem, repository, repositories) {
     createRepositoryEdit(listItem, repository, repositories);
   });
 
-  listItem.append(link, editButton, createDeleteButton(repositories, repository, listItem));
+  listItem.append(
+    link,
+    editButton,
+    createDeleteButton(repositories, repository, listItem, deleteRepository),
+  );
 }
 
-function createServicesRead(services) {
+function createServicesRead(services, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Servicios";
   const servicesList = document.createElement("ul");
   const addButton = createAddButton("Añadir servicio", () => {
-    const service = { name: "" };
+    const service = { project_id: projectId, name: "" };
     const listItem = document.createElement("li");
     servicesList.append(listItem);
     createServiceEdit(listItem, service, services, true);
@@ -306,11 +537,22 @@ function createServiceEdit(listItem, service, services, isNew = false) {
     renderServiceRead(listItem, service, services);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /services/{service.id}.
-    service.name = nameInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedService = {
+      ...service,
+      name: nameInput.value.trim(),
+    };
 
-    if (isNew) services.push(service);
+    if (isNew) {
+      const createdService = await setService(updatedService);
+      services.push(createdService);
+      renderServiceRead(listItem, createdService, services);
+      return;
+    }
+
+    await modifyService(updatedService, updatedService.id);
+
+    service.name = updatedService.name;
     renderServiceRead(listItem, service, services);
   });
 
@@ -331,16 +573,20 @@ function renderServiceRead(listItem, service, services) {
     createServiceEdit(listItem, service, services);
   });
 
-  listItem.append(name, editButton, createDeleteButton(services, service, listItem));
+  listItem.append(
+    name,
+    editButton,
+    createDeleteButton(services, service, listItem, deleteService),
+  );
 }
 
-function createDomainsRead(domains) {
+function createDomainsRead(domains, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Dominios";
   const domainsList = document.createElement("ul");
   const addButton = createAddButton("Añadir dominio", () => {
-    const domain = { url: "" };
+    const domain = { project_id: projectId, url: "" };
     const listItem = document.createElement("li");
     domainsList.append(listItem);
     createDomainEdit(listItem, domain, domains, true);
@@ -381,11 +627,22 @@ function createDomainEdit(listItem, domain, domains, isNew = false) {
     renderDomainRead(listItem, domain, domains);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /domains/{domain.id}.
-    domain.url = urlInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedDomain = {
+      ...domain,
+      url: urlInput.value.trim(),
+    };
 
-    if (isNew) domains.push(domain);
+    if (isNew) {
+      const createdDomain = await setDomain(updatedDomain);
+      domains.push(createdDomain);
+      renderDomainRead(listItem, createdDomain, domains);
+      return;
+    }
+
+    await modifyDomain(updatedDomain, updatedDomain.id);
+
+    domain.url = updatedDomain.url;
     renderDomainRead(listItem, domain, domains);
   });
 
@@ -409,16 +666,20 @@ function renderDomainRead(listItem, domain, domains) {
     createDomainEdit(listItem, domain, domains);
   });
 
-  listItem.append(link, editButton, createDeleteButton(domains, domain, listItem));
+  listItem.append(
+    link,
+    editButton,
+    createDeleteButton(domains, domain, listItem, deleteDomain),
+  );
 }
 
-function createCommandsRead(commands) {
+function createCommandsRead(commands, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Comandos";
   const commandsList = document.createElement("ul");
   const addButton = createAddButton("Añadir comando", () => {
-    const command = { name: "", instruction: "" };
+    const command = { project_id: projectId, name: "", instruction: "" };
     const listItem = document.createElement("li");
     commandsList.append(listItem);
     createCommandEdit(listItem, command, commands, true);
@@ -463,12 +724,24 @@ function createCommandEdit(listItem, command, commands, isNew = false) {
     renderCommandRead(listItem, command, commands);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /commands/{command.id}.
-    command.name = nameInput.value.trim();
-    command.instruction = instructionInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedCommand = {
+      ...command,
+      name: nameInput.value.trim(),
+      instruction: instructionInput.value.trim(),
+    };
 
-    if (isNew) commands.push(command);
+    if (isNew) {
+      const createdCommand = await setCommand(updatedCommand);
+      commands.push(createdCommand);
+      renderCommandRead(listItem, createdCommand, commands);
+      return;
+    }
+
+    await modifyCommand(updatedCommand, updatedCommand.id);
+
+    command.name = updatedCommand.name;
+    command.instruction = updatedCommand.instruction;
     renderCommandRead(listItem, command, commands);
   });
 
@@ -494,16 +767,20 @@ function renderCommandRead(listItem, command, commands) {
     createCommandEdit(listItem, command, commands);
   });
 
-  listItem.append(content, editButton, createDeleteButton(commands, command, listItem));
+  listItem.append(
+    content,
+    editButton,
+    createDeleteButton(commands, command, listItem, deleteCommand),
+  );
 }
 
-function createLinksRead(links) {
+function createLinksRead(links, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Documentación";
   const linksList = document.createElement("ul");
   const addButton = createAddButton("Añadir documentación", () => {
-    const linkData = { title: "", url: "" };
+    const linkData = { project_id: projectId, title: "", url: "" };
     const listItem = document.createElement("li");
     linksList.append(listItem);
     createLinkEdit(listItem, linkData, links, true);
@@ -548,12 +825,24 @@ function createLinkEdit(listItem, linkData, links, isNew = false) {
     renderLinkRead(listItem, linkData, links);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /links/{linkData.id}.
-    linkData.title = titleInput.value.trim();
-    linkData.url = urlInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedLink = {
+      ...linkData,
+      title: titleInput.value.trim(),
+      url: urlInput.value.trim(),
+    };
 
-    if (isNew) links.push(linkData);
+    if (isNew) {
+      const createdLink = await setLink(updatedLink);
+      links.push(createdLink);
+      renderLinkRead(listItem, createdLink, links);
+      return;
+    }
+
+    await modifyLink(updatedLink, updatedLink.id);
+
+    linkData.title = updatedLink.title;
+    linkData.url = updatedLink.url;
     renderLinkRead(listItem, linkData, links);
   });
 
@@ -582,16 +871,20 @@ function renderLinkRead(listItem, linkData, links) {
     createLinkEdit(listItem, linkData, links);
   });
 
-  listItem.append(content, editButton, createDeleteButton(links, linkData, listItem));
+  listItem.append(
+    content,
+    editButton,
+    createDeleteButton(links, linkData, listItem, deleteLink),
+  );
 }
 
-function createNotesRead(notes) {
+function createNotesRead(notes, projectId) {
   const section = document.createElement("section");
   const title = document.createElement("h3");
   title.textContent = "Notas";
   const notesList = document.createElement("ul");
   const addButton = createAddButton("Añadir nota", () => {
-    const note = { description: "", content: "" };
+    const note = { project_id: projectId, description: "", content: "" };
     const listItem = document.createElement("li");
     notesList.append(listItem);
     createNoteEdit(listItem, note, notes, true);
@@ -636,12 +929,24 @@ function createNoteEdit(listItem, note, notes, isNew = false) {
     renderNoteRead(listItem, note, notes);
   });
 
-  saveButton.addEventListener("click", () => {
-    // Aquí irá PATCH /notes/{note.id}.
-    note.description = descriptionInput.value.trim();
-    note.content = contentInput.value.trim();
+  saveButton.addEventListener("click", async () => {
+    const updatedNote = {
+      ...note,
+      description: descriptionInput.value.trim(),
+      content: contentInput.value.trim(),
+    };
 
-    if (isNew) notes.push(note);
+    if (isNew) {
+      const createdNote = await setNote(updatedNote);
+      notes.push(createdNote);
+      renderNoteRead(listItem, createdNote, notes);
+      return;
+    }
+
+    await modifyNote(updatedNote, updatedNote.id);
+
+    note.description = updatedNote.description;
+    note.content = updatedNote.content;
     renderNoteRead(listItem, note, notes);
   });
 
@@ -667,7 +972,11 @@ function renderNoteRead(listItem, note, notes) {
     createNoteEdit(listItem, note, notes);
   });
 
-  listItem.append(content, editButton, createDeleteButton(notes, note, listItem));
+  listItem.append(
+    content,
+    editButton,
+    createDeleteButton(notes, note, listItem, deleteNote),
+  );
 }
 
 function createAddButton(text, onClick) {
@@ -679,13 +988,18 @@ function createAddButton(text, onClick) {
   return addButton;
 }
 
-function createDeleteButton(collection, item, listItem) {
+function createDeleteButton(collection, item, listItem, deleteItemFromApi) {
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.textContent = "Eliminar";
 
-  deleteButton.addEventListener("click", () => {
-    collection.splice(collection.indexOf(item), 1);
+  deleteButton.addEventListener("click", async () => {
+    await deleteItemFromApi(item.id);
+    const itemPosition = collection.indexOf(item);
+
+    if (itemPosition !== -1) {
+      collection.splice(itemPosition, 1);
+    }
     listItem.remove();
   });
 

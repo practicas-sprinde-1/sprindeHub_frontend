@@ -1,10 +1,35 @@
-import { getData, sendData, modifyData, deleteData } from "./methods.js";
+import {
+  getData,
+  sendData,
+  modifyData,
+  deleteData,
+  archiveOrRestoreData,
+  getLightData,
+  getPaginatedData,
+} from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 
-export async function getClients() {
+export async function getClients(entity, limit, offset, search) {
+  return getPaginatedData(
+    entity,
+    limit,
+    offset,
+    search,
+    "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
+export async function getLightClients(entity) {
+  return getLightData(
+    entity,
+    "No se han podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
+  );
+}
+
+export async function getArchivedClients() {
   return getData(
-    `${API_URL}/clients`,
+    `${API_URL}/clients/archived`,
     "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
   );
 }
@@ -32,7 +57,7 @@ export async function modifyClient(client, id) {
   );
 }
 
-export async function deleteClient(id) {
+export async function deleteClientById(id) {
   return deleteData(
     `${API_URL}/clients/${id}`,
     "No se ha podido borrar el cliente",
@@ -40,17 +65,16 @@ export async function deleteClient(id) {
 }
 
 export async function archiveClient(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/clients/${id}/archive`,
-    client,
+
     "No se ha podido archivar el cliente.",
   );
 }
 
 export async function restoreClient(id) {
-  return modifyData(
+  return archiveOrRestoreData(
     `${API_URL}/clients/${id}/restore`,
-    client,
     "No se ha podido restaurar el cliente.",
   );
 }

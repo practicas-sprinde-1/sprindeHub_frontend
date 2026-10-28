@@ -1,5 +1,4 @@
 import { logout } from "../api/session.js";
-import { userMockData } from "../mockdata/user.mockdata.js";
 
 export function createHeader(userName, profileUrl) {
   const header = document.createElement("header");
@@ -46,16 +45,21 @@ export function createHeader(userName, profileUrl) {
     window.location.href = getPageUrl(profileUrl, "users.html");
   });
 
+  const logsButton = document.createElement("button");
+  logsButton.classList.add("main-header-logs");
+  logsButton.type = "button";
+  logsButton.textContent = "Registros";
+
+  logsButton.addEventListener("click", () => {
+    window.location.href = getPageUrl(profileUrl, "logs.html");
+  });
+
   const actionButtons = document.createElement("div");
-  actionButtons.classList.add("action-buttons");
+  actionButtons.classList.add("main-header-actions");
 
   actionButtons.append(projectButton, clientButton);
 
-  if (userMockData.role === "ADMIN") {
-    actionButtons.append(usersButton);
-  }
-
-  actionButtons.append(logoutButton);
+  actionButtons.append(usersButton, logsButton, logoutButton);
 
   header.appendChild(profileLink);
   header.appendChild(actionButtons);

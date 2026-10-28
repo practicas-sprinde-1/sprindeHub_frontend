@@ -1,3 +1,5 @@
+import { modifyProfile } from "../api/profile.api.js";
+
 export function createEditProfileModal(user, renderUser) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
@@ -29,7 +31,7 @@ export function createEditProfileModal(user, renderUser) {
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     const username = usernameInput.value.trim();
     const email = emailInput.value.trim();
 
@@ -39,6 +41,8 @@ export function createEditProfileModal(user, renderUser) {
 
     user.username = username;
     user.email = email;
+
+    await modifyProfile(user);
     renderUser(user);
     overlay.remove();
   });
