@@ -113,6 +113,7 @@ function renderProject(project) {
       `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?`,
       async () => {
         await deleteProjectById(project.id);
+        window.location.href = "../index.html";
       },
     );
 

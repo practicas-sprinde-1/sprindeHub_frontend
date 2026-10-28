@@ -1,22 +1,28 @@
 import { createHeader } from "../components/header.js";
 import { createEditProfileModal } from "../components/profile-edit-modal.js";
-import { clientsMockData } from "../mockdata/client.mockdata.js";
 import { getProfile, modifyPassword } from "../api/profile.api.js";
+import { getClientById } from "../api/client.api.js";
+import { getRelationshipByUser } from "../api/user_client.api.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
 
 const user = await getProfile();
 
-function renderUser(user) {
+async function renderUser(user) {
   document.title = `${user.username} - Sprinde`;
 
   document.querySelector("#user-title").textContent = user.email;
 
   const clientsList = document.querySelector("#user-list-clients");
   clientsList.replaceChildren();
+  let clients = [];
+  const relationships = await getRelationshipByUser(user.id);
 
-  const clients = clientsMockData; //LLAMADA A USER_CLIENT PARA SABER QUÉ CLIENTES TIENE ASIGNADO.
+  for (const r of relationships) {
+    const client = await getClientById(r.client_id);
+    clients.push(client);
+  }
 
   clients.forEach((client) => {
     const listItem = document.createElement("li");
@@ -111,8 +117,6 @@ function createEditPasswordModal() {
       current_password: oldPassword,
       new_password: newPassword,
     };
-
-    console.log(newPassword);
 
     try {
       await modifyPassword(data);

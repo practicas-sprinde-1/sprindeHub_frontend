@@ -211,7 +211,7 @@ main {
 }
 
 /* Separación entre enlaces de repositorios y dominios. */
-td.repositories-cell a,
+.repository-link,
 .projects-table td.cell-centered .domain-link {
   display: inline-block;
   margin: 4px 8px;

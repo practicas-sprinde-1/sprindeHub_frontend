@@ -145,7 +145,7 @@ export async function createEditModalProject(project, onSave) {
     projectDescription,
   );
   const clientField = createProjectField("Cliente", clientSelect);
-  const statusField = createProjectField("Estado", statusSelect);
+  const statusField = createStatusField(statusSelect);
 
   const environmentsSection = createEnvironmentsRead(
     project.environments,
@@ -190,7 +190,7 @@ export async function createEditModalProject(project, onSave) {
 
 function createProjectField(labelText, input) {
   const field = document.createElement("div");
-  field.classList.add("user-modal-field");
+  field.classList.add("project-edit-field");
 
   const label = document.createElement("label");
   label.textContent = labelText;
@@ -198,6 +198,36 @@ function createProjectField(labelText, input) {
   input.id = input.name;
 
   field.append(label, input);
+  return field;
+}
+
+function createStatusField(statusSelect) {
+  const field = document.createElement("div");
+  field.classList.add("project-edit-field");
+
+  const label = document.createElement("label");
+  label.textContent = "Estado";
+  label.htmlFor = statusSelect.name;
+  statusSelect.id = statusSelect.name;
+
+  const control = document.createElement("div");
+  control.classList.add("project-status-control");
+
+  const indicator = document.createElement("span");
+  indicator.classList.add("project-status-indicator");
+  indicator.setAttribute("aria-hidden", "true");
+
+  const updateIndicator = () => {
+    const isActive = statusSelect.value === "true";
+    indicator.classList.toggle("project-status-indicator--active", isActive);
+    indicator.classList.toggle("project-status-indicator--inactive", !isActive);
+  };
+
+  statusSelect.addEventListener("change", updateIndicator);
+  updateIndicator();
+
+  control.append(indicator, statusSelect);
+  field.append(label, control);
   return field;
 }
 

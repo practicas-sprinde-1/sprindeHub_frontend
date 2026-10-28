@@ -55,7 +55,7 @@ export function createHeader(userName, profileUrl) {
   });
 
   const actionButtons = document.createElement("div");
-  actionButtons.classList.add("action-buttons");
+  actionButtons.classList.add("main-header-actions");
 
   actionButtons.append(projectButton, clientButton);
 

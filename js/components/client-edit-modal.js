@@ -2,7 +2,6 @@ import { modifyClient } from "../api/client.api.js";
 import { getProfile } from "../api/profile.api.js";
 import { getLightProjects, modifyProject } from "../api/project.api.js";
 import {
-  getRelationshipByClient,
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
@@ -86,8 +85,6 @@ export async function createEditModalClient(
   const individualRelationshipClientId = userRelationshipClientsId.filter(
     (id) => id === client.id,
   );
-
-  console.log(individualRelationshipClientId);
 
   const userCheckBoxList = createUserCheckBoxList(
     userName,
@@ -182,8 +179,8 @@ export async function createEditModalClient(
       cifField,
       phoneField,
       statusField,
-      projectCheckBoxList.element,
       userCheckBoxList.element,
+      projectCheckBoxList.element,
       modalActions,
     );
   }
@@ -268,10 +265,12 @@ function createProjectCheckBoxList(projects, initialProjectsIds) {
 
 function createUserCheckBoxList(userName, relationship) {
   const section = document.createElement("section");
+  section.classList.add("client-user-access");
   const title = document.createElement("h2");
   title.textContent = "Usuarios";
 
   const label = document.createElement("label");
+  label.classList.add("client-user-access-option");
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
 
@@ -295,7 +294,7 @@ function createUserCheckBoxList(userName, relationship) {
     }
   });
 
-  label.append(checkbox, userName);
+  label.append(checkbox, spanUserName);
 
   section.append(title, label);
 

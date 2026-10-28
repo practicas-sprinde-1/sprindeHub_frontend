@@ -67,8 +67,7 @@ function renderTable(clients) {
 }
 
 function showTableRows() {
-  console.log(clients.length);
-  const tableRows = document.querySelectorAll("#projects-table-body tr");
+  const tableRows = document.querySelectorAll("#clients-table-body tr");
 
   const firstRow = (currentPage - 1) * recordsPerPage;
   const lastRow = firstRow + recordsPerPage;
@@ -92,11 +91,16 @@ searchInput.addEventListener("input", () => {
 
   timeOut = setTimeout(async () => {
     const searched = searchInput.value.trim().toLowerCase();
+    if (searched === "") {
+      showTableRows();
+      return;
+    }
     const response = await getClients("clients", 100, 0, searched);
     const filteredClients = response.items;
-    console.log(searched);
 
     currentPage = 1;
+    previousPageButton.disabled = currentPage === 1;
+    nextPageButton.disabled = filteredClients !== recordsPerPage;
     renderTable(filteredClients);
   }, 500);
 });
@@ -130,7 +134,6 @@ nextPageButton.addEventListener("click", async () => {
     (currentPage - 1) * recordsPerPage,
   );
   clients = response.items;
-  console.log(clients);
   showTableRows();
 });
 document.querySelector("#button-new-client").addEventListener("click", () => {

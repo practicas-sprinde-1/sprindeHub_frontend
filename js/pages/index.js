@@ -23,6 +23,7 @@ const showActivedButton = document.querySelector("#actived-projects");
 
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
+let search = "";
 
 const projectsTableRead = await getProjects("projects", 20, 0);
 
@@ -46,6 +47,9 @@ function showTableRows() {
 }
 
 recordsPerPageSelect.addEventListener("change", async () => {
+  if (search !== "") {
+    return;
+  }
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
   const response = await getProjects(
@@ -133,6 +137,7 @@ function renderTable(projects) {
     repositories.forEach((repository) => {
       const repositoryLink = document.createElement("a");
 
+      repositoryLink.classList.add("repository-link");
       repositoryLink.href = repository.url;
       repositoryLink.textContent = repository.type;
 
@@ -272,9 +277,17 @@ searchInput.addEventListener("input", () => {
   clearTimeout(timeOut);
 
   timeOut = setTimeout(async () => {
-    const searched = searchInput.value.trim().toLowerCase();
-    const response = await getProjects("projects", 100, 0, searched);
+    search = searchInput.value.trim().toLowerCase();
+    if (search === "") {
+      showTableRows();
+      return;
+    }
+    const response = await getProjects("projects", 100, 0, search);
     const filteredProjects = response.items;
+
+    currentPage = 1;
+    previousPageButton.disabled = currentPage === 1;
+    nextPageButton.disabled = filteredProjects.length !== recordsPerPage;
 
     renderTable(filteredProjects);
   }, 500);

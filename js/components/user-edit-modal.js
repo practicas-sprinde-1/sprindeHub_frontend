@@ -178,10 +178,12 @@ function createCancelButton(overlay) {
 
 function createClientCheckBoxList(clients, initialClientsId) {
   const section = document.createElement("section");
+  section.classList.add("user-client-access");
   const title = document.createElement("h2");
   title.textContent = "Clientes";
 
   const list = document.createElement("ul");
+  list.classList.add("user-client-access-list");
 
   let selectedClientsId = [...initialClientsId];
 
@@ -198,6 +200,7 @@ function createClientCheckBoxList(clients, initialClientsId) {
   orderedClients.forEach((client) => {
     const listItem = document.createElement("li");
     const label = document.createElement("label");
+    label.classList.add("user-client-access-option");
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";

@@ -23,7 +23,7 @@ const deleteUserButton = document.querySelector("#button-delete-user");
 let currentPage = 1;
 let recordsPerPage = Number(recordsPerPageSelect.value);
 let selectedUser = null;
-
+let search = "";
 let users = await getUsers("users", 20, 0);
 
 function renderTable(users) {
@@ -87,29 +87,28 @@ function showTableRows() {
   pageInformation.textContent = "Página " + currentPage;
   previousPageButton.disabled = currentPage === 1;
   nextPageButton.disabled = users.length !== recordsPerPage;
-  renderTable(users);
 }
-
+let timeOut;
 async function showUsers() {
-  if (!users.includes(selectedUser)) {
-    selectedUser = null;
-  }
+  clearTimeout(timeOut);
+  timeOut = setTimeout(async () => {
+    if (!users.includes(selectedUser)) {
+      selectedUser = null;
+    }
 
-  const textToSearch = searchInput.value.trim().toLowerCase();
-  const usersToShow = users.filter(function (user) {
-    return (
-      user.email.toLowerCase().includes(textToSearch) ||
-      user.username.toLowerCase().includes(textToSearch) ||
-      user.role.toLowerCase().includes(textToSearch)
-    );
-  });
-  renderTable(usersToShow);
-  showTableRows();
+    search = searchInput.value.trim().toLowerCase();
+    const filteredUsers = await getUsers("users", 100, 0, search);
+    renderTable(filteredUsers);
+    showTableRows();
+  }, 250);
 }
 
 searchInput.addEventListener("input", showUsers);
 
 recordsPerPageSelect.addEventListener("change", async () => {
+  if (search !== "") {
+    return;
+  }
   recordsPerPage = Number(recordsPerPageSelect.value);
   currentPage = 1;
   users = await getUsers(

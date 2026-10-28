@@ -78,7 +78,7 @@ async function renderTable(logs, users) {
       }
     }
 
-    if (log.affected_entity === "CLIENT") {
+    if (log.affected_entity === "CLIENT" && entity !== null) {
       const clientLink = document.createElement("a");
       clientLink.href = `./client.html?id=${entity.id}`;
       clientLink.className = "project-link";
@@ -86,7 +86,7 @@ async function renderTable(logs, users) {
       linksCell.append(clientLink);
     }
 
-    if (log.affected_entity === "PROJECT") {
+    if (log.affected_entity === "PROJECT" && entity !== null) {
       const projectLink = document.createElement("a");
       projectLink.href = `./project.html?id=${entity.id}`;
       projectLink.className = "project-link";
@@ -131,9 +131,16 @@ searchInput.addEventListener("input", async () => {
   clearTimeout(timeOut);
   timeOut = setTimeout(async () => {
     const searched = searchInput.value;
-    const filteredLogs = await getLogs("logs", 20, 0, searched);
+    if (searched === "") {
+      showTableRows();
+      return;
+    }
+    const filteredLogs = await getLogs("logs", 100, 0, searched);
+    console.log(filteredLogs);
 
     currentPage = 1;
+    nextPageButton.disabled = filteredLogs.length !== recordsPerPage;
+    previousPageButton.disabled = currentPage === 1;
     renderTable(filteredLogs, users);
   }, 500);
 });
