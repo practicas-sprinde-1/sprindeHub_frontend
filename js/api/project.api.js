@@ -27,9 +27,12 @@ export async function getLightProjects(entity) {
   );
 }
 
-export async function getArchivedProjects() {
-  return getData(
-    `${API_URL}/projects/archived`,
+export async function getArchivedProjects(limit = 20, offset = 0, search = "") {
+  return getPaginatedData(
+    "projects/archived",
+    limit,
+    offset,
+    search,
     "No se ha podido obtener los proyectos del servidor. Inténtelo de nuevo más tarde",
   );
 }

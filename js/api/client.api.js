@@ -27,9 +27,12 @@ export async function getLightClients(entity) {
   );
 }
 
-export async function getArchivedClients() {
-  return getData(
-    `${API_URL}/clients/archived`,
+export async function getArchivedClients(limit, offset, search) {
+  return getPaginatedData(
+    "clients/archived",
+    limit,
+    offset,
+    search,
     "No se ha podido obtener los clientes del servidor. Inténtelo de nuevo más tarde",
   );
 }

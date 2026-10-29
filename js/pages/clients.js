@@ -15,19 +15,18 @@ const pageInformation = document.querySelector("#page-information");
 const showArchivedButton = document.querySelector("#archived-clients");
 const showActivedButton = document.querySelector("#actived-clients");
 
-let currentPage = 1;
-let recordsPerPage = Number(recordsPerPageSelect.value);
+let clients = [];
+let tableState = {
+  search: "",
+  page: 1,
+  limit: Number(recordsPerPageSelect.value),
+  view: "active",
+};
 
-const clientsResponse = await getClients("clients", 20, 0);
-let clients = clientsResponse.items;
-const archivedClients = await getArchivedClients();
+async function renderTable(clients) {
+  const rows = [];
 
-function renderTable(clients) {
-  tableBody.replaceChildren();
-
-  console.log(clients.length);
-
-  clients.forEach(async (client) => {
+  for (const client of clients) {
     const row = document.createElement("tr");
     const nameCell = document.createElement("td");
     const clientLink = document.createElement("a");
@@ -64,90 +63,79 @@ function renderTable(clients) {
     statusCell.append(status);
 
     row.append(nameCell, cifCell, phoneCell, projectsCell, statusCell);
-    tableBody.append(row);
-  });
+    rows.push(row);
+  }
+
+  tableBody.replaceChildren(...rows);
 }
 
-function showTableRows(clients) {
-  const tableRows = document.querySelectorAll("#clients-table-body tr");
+async function loadClients() {
+  const offset = (tableState.page - 1) * tableState.limit;
+  let response;
 
-  const firstRow = (currentPage - 1) * recordsPerPage;
-  const lastRow = firstRow + recordsPerPage;
-
-  tableRows.forEach(function (row, index) {
-    row.hidden = index < firstRow || index >= lastRow;
-  });
-
-  pageInformation.textContent = "Página " + currentPage;
-
-  previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = clients.length !== recordsPerPage;
-  renderTable(clients);
+  if (tableState.view === "archived") {
+    response = await getArchivedClients(
+      tableState.limit,
+      offset,
+      tableState.search,
+    );
+  } else {
+    response = await getClients(
+      "clients",
+      tableState.limit,
+      offset,
+      tableState.search,
+    );
+  }
+  clients = response.items;
+  await renderTable(clients);
+  pageInformation.textContent = "Página " + tableState.page;
+  previousPageButton.disabled = tableState.page === 1;
+  nextPageButton.disabled = clients.length < tableState.limit;
 }
-showTableRows(clients);
+await loadClients();
 
 let timeOut;
 
 searchInput.addEventListener("input", () => {
   clearTimeout(timeOut);
 
-  timeOut = setTimeout(async () => {
-    const searched = searchInput.value.trim().toLowerCase();
-    if (searched === "") {
-      showTableRows(clients);
-      return;
-    }
-    const response = await getClients("clients", 100, 0, searched);
-    const filteredClients = response.items;
-
-    currentPage = 1;
-    previousPageButton.disabled = currentPage === 1;
-    nextPageButton.disabled = filteredClients.length !== recordsPerPage;
-    showTableRows(filteredClients);
+  timeOut = setTimeout(() => {
+    tableState.search = searchInput.value.trim().toLowerCase();
+    tableState.page = 1;
+    loadClients();
   }, 500);
 });
 
-recordsPerPageSelect.addEventListener("change", async () => {
-  recordsPerPage = Number(recordsPerPageSelect.value);
-  currentPage = 1;
-  const response = await getClients(
-    "clients",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  clients = response.items;
-  showTableRows(clients);
+recordsPerPageSelect.addEventListener("change", () => {
+  tableState.limit = Number(recordsPerPageSelect.value);
+  tableState.page = 1;
+  loadClients();
 });
 previousPageButton.addEventListener("click", async () => {
-  currentPage -= 1;
-  const response = await getClients(
-    "clients",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  clients = response.items;
-  showTableRows(clients);
+  if (tableState.page > 1) {
+    tableState.page--;
+    await loadClients();
+    window.scrollTo(0, 0);
+  }
 });
 nextPageButton.addEventListener("click", async () => {
-  currentPage += 1;
-  const response = await getClients(
-    "clients",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  clients = response.items;
-  showTableRows(clients);
+  tableState.page++;
+  await loadClients();
+  window.scrollTo(0, 0);
 });
 document.querySelector("#button-new-client").addEventListener("click", () => {
   window.location.href = "./new-client.html";
 });
 
-showArchivedButton.onclick = async () => {
-  clients = archivedClients.items;
-  renderTable(clients);
+showArchivedButton.onclick = () => {
+  tableState.view = "archived";
+  tableState.page = 1;
+  loadClients();
 };
 
-showActivedButton.onclick = async () => {
-  clients = clientsResponse.items;
-  renderTable(clients);
+showActivedButton.onclick = () => {
+  tableState.view = "active";
+  tableState.page = 1;
+  loadClients();
 };
