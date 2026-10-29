@@ -1,0 +1,60 @@
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-color: rgba(30, 58, 95, 0.55);
+}
+
+.confirm-modal {
+  width: 480px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+}
+
+.confirm-modal .modal-title {
+  margin: 0 0 12px;
+  color: var(--test);
+  font-size: 28px;
+}
+
+.confirm-modal p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.confirm-modal .modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.confirm-modal button {
+  padding: 10px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.confirm-modal .modal-delete-button {
+  border: 1px solid var(--test);
+  background-color: var(--test);
+  color: var(--surface);
+}
+
+.confirm-modal .modal-cancel-button {
+  border: 1px solid var(--blue);
+  background-color: var(--surface);
+  color: var(--blue);
+}
+
+.confirm-modal .modal-delete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}

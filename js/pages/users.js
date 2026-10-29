@@ -1,8 +1,9 @@
 import { createHeader } from "../components/header.js";
 import { createNewUserModal } from "../components/user-create-modal.js";
 import { createEditUserModal } from "../components/user-edit-modal.js";
-import { createDeleteUserModal } from "../components/user-delete-modal.js";
-import { getUsers } from "../api/user.api.js";
+import { createConfirmModal } from "../components/confirm-modal.js";
+import { deleteUser, getUsers } from "../api/user.api.js";
+import { showNotification } from "../components/notifications.js";
 
 // Solo los administradores pueden consultar esta página.
 
@@ -156,7 +157,11 @@ editUserButton.addEventListener("click", async () => {
   }
 
   if (selectedUser === null) {
-    alert("Selecciona un usuario de la tabla antes de modificarlo.");
+    showNotification({
+      type: "info",
+      title: "Selecciona un usuario",
+      message: "Selecciona un usuario de la tabla antes de modificarlo.",
+    });
     return;
   }
 
@@ -165,16 +170,36 @@ editUserButton.addEventListener("click", async () => {
 });
 
 deleteUserButton.addEventListener("click", () => {
-  if (document.querySelector(".modal-overlay")) {
+  if (
+    document.querySelector(".modal-overlay") ||
+    document.querySelector(".confirm-overlay")
+  ) {
     return;
   }
 
   if (selectedUser === null) {
-    alert("Selecciona un usuario de la tabla antes de borrarlo.");
+    showNotification({
+      type: "info",
+      title: "Selecciona un usuario",
+      message: "Selecciona un usuario de la tabla antes de borrarlo.",
+    });
     return;
   }
-  const modal = createDeleteUserModal(selectedUser, showUsers);
-  document.body.append(modal);
+  const confirmModal = createConfirmModal(
+    "Borrar usuario",
+    `¿Estás seguro de que deseas borrar el usuario "${selectedUser.username}"?`,
+    async () => {
+      await deleteUser(selectedUser.id);
+      showUsers();
+      showNotification({
+        type: "success",
+        title: "Usuario borrado",
+        message: "El usuario se ha borrado correctamente.",
+      });
+    },
+  );
+
+  document.body.append(confirmModal);
 });
 
 showUsers();

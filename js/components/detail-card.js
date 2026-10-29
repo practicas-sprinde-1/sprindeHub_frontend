@@ -15,7 +15,6 @@ export function createDetailCard(title, items, projectUrl, contentType) {
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
 
   header.append(titleElement, closeButton);
 

@@ -5,6 +5,7 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
+import { showNotification } from "./notifications.js";
 
 export async function createEditModalClient(
   client,
@@ -25,7 +26,6 @@ export async function createEditModalClient(
   closeButton.classList.add("modal-close-button");
   closeButton.type = "button";
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
 
   closeButton.addEventListener("click", () => {
     overlay.remove();
@@ -97,7 +97,8 @@ export async function createEditModalClient(
   saveButton.classList.add("modal-save-button");
 
   saveButton.addEventListener("click", async () => {
-    client.name = nameInput.value.trim();
+    try {
+      client.name = nameInput.value.trim();
     client.cif = cifInput.value.trim();
     client.phone = phoneInput.value.trim();
     client.is_active = statusInput.value === "true";
@@ -143,8 +144,21 @@ export async function createEditModalClient(
       await revokeClientAccess(user.id, client.id);
     }
 
-    await onSave(client);
-    overlay.remove();
+      await onSave(client);
+      overlay.remove();
+      showNotification({
+        type: "success",
+        title: "Cliente modificado",
+        message: "Los cambios se han guardado correctamente.",
+      });
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido modificar el cliente",
+        message: error.message,
+        duration: 7000,
+      });
+    }
   });
 
   const cancelButton = document.createElement("button");

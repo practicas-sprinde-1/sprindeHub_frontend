@@ -1,0 +1,70 @@
+.notifications {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: grid;
+  gap: 12px;
+  width: 400px;
+}
+
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid;
+  border-radius: 10px;
+  background-color: var(--surface);
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.18);
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-content strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.notification-content p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.notification-close {
+  padding: 6px 10px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.notification-success {
+  border-color: var(--production);
+  color: #166534;
+}
+
+.notification-info {
+  border-color: var(--blue);
+  color: var(--navy);
+}
+
+.notification-warning {
+  border-color: var(--staging);
+  color: #92400e;
+}
+
+.notification-error {
+  border-color: var(--test);
+  color: #991b1b;
+}
+
+.notification-danger {
+  border-color: #7f1d1d;
+  color: #7f1d1d;
+}

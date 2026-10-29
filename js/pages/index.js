@@ -93,6 +93,10 @@ const tableTitles = document.querySelector(".table-titles");
 function renderTable(projects) {
   tableBody.replaceChildren();
 
+  currentPage = 1;
+  nextPageButton.disabled = projects.length !== recordsPerPage;
+  previousPageButton.disabled = currentPage === 1;
+
   projects.forEach(async (project) => {
     // Creamos la fila
     const row = document.createElement("tr");

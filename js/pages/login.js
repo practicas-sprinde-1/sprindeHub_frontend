@@ -23,8 +23,6 @@ loginForm.addEventListener("submit", async (event) => {
     sessionStorage.setItem("accessToken", tokenData.access_token);
     sessionStorage.setItem("refreshToken", tokenData.refresh_token);
 
-    console.log(tokenData);
-
     window.location.replace("/index.html");
   } catch (error) {
     loginMessage.textContent =

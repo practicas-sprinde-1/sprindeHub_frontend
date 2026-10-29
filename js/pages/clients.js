@@ -25,6 +25,8 @@ const archivedClients = await getArchivedClients();
 function renderTable(clients) {
   tableBody.replaceChildren();
 
+  console.log(clients.length);
+
   clients.forEach(async (client) => {
     const row = document.createElement("tr");
     const nameCell = document.createElement("td");
@@ -66,7 +68,7 @@ function renderTable(clients) {
   });
 }
 
-function showTableRows() {
+function showTableRows(clients) {
   const tableRows = document.querySelectorAll("#clients-table-body tr");
 
   const firstRow = (currentPage - 1) * recordsPerPage;
@@ -82,7 +84,7 @@ function showTableRows() {
   nextPageButton.disabled = clients.length !== recordsPerPage;
   renderTable(clients);
 }
-showTableRows();
+showTableRows(clients);
 
 let timeOut;
 
@@ -92,7 +94,7 @@ searchInput.addEventListener("input", () => {
   timeOut = setTimeout(async () => {
     const searched = searchInput.value.trim().toLowerCase();
     if (searched === "") {
-      showTableRows();
+      showTableRows(clients);
       return;
     }
     const response = await getClients("clients", 100, 0, searched);
@@ -100,8 +102,8 @@ searchInput.addEventListener("input", () => {
 
     currentPage = 1;
     previousPageButton.disabled = currentPage === 1;
-    nextPageButton.disabled = filteredClients !== recordsPerPage;
-    renderTable(filteredClients);
+    nextPageButton.disabled = filteredClients.length !== recordsPerPage;
+    showTableRows(filteredClients);
   }, 500);
 });
 
@@ -114,7 +116,7 @@ recordsPerPageSelect.addEventListener("change", async () => {
     (currentPage - 1) * recordsPerPage,
   );
   clients = response.items;
-  showTableRows();
+  showTableRows(clients);
 });
 previousPageButton.addEventListener("click", async () => {
   currentPage -= 1;
@@ -124,7 +126,7 @@ previousPageButton.addEventListener("click", async () => {
     (currentPage - 1) * recordsPerPage,
   );
   clients = response.items;
-  showTableRows();
+  showTableRows(clients);
 });
 nextPageButton.addEventListener("click", async () => {
   currentPage += 1;
@@ -134,7 +136,7 @@ nextPageButton.addEventListener("click", async () => {
     (currentPage - 1) * recordsPerPage,
   );
   clients = response.items;
-  showTableRows();
+  showTableRows(clients);
 });
 document.querySelector("#button-new-client").addEventListener("click", () => {
   window.location.href = "./new-client.html";

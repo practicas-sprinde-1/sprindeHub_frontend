@@ -1,5 +1,6 @@
 import { setClient } from "../api/client.api.js";
 import { createHeader } from "../components/header.js";
+import { showNotification } from "../components/notifications.js";
 
 start();
 
@@ -26,7 +27,12 @@ export function configureClientForm(form) {
       await setClient(clientData);
       window.location.href = "./clients.html";
     } catch (error) {
-      alert("No se ha podido guardar el cliente");
+      showNotification({
+        type: "error",
+        title: "No se pudo guardar el cliente",
+        message: error.message,
+        duration: 7000,
+      });
     }
   });
 }

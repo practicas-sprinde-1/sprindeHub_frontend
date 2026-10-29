@@ -3,6 +3,7 @@ import { createEditProfileModal } from "../components/profile-edit-modal.js";
 import { getProfile, modifyPassword } from "../api/profile.api.js";
 import { getClientById } from "../api/client.api.js";
 import { getRelationshipByUser } from "../api/user_client.api.js";
+import { showNotification } from "../components/notifications.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -121,8 +122,18 @@ function createEditPasswordModal() {
     try {
       await modifyPassword(data);
       overlay.remove();
+      showNotification({
+        type: "success",
+        title: "Contraseña modificada",
+        message: "La contraseña se ha actualizado correctamente.",
+      });
     } catch (error) {
-      throw error;
+      showNotification({
+        type: "error",
+        title: "No se ha podido modificar la contraseña",
+        message: error.message,
+        duration: 7000,
+      });
     }
   };
 
@@ -157,7 +168,6 @@ function createCloseButton(overlay) {
   closeButton.type = "button";
   closeButton.classList.add("modal-close-button");
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
   closeButton.addEventListener("click", () => {
     overlay.remove();
   });
