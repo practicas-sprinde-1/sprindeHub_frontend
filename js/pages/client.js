@@ -1,8 +1,9 @@
 import { createHeader } from "../components/header.js";
-import { createAlertModal } from "../components/alert-modal.js";
+import { createConfirmModal } from "../components/confirm-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
 import { getClientById, deleteClientById } from "../api/client.api.js";
 import { getProjectByClientId } from "../api/project.api.js";
+import { showNotification } from "../components/notifications.js";
 
 const headerContainer = document.querySelector("#header-container");
 headerContainer.append(createHeader("César", "./profile.html"));
@@ -64,17 +65,19 @@ async function renderClient(client) {
 
   const deleteClient = document.querySelector(".button-delete-client");
   deleteClient.onclick = () => {
-    if (document.querySelector(".alert-overlay")) return;
+    if (document.querySelector(".confirm-overlay")) return;
 
-    const alertModal = createAlertModal(
+    const confirmModal = createConfirmModal(
       "Borrar cliente",
       `¿Estás seguro de que deseas borrar el cliente "${client.name}"?`,
       async () => {
         await deleteClientById(client.id);
-        window.location.href = "./clients.html";
+        setTimeout(() => {
+          window.location.href = "./clients.html";
+        }, 1000);
       },
     );
 
-    document.body.append(alertModal);
+    document.body.append(confirmModal);
   };
 }

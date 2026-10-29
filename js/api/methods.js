@@ -14,7 +14,7 @@ export async function getData(url, errorMessage) {
   }
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -49,7 +49,7 @@ export async function getPaginatedData(
   }
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -88,7 +88,7 @@ export async function getAdminData(
   }
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -105,7 +105,7 @@ export async function sendData(url, data, errorMessage) {
   });
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -122,7 +122,7 @@ export async function modifyData(url, data, errorMessage) {
   });
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -138,7 +138,7 @@ export async function deleteData(url, errorMessage) {
   });
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   if (response.status === 204) {
@@ -158,7 +158,7 @@ export async function archiveOrRestoreData(url, errorMessage) {
   });
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -205,4 +205,23 @@ function clearSessionAndRedirect() {
   sessionStorage.removeItem("refreshToken");
 
   window.location.replace("/pages/login.html");
+}
+
+async function getResponseError(response, defaultMessage) {
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = null;
+  }
+  let message = defaultMessage;
+
+  if (data && data.detail) {
+    message = data.detail;
+  }
+
+  const newError = new Error(message);
+  newError.code = data?.code;
+  newError.status = response.status;
+  return newError;
 }

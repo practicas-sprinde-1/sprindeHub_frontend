@@ -1,9 +1,9 @@
 import { createHeader } from "../components/header.js";
+import { createConfirmModal } from "../components/confirm-modal.js";
 import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
-import { createAlertModal } from "../components/alert-modal.js";
 import { deleteProjectById, getProjectById } from "../api/project.api.js";
 
 start();
@@ -106,18 +106,20 @@ function renderProject(project) {
 
   const deleteProject = document.querySelector(".button-delete-project");
   deleteProject.onclick = () => {
-    if (document.querySelector(".alert-overlay")) return;
+    if (document.querySelector(".confirm-overlay")) return;
 
-    const alertModal = createAlertModal(
+    const confirmModal = createConfirmModal(
       "Borrar proyecto",
       `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?`,
       async () => {
         await deleteProjectById(project.id);
-        window.location.href = "../index.html";
+        setTimeout(() => {
+          window.location.href = "../index.html";
+        }, 2000);
       },
     );
 
-    document.body.append(alertModal);
+    document.body.append(confirmModal);
   };
 }
 

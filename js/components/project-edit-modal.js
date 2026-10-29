@@ -27,6 +27,7 @@ import {
   modifyProject,
   restoreProject,
 } from "../api/project.api.js";
+import { showNotification } from "./notifications.js";
 
 export async function createEditModalProject(project, onSave) {
   // Reúne en un solo modal las colecciones editables de un proyecto.
@@ -44,7 +45,6 @@ export async function createEditModalProject(project, onSave) {
   closeButton.classList.add("modal-close-button");
   closeButton.type = "button";
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
 
   closeButton.addEventListener("click", () => {
     onSave(project);
@@ -57,7 +57,8 @@ export async function createEditModalProject(project, onSave) {
   saveButton.classList.add("modal-save-button");
 
   saveButton.addEventListener("click", async () => {
-    project.name = projectName.value.trim();
+    try {
+      project.name = projectName.value.trim();
     project.description = projectDescription.value.trim();
     project.client_id = Number(clientSelect.value);
 
@@ -86,7 +87,20 @@ export async function createEditModalProject(project, onSave) {
 
     await onSave(project);
 
-    overlay.remove();
+      overlay.remove();
+      showNotification({
+        type: "success",
+        title: "Proyecto modificado",
+        message: "Los cambios se han guardado correctamente.",
+      });
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido modificar el proyecto",
+        message: error.message,
+        duration: 7000,
+      });
+    }
   });
 
   const cancelButton = document.createElement("button");
@@ -215,7 +229,6 @@ function createStatusField(statusSelect) {
 
   const indicator = document.createElement("span");
   indicator.classList.add("project-status-indicator");
-  indicator.setAttribute("aria-hidden", "true");
 
   const updateIndicator = () => {
     const isActive = statusSelect.value === "true";

@@ -1,4 +1,5 @@
 import { setUser } from "../api/user.api.js";
+import { showNotification } from "./notifications.js";
 
 export function createNewUserModal(showUsers) {
   const overlay = document.createElement("div");
@@ -40,9 +41,24 @@ export function createNewUserModal(showUsers) {
   saveButton.addEventListener("click", async () => {
     const email = emailInput.value.trim();
     const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+    const password = passwordInput.value;
 
-    if (email === "" || username === "") {
+    if (email === "" || username === "" || password === "") {
+      showNotification({
+        type: "warning",
+        title: "Campos obligatorios",
+        message: "Completa el email, el nombre de usuario y la contraseña.",
+      });
+      return;
+    }
+
+    if (password.length < 10) {
+      showNotification({
+        type: "error",
+        title: "Contraseña no válida",
+        message: "La contraseña debe tener al menos 10 caracteres.",
+      });
+      passwordInput.focus();
       return;
     }
 
@@ -53,9 +69,26 @@ export function createNewUserModal(showUsers) {
       role: roleSelect.value,
     };
 
-    await setUser(newUser);
-    showUsers();
-    overlay.remove();
+    try {
+      saveButton.disabled = true;
+      await setUser(newUser);
+      await showUsers();
+      overlay.remove();
+      showNotification({
+        type: "success",
+        title: "Usuario creado",
+        message: `Se ha creado el usuario ${username}.`,
+      });
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se pudo crear el usuario",
+        message: getCreateUserErrorMessage(error),
+        duration: 7000,
+      });
+    } finally {
+      saveButton.disabled = false;
+    }
   });
 
   const cancelButton = createCancelButton(overlay);
@@ -110,11 +143,14 @@ function createCloseButton(overlay) {
   closeButton.type = "button";
   closeButton.classList.add("modal-close-button");
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
   closeButton.addEventListener("click", () => {
     overlay.remove();
   });
   return closeButton;
+}
+
+function getCreateUserErrorMessage(error) {
+  return error.message || "Ha ocurrido un error inesperado.";
 }
 
 function createCancelButton(overlay) {

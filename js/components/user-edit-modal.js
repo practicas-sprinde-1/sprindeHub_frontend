@@ -6,6 +6,7 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
+import { showNotification } from "./notifications.js";
 
 export async function createEditUserModal(user, showUsers) {
   const overlay = document.createElement("div");
@@ -60,18 +61,19 @@ export async function createEditUserModal(user, showUsers) {
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
   saveButton.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const username = usernameInput.value.trim();
+    try {
+      const email = emailInput.value.trim();
+      const username = usernameInput.value.trim();
 
-    if (email === "" || username === "") {
-      return;
-    }
+      if (email === "" || username === "") {
+        return;
+      }
 
-    user.email = email;
-    user.username = username;
-    user.role = roleSelect.value;
+      user.email = email;
+      user.username = username;
+      user.role = roleSelect.value;
 
-    await modifyUser(user, user.id);
+      await modifyUser(user, user.id);
 
     const selectedClientsId = clientCheckBoxList.getSelectedClientsId();
 
@@ -102,8 +104,21 @@ export async function createEditUserModal(user, showUsers) {
       await revokeClientAccess(user.id, client.id);
     }
 
-    showUsers();
-    overlay.remove();
+      showUsers();
+      overlay.remove();
+      showNotification({
+        type: "success",
+        title: "Usuario modificado",
+        message: "Los cambios se han guardado correctamente.",
+      });
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido modificar el usuario",
+        message: error.message,
+        duration: 7000,
+      });
+    }
   });
 
   const cancelButton = createCancelButton(overlay);
@@ -158,7 +173,6 @@ function createCloseButton(overlay) {
   closeButton.type = "button";
   closeButton.classList.add("modal-close-button");
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
   closeButton.addEventListener("click", () => {
     overlay.remove();
   });

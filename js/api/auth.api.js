@@ -18,16 +18,10 @@ export async function register(credentials) {
 
 // Envía los datos de acceso al endpoint indicado y devuelve el usuario recibido.
 async function sendCredentials(url, credentials, errorMessage) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(credentials),
-  });
+  const response = await sendRequest(url, credentials);
 
   if (!response.ok) {
-    throw new Error(errorMessage);
+    throw await getResponseError(response, errorMessage);
   }
 
   return response.json();
@@ -44,16 +38,13 @@ export async function refreshAccessToken() {
     refresh_token: refreshToken,
   };
 
-  const response = await fetch(`${API_URL}/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(refreshTokenData),
-  });
+  const response = await sendRequest(
+    `${API_URL}/auth/refresh`,
+    refreshTokenData,
+  );
 
   if (!response.ok) {
-    throw new Error("Error al refrescar la sesión");
+    throw await getResponseError(response, "Error al refrescar la sesión");
   }
 
   const tokenData = await response.json();
@@ -61,4 +52,48 @@ export async function refreshAccessToken() {
   sessionStorage.setItem("accessToken", tokenData.access_token);
 
   return tokenData.access_token;
+}
+
+async function sendRequest(url, data) {
+  try {
+    return await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    throw new Error("No se ha podido conectar con el servidor.");
+  }
+}
+
+async function getResponseError(response, defaultMessage) {
+  let data;
+
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = null;
+  }
+
+  let message = defaultMessage;
+
+  if (data && data.detail) {
+    message = JSON.stringify(data.detail);
+
+    if (data.detail.message) {
+      message = data.detail.message;
+    }
+  }
+
+  const newError = new Error(message);
+  newError.statusCode = null;
+
+  if (data) {
+    newError.statusCode = data.status_code;
+  }
+
+  newError.status = response.status;
+  return newError;
 }

@@ -136,7 +136,6 @@ searchInput.addEventListener("input", async () => {
       return;
     }
     const filteredLogs = await getLogs("logs", 100, 0, searched);
-    console.log(filteredLogs);
 
     currentPage = 1;
     nextPageButton.disabled = filteredLogs.length !== recordsPerPage;
@@ -153,7 +152,6 @@ recordsPerPageSelect.addEventListener("change", async () => {
     recordsPerPage,
     (currentPage - 1) * recordsPerPage,
   );
-  console.log(logs.length);
 
   showTableRows();
 });

@@ -1,4 +1,5 @@
 import { modifyProfile } from "../api/profile.api.js";
+import { showNotification } from "./notifications.js";
 
 export function createEditProfileModal(user, renderUser) {
   const overlay = document.createElement("div");
@@ -42,9 +43,23 @@ export function createEditProfileModal(user, renderUser) {
     user.username = username;
     user.email = email;
 
-    await modifyProfile(user);
-    renderUser(user);
-    overlay.remove();
+    try {
+      await modifyProfile(user);
+      await renderUser(user);
+      overlay.remove();
+      showNotification({
+        type: "success",
+        title: "Perfil modificado",
+        message: "Los datos se han guardado correctamente.",
+      });
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido modificar el perfil",
+        message: error.message,
+        duration: 7000,
+      });
+    }
   });
 
   const cancelButton = document.createElement("button");
@@ -86,7 +101,6 @@ function createCloseButton(overlay) {
   closeButton.type = "button";
   closeButton.classList.add("modal-close-button");
   closeButton.textContent = "×";
-  closeButton.setAttribute("aria-label", "Cerrar");
   closeButton.addEventListener("click", () => {
     overlay.remove();
   });

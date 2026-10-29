@@ -1,6 +1,7 @@
 import { getLightClients } from "../api/client.api.js";
 import { setFullProject } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
+import { showNotification } from "../components/notifications.js";
 
 start();
 
@@ -70,7 +71,12 @@ export function configureProjectForm(form) {
       await setFullProject(projectData);
       window.location.href = "../index.html";
     } catch (error) {
-      alert("No se ha podido guardar el proyecto.");
+      showNotification({
+        type: "error",
+        title: "No se pudo guardar el proyecto",
+        message: error.message,
+        duration: 7000,
+      });
     }
   });
 }
