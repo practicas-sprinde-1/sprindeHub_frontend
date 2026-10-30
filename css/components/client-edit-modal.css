@@ -62,6 +62,27 @@
   outline-offset: 2px;
 }
 
+.client-status-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.client-status-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.client-status-indicator--active {
+  background-color: var(--production);
+}
+
+.client-status-indicator--inactive {
+  background-color: var(--test);
+}
+
 .client-edit-modal button {
   flex-shrink: 0;
   padding: 10px 14px;

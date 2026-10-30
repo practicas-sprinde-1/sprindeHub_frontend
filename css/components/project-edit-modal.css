@@ -151,6 +151,11 @@
   font: inherit;
 }
 
+.project-edit-modal input::placeholder,
+.project-edit-modal textarea::placeholder {
+  font-size: 0.875em;
+}
+
 .project-edit-modal li div {
   flex: 1 1 0;
   display: grid;

@@ -63,7 +63,7 @@ export async function createEditModalClient(
   const nameField = createClientField("Nombre", nameInput);
   const cifField = createClientField("CIF", cifInput);
   const phoneField = createClientField("Teléfono", phoneInput);
-  const statusField = createClientField("Estado", statusInput);
+  const statusField = createClientStatusField(statusInput);
 
   const projects = await getLightProjects("projects");
 
@@ -213,6 +213,35 @@ function createClientField(labelText, input) {
   input.id = input.name;
 
   field.append(label, input);
+  return field;
+}
+
+function createClientStatusField(statusInput) {
+  const field = document.createElement("div");
+  field.classList.add("client-edit-field");
+
+  const label = document.createElement("label");
+  label.textContent = "Estado";
+  label.htmlFor = statusInput.name;
+  statusInput.id = statusInput.name;
+
+  const control = document.createElement("div");
+  control.classList.add("client-status-control");
+
+  const indicator = document.createElement("span");
+  indicator.classList.add("client-status-indicator");
+
+  const updateIndicator = () => {
+    const isActive = statusInput.value === "true";
+    indicator.classList.toggle("client-status-indicator--active", isActive);
+    indicator.classList.toggle("client-status-indicator--inactive", !isActive);
+  };
+
+  statusInput.addEventListener("change", updateIndicator);
+  updateIndicator();
+
+  control.append(indicator, statusInput);
+  field.append(label, control);
   return field;
 }
 

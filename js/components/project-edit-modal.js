@@ -59,33 +59,35 @@ export async function createEditModalProject(project, onSave) {
   saveButton.addEventListener("click", async () => {
     try {
       project.name = projectName.value.trim();
-    project.description = projectDescription.value.trim();
-    project.client_id = Number(clientSelect.value);
+      project.description = projectDescription.value.trim();
+      project.client_id = Number(clientSelect.value);
 
-    const previousState = project.is_active;
-    let selectedState;
+      const previousState = project.is_active;
+      let selectedState;
 
-    if (statusSelect.value === "true") {
-      selectedState = true;
-    } else {
-      selectedState = false;
-    }
-
-    if (previousState !== selectedState) {
-      if (selectedState) {
-        await restoreProject(project.id);
+      if (statusSelect.value === "true") {
+        selectedState = true;
       } else {
-        await archiveProject(project.id);
+        selectedState = false;
       }
-      project.is_active = selectedState;
-    }
 
-    //Metodo para que aparezca por pantalla el cliente nuevo seleccionado
-    project.client = clients.find((client) => client.id === project.client_id);
+      if (previousState !== selectedState) {
+        if (selectedState) {
+          await restoreProject(project.id);
+        } else {
+          await archiveProject(project.id);
+        }
+        project.is_active = selectedState;
+      }
 
-    await modifyProject(project, project.id);
+      //Metodo para que aparezca por pantalla el cliente nuevo seleccionado
+      project.client = clients.find(
+        (client) => client.id === project.client_id,
+      );
 
-    await onSave(project);
+      await modifyProject(project, project.id);
+
+      await onSave(project);
 
       overlay.remove();
       showNotification({
@@ -336,18 +338,21 @@ function createEnvironmentsEdit(
       url: urlInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdEnvironment = await setEnvironment(updatedEnvironment);
-      environments.push(createdEnvironment);
-      renderEnvironmentRead(listItem, createdEnvironment, environments);
-      return;
-    }
-    await modifyEnvironment(updatedEnvironment, updatedEnvironment.id);
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdEnvironment = await setEnvironment(updatedEnvironment);
+        environments.push(createdEnvironment);
+        renderEnvironmentRead(listItem, createdEnvironment, environments);
+        return;
+      }
 
-    environment.type = updatedEnvironment.type;
-    environment.url = updatedEnvironment.url;
+      await modifyEnvironment(updatedEnvironment, updatedEnvironment.id);
 
-    renderEnvironmentRead(listItem, environment, environments);
+      environment.type = updatedEnvironment.type;
+      environment.url = updatedEnvironment.url;
+
+      renderEnvironmentRead(listItem, environment, environments);
+    }, "entorno");
   });
 
   listItem.append(typeSelect, urlInput, saveButton, cancelButton);
@@ -462,18 +467,20 @@ function createRepositoryEdit(
       url: urlInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdRepository = await setRepository(updatedRepository);
-      repositories.push(createdRepository);
-      renderRepositoryRead(listItem, createdRepository, repositories);
-      return;
-    }
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdRepository = await setRepository(updatedRepository);
+        repositories.push(createdRepository);
+        renderRepositoryRead(listItem, createdRepository, repositories);
+        return;
+      }
 
-    await modifyRepository(updatedRepository, updatedRepository.id);
+      await modifyRepository(updatedRepository, updatedRepository.id);
 
-    repository.type = updatedRepository.type;
-    repository.url = updatedRepository.url;
-    renderRepositoryRead(listItem, repository, repositories);
+      repository.type = updatedRepository.type;
+      repository.url = updatedRepository.url;
+      renderRepositoryRead(listItem, repository, repositories);
+    }, "repositorio");
   });
 
   listItem.append(typeSelect, urlInput, saveButton, cancelButton);
@@ -532,6 +539,7 @@ function createServiceEdit(listItem, service, services, isNew = false) {
   const nameInput = document.createElement("input");
   nameInput.type = "text";
   nameInput.value = service.name;
+  nameInput.placeholder = "Nombre del servicio";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -556,17 +564,19 @@ function createServiceEdit(listItem, service, services, isNew = false) {
       name: nameInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdService = await setService(updatedService);
-      services.push(createdService);
-      renderServiceRead(listItem, createdService, services);
-      return;
-    }
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdService = await setService(updatedService);
+        services.push(createdService);
+        renderServiceRead(listItem, createdService, services);
+        return;
+      }
 
-    await modifyService(updatedService, updatedService.id);
+      await modifyService(updatedService, updatedService.id);
 
-    service.name = updatedService.name;
-    renderServiceRead(listItem, service, services);
+      service.name = updatedService.name;
+      renderServiceRead(listItem, service, services);
+    }, "servicio");
   });
 
   listItem.append(nameInput, saveButton, cancelButton);
@@ -622,6 +632,7 @@ function createDomainEdit(listItem, domain, domains, isNew = false) {
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.value = domain.url;
+  urlInput.placeholder = "URL del dominio";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -646,17 +657,19 @@ function createDomainEdit(listItem, domain, domains, isNew = false) {
       url: urlInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdDomain = await setDomain(updatedDomain);
-      domains.push(createdDomain);
-      renderDomainRead(listItem, createdDomain, domains);
-      return;
-    }
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdDomain = await setDomain(updatedDomain);
+        domains.push(createdDomain);
+        renderDomainRead(listItem, createdDomain, domains);
+        return;
+      }
 
-    await modifyDomain(updatedDomain, updatedDomain.id);
+      await modifyDomain(updatedDomain, updatedDomain.id);
 
-    domain.url = updatedDomain.url;
-    renderDomainRead(listItem, domain, domains);
+      domain.url = updatedDomain.url;
+      renderDomainRead(listItem, domain, domains);
+    }, "dominio");
   });
 
   listItem.append(urlInput, saveButton, cancelButton);
@@ -715,10 +728,12 @@ function createCommandEdit(listItem, command, commands, isNew = false) {
   const nameInput = document.createElement("input");
   nameInput.type = "text";
   nameInput.value = command.name;
+  nameInput.placeholder = "Nombre del comando";
 
   const instructionInput = document.createElement("input");
   instructionInput.type = "text";
   instructionInput.value = command.instruction;
+  instructionInput.placeholder = "Instrucción";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -744,18 +759,20 @@ function createCommandEdit(listItem, command, commands, isNew = false) {
       instruction: instructionInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdCommand = await setCommand(updatedCommand);
-      commands.push(createdCommand);
-      renderCommandRead(listItem, createdCommand, commands);
-      return;
-    }
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdCommand = await setCommand(updatedCommand);
+        commands.push(createdCommand);
+        renderCommandRead(listItem, createdCommand, commands);
+        return;
+      }
 
-    await modifyCommand(updatedCommand, updatedCommand.id);
+      await modifyCommand(updatedCommand, updatedCommand.id);
 
-    command.name = updatedCommand.name;
-    command.instruction = updatedCommand.instruction;
-    renderCommandRead(listItem, command, commands);
+      command.name = updatedCommand.name;
+      command.instruction = updatedCommand.instruction;
+      renderCommandRead(listItem, command, commands);
+    }, "comando");
   });
 
   listItem.append(nameInput, instructionInput, saveButton, cancelButton);
@@ -816,10 +833,12 @@ function createLinkEdit(listItem, linkData, links, isNew = false) {
   const titleInput = document.createElement("input");
   titleInput.type = "text";
   titleInput.value = linkData.title;
+  titleInput.placeholder = "Título";
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.value = linkData.url;
+  urlInput.placeholder = "URL de documentación";
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -845,18 +864,20 @@ function createLinkEdit(listItem, linkData, links, isNew = false) {
       url: urlInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdLink = await setLink(updatedLink);
-      links.push(createdLink);
-      renderLinkRead(listItem, createdLink, links);
-      return;
-    }
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdLink = await setLink(updatedLink);
+        links.push(createdLink);
+        renderLinkRead(listItem, createdLink, links);
+        return;
+      }
 
-    await modifyLink(updatedLink, updatedLink.id);
+      await modifyLink(updatedLink, updatedLink.id);
 
-    linkData.title = updatedLink.title;
-    linkData.url = updatedLink.url;
-    renderLinkRead(listItem, linkData, links);
+      linkData.title = updatedLink.title;
+      linkData.url = updatedLink.url;
+      renderLinkRead(listItem, linkData, links);
+    }, "documentación");
   });
 
   listItem.append(titleInput, urlInput, saveButton, cancelButton);
@@ -920,9 +941,11 @@ function createNoteEdit(listItem, note, notes, isNew = false) {
   const descriptionInput = document.createElement("input");
   descriptionInput.type = "text";
   descriptionInput.value = note.description;
+  descriptionInput.placeholder = "Título de la nota";
 
   const contentInput = document.createElement("textarea");
   contentInput.value = note.content;
+  contentInput.placeholder = "Contenido de la nota";
   contentInput.rows = 4;
 
   const saveButton = document.createElement("button");
@@ -949,18 +972,20 @@ function createNoteEdit(listItem, note, notes, isNew = false) {
       content: contentInput.value.trim(),
     };
 
-    if (isNew) {
-      const createdNote = await setNote(updatedNote);
-      notes.push(createdNote);
-      renderNoteRead(listItem, createdNote, notes);
-      return;
-    }
+    await saveChildItem(async () => {
+      if (isNew) {
+        const createdNote = await setNote(updatedNote);
+        notes.push(createdNote);
+        renderNoteRead(listItem, createdNote, notes);
+        return;
+      }
 
-    await modifyNote(updatedNote, updatedNote.id);
+      await modifyNote(updatedNote, updatedNote.id);
 
-    note.description = updatedNote.description;
-    note.content = updatedNote.content;
-    renderNoteRead(listItem, note, notes);
+      note.description = updatedNote.description;
+      note.content = updatedNote.content;
+      renderNoteRead(listItem, note, notes);
+    }, "nota");
   });
 
   listItem.append(descriptionInput, contentInput, saveButton, cancelButton);
@@ -999,6 +1024,19 @@ function createAddButton(text, onClick) {
   addButton.textContent = text;
   addButton.addEventListener("click", onClick);
   return addButton;
+}
+
+async function saveChildItem(saveItem, itemName) {
+  try {
+    await saveItem();
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: `No se ha podido guardar el ${itemName}`,
+      message: error.message,
+      duration: 7000,
+    });
+  }
 }
 
 function createDeleteButton(collection, item, listItem, deleteItemFromApi) {
