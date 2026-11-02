@@ -9,8 +9,14 @@ import { deleteProjectById, getProjectById } from "../api/project.api.js";
 start();
 
 async function start() {
-  const headerContainer = document.querySelector("#header-container");
-  headerContainer.append(createHeader("César", "./profile.html"));
+  const user = sessionStorage.getItem("userInfo");
+  let cachedUser;
+  if (user) {
+    cachedUser = JSON.parse(user);
+  }
+  document
+    .querySelector("#header-container")
+    .append(createHeader(cachedUser.username, "./profile.html"));
 
   const projectDetail = document.querySelector("#project-detail");
   const projectError = document.querySelector("#project-error");
@@ -34,8 +40,8 @@ function renderProject(project) {
   document.title = `${project.name} - Sprinde`;
   const clientLink = document.querySelector("#project-client");
   if (project.client !== null) {
-    clientLink.textContent = project.client?.name ?? "No asignado";
-    clientLink.href = null;
+    const title = `Cliente: ${project.client?.name}`;
+    clientLink.textContent = title ?? "No asignado";
     clientLink.href = `./client.html?id=${project.client?.id}`;
   }
 

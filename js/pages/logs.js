@@ -10,10 +10,28 @@ import { getRepositoryById } from "../api/repository.api.js";
 import { getServiceById } from "../api/service.api.js";
 import { getUsers } from "../api/user.api.js";
 import { createHeader } from "../components/header.js";
+import { showNotification } from "../components/notifications.js";
 
+const user = sessionStorage.getItem("userInfo");
+let cachedUser;
+if (user) {
+  cachedUser = JSON.parse(user);
+}
 document
   .querySelector("#header-container")
-  .append(createHeader("César", "./profile.html"));
+  .append(createHeader(cachedUser.username, "./profile.html"));
+
+if (cachedUser.role !== "ADMIN") {
+  showNotification({
+    type: "error",
+    title: "Acceso no autorizado",
+    message: "No tienes acceso a esta página. Contacta con un administrador.",
+    duration: 5000,
+  });
+  setTimeout(() => {
+    window.location.href = "../index.html";
+  }, 1500);
+}
 
 const tableBody = document.querySelector("#logs-table-body");
 const searchInput = document.querySelector("#input-logs");
@@ -22,14 +40,16 @@ const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
 
-let currentPage = 1;
-let recordsPerPage = Number(recordsPerPageSelect.value);
-
-let logs = await getLogs("logs", 20, 0);
+let logs = [];
 const users = await getUsers("users", 100, 0);
+let tableState = {
+  search: "",
+  page: 1,
+  limit: Number(recordsPerPageSelect.value),
+};
 
 async function renderTable(logs, users) {
-  tableBody.replaceChildren();
+  const rows = [];
 
   for (const log of logs) {
     const row = document.createElement("tr");
@@ -95,7 +115,9 @@ async function renderTable(logs, users) {
     }
 
     const dateCell = document.createElement("td");
-    dateCell.textContent = log.created_at;
+    const date = new Date(log.created_at);
+    const formatedDate = date.toLocaleString("es-ES");
+    dateCell.textContent = formatedDate;
 
     row.append(
       userCell,
@@ -105,73 +127,48 @@ async function renderTable(logs, users) {
       dateCell,
       linksCell,
     );
-    tableBody.append(row);
+    rows.push(row);
   }
+
+  tableBody.replaceChildren(...rows);
 }
 
-async function showTableRows() {
-  const rows = document.querySelectorAll("#logs-table-body tr");
-  const firstRow = (currentPage - 1) * recordsPerPage;
-  const lastRow = firstRow + recordsPerPage;
-
-  rows.forEach(function (row, index) {
-    row.hidden = index < firstRow || index >= lastRow;
-  });
-
-  pageInformation.textContent = "Página " + currentPage;
-  previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = logs.length !== recordsPerPage;
+async function loadLogs() {
+  const offset = (tableState.page - 1) * tableState.limit;
+  logs = await getLogs("logs", tableState.limit, offset, tableState.search);
   await renderTable(logs, users);
+  pageInformation.textContent = "Página " + tableState.page;
+  previousPageButton.disabled = tableState.page === 1;
+  nextPageButton.disabled = logs.length < tableState.limit;
 }
-showTableRows();
+await loadLogs();
 
 let timeOut;
 
 searchInput.addEventListener("input", async () => {
   clearTimeout(timeOut);
-  timeOut = setTimeout(async () => {
-    const searched = searchInput.value;
-    if (searched === "") {
-      showTableRows();
-      return;
-    }
-    const filteredLogs = await getLogs("logs", 100, 0, searched);
-
-    currentPage = 1;
-    nextPageButton.disabled = filteredLogs.length !== recordsPerPage;
-    previousPageButton.disabled = currentPage === 1;
-    renderTable(filteredLogs, users);
+  timeOut = setTimeout(() => {
+    tableState.search = searchInput.value.trim().toLowerCase();
+    tableState.page = 1;
+    loadLogs();
   }, 500);
 });
-recordsPerPageSelect.addEventListener("change", async () => {
-  recordsPerPage = Number(recordsPerPageSelect.value);
-
-  currentPage = 1;
-  logs = await getLogs(
-    "logs",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-
-  showTableRows();
+recordsPerPageSelect.addEventListener("change", () => {
+  tableState.limit = Number(recordsPerPageSelect.value);
+  tableState.page = 1;
+  loadLogs();
 });
 previousPageButton.addEventListener("click", async () => {
-  currentPage -= 1;
-  logs = await getLogs(
-    "logs",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  showTableRows();
+  if (tableState.page > 1) {
+    tableState.page--;
+    await loadLogs();
+    window.scrollTo(0, 0);
+  }
 });
 nextPageButton.addEventListener("click", async () => {
-  currentPage += 1;
-  logs = await getLogs(
-    "logs",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  showTableRows();
+  tableState.page++;
+  await loadLogs();
+  window.scrollTo(0, 0);
 });
 
 export async function findEntity(entity, id) {

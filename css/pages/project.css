@@ -27,7 +27,7 @@
 }
 
 .back-link:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -42,7 +42,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.514);
+  box-shadow: 0 12px 30px var(--shadow-strong);
   margin-bottom: 32px;
   overflow: hidden;
 }
@@ -55,7 +55,7 @@
 #project-client {
   display: inline-block;
   margin: 0;
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
@@ -64,18 +64,18 @@
 }
 
 #project-client:hover {
-  color: var(--surface);
+  color: var(--on-primary);
   text-decoration: underline;
 }
 
 #project-client:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.75);
+  outline: 3px solid var(--header-border);
   outline-offset: 3px;
 }
 
 .project-header h1 {
   margin: 8px 0 0;
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: clamp(28px, 4vw, 38px);
   line-height: 1.15;
 }
@@ -108,12 +108,12 @@
 }
 
 .project-status--active {
-  background-color: #dcfce7;
-  color: #15803d;
+  background-color: var(--success-background);
+  color: var(--success-text);
 }
 
 .project-status--inactive {
-  background-color: #fee2e2;
+  background-color: var(--inactive-background);
   color: var(--test);
 }
 
@@ -133,8 +133,8 @@
 
 .button-edit-project {
   border: 1px solid var(--blue);
-  background-color: var(--blue);
-  color: var(--surface);
+  background-color: var(--button-background);
+  color: var(--on-primary);
 }
 
 .button-edit-project:hover {
@@ -148,11 +148,11 @@
 }
 
 .button-delete-project:hover {
-  background-color: #fef2f2;
+  background-color: var(--danger-background);
 }
 
 .project-actions button:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -161,7 +161,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background-color: var(--surface);
-  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.05);
+  box-shadow: 0 6px 18px var(--shadow-soft);
   overflow: hidden;
 }
 
@@ -169,7 +169,7 @@
   margin: 0;
   padding: 14px 20px;
   background-color: var(--navy);
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: 17px;
   letter-spacing: -0.2px;
 }
@@ -204,15 +204,15 @@
 }
 
 .project-page li a:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 #project-error {
   padding: 16px 18px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--danger-border);
   border-radius: 8px;
-  background-color: #fef2f2;
+  background-color: var(--danger-background);
   color: var(--test);
   font-weight: 600;
 }

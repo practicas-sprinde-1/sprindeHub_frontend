@@ -13,7 +13,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.08);
+  box-shadow: 0 12px 30px var(--shadow-soft);
   color: var(--text);
 }
 
@@ -29,7 +29,7 @@ main {
 
 .projects-table h2 {
   margin: 0;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 24px;
   letter-spacing: -0.4px;
 }
@@ -52,27 +52,16 @@ main {
     transform 0.2s ease;
 }
 
-.projects-table-actions button:hover {
-  transform: translateY(-1px);
-}
-
-.button-new-project {
-  background-color: var(--blue);
-  color: white;
-}
-
-.button-new-project:hover {
-  background-color: var(--navy);
-}
-
+.button-new-project,
 .button-new-client {
-  border-color: var(--blue) !important;
-  background-color: white;
-  color: var(--blue);
+  background-color: var(--button-background);
+  color: var(--on-primary);
 }
 
+.button-new-project:hover,
 .button-new-client:hover {
-  background-color: var(--blue-light);
+  border-color: var(--blue);
+  background-color: var(--navy);
 }
 
 /* Buscador. */
@@ -104,8 +93,8 @@ main {
   height: 44px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: #fbfdff;
-  color: var(--muted);
+  background-color: var(--input-surface);
+  color: var(--placeholder);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -113,7 +102,7 @@ main {
 
 .search:focus-within {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 168, 0.14);
+  box-shadow: 0 0 0 3px var(--focus-ring-soft);
 }
 
 .search input {
@@ -126,7 +115,7 @@ main {
 }
 
 .search input::placeholder {
-  color: #94a3b8;
+  color: var(--placeholder);
 }
 
 /* Tabla. */
@@ -147,7 +136,7 @@ main {
 .projects-table th {
   padding: 14px 20px;
   background-color: var(--navy);
-  color: white;
+  color: var(--on-primary);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -172,11 +161,11 @@ main {
 }
 
 .projects-table tbody tr:hover {
-  background-color: #f8fbff;
+  background-color: var(--hover-surface);
 }
 
 .projects-table td strong {
-  color: var(--navy);
+  color: var(--heading);
   font-size: 14px;
 }
 
@@ -223,8 +212,8 @@ main {
   margin: 3px 8px 3px 0;
   padding: 3px 8px;
   border-radius: 999px;
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: var(--badge-surface);
+  color: var(--badge-text);
   font-size: 11px;
   font-weight: 600;
 }
@@ -260,7 +249,7 @@ main {
   padding: 4px 8px;
   border-radius: 6px;
   background-color: var(--blue-light);
-  color: #315b8c;
+  color: var(--tag-text);
   font-size: 11px;
   font-weight: 600;
 }
@@ -281,7 +270,7 @@ main {
   padding: 5px 24px 5px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background-color: white;
+  background-color: var(--surface);
   color: var(--text);
 }
 
@@ -292,7 +281,7 @@ main {
   padding: 7px 11px;
   border: 1px solid var(--blue);
   border-radius: 6px;
-  background-color: white;
+  background-color: var(--surface);
   color: var(--blue);
   cursor: pointer;
   white-space: nowrap;
@@ -308,7 +297,7 @@ main {
 
 .pagination button:disabled {
   border-color: var(--border);
-  color: #94a3b8;
+  color: var(--muted);
   cursor: not-allowed;
 }
 
@@ -331,6 +320,6 @@ main {
 }
 
 .table-count-button:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }

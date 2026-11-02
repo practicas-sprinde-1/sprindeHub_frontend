@@ -7,7 +7,7 @@
   place-items: center;
 
   padding: 24px;
-  background-color: rgba(30, 58, 95, 0.55);
+  background-color: var(--overlay);
 }
 
 .client-edit-modal {
@@ -23,12 +23,12 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+  box-shadow: 0 12px 30px var(--shadow-strong);
 }
 
 .modal-title {
   margin: 0 40px 0 0;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 28px;
   line-height: 1.15;
 }
@@ -58,8 +58,29 @@
 
 .client-edit-field input:focus-visible,
 .client-edit-field select:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+.client-status-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.client-status-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.client-status-indicator--active {
+  background-color: var(--production);
+}
+
+.client-status-indicator--inactive {
+  background-color: var(--test);
 }
 
 .client-edit-modal button {
@@ -80,7 +101,7 @@
 }
 
 .client-edit-modal button:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -100,8 +121,8 @@
 }
 
 .client-edit-modal .modal-save-button {
-  background-color: var(--blue);
-  color: var(--surface);
+  background-color: var(--button-background);
+  color: var(--on-primary);
 }
 
 .client-edit-modal .modal-save-button:hover {
@@ -119,7 +140,7 @@
   margin: 0;
   padding: 14px 20px;
   background-color: var(--navy);
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: 17px;
 }
 

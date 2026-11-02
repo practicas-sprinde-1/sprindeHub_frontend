@@ -8,7 +8,7 @@
   place-items: center;
 
   padding: 24px;
-  background-color: rgba(30, 58, 95, 0.55);
+  background-color: var(--overlay);
 }
 
 .project-edit-modal {
@@ -25,14 +25,14 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+  box-shadow: 0 12px 30px var(--shadow-strong);
 }
 
 .modal-title {
   /*Ocupa ambas columnas*/
   grid-column: 1 / -1;
   margin: 0 40px 0 0;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 28px;
   line-height: 1.15;
 }
@@ -65,7 +65,7 @@
 .project-edit-field select:focus-visible,
 .project-edit-modal li input:focus-visible,
 .project-edit-modal li select:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -101,7 +101,7 @@
   margin: 0;
   padding: 14px 20px;
   background-color: var(--navy);
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: 17px;
 }
 
@@ -149,6 +149,11 @@
   background-color: var(--surface);
   color: var(--text);
   font: inherit;
+}
+
+.project-edit-modal input::placeholder,
+.project-edit-modal textarea::placeholder {
+  font-size: 0.875em;
 }
 
 .project-edit-modal li div {
@@ -199,7 +204,7 @@
 }
 
 .project-edit-modal li textarea:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -225,7 +230,7 @@
 }
 
 .project-edit-modal button:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -240,8 +245,8 @@
 }
 
 .project-edit-modal .modal-save-button {
-  background-color: var(--blue);
-  color: var(--surface);
+  background-color: var(--button-background);
+  color: var(--on-primary);
 }
 
 .modal-actions {

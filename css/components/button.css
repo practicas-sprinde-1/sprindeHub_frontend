@@ -3,8 +3,8 @@
   border: 0;
   border-radius: 6px;
   font-weight: 600;
-  color: var(--surface);
-  background-color: var(--blue);
+  color: var(--on-primary);
+  background-color: var(--button-background);
   cursor: pointer;
 }
 

@@ -25,7 +25,7 @@
 }
 
 .new-client-page .back-link:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -35,19 +35,19 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--navy);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+  box-shadow: 0 12px 30px var(--shadow-strong);
 }
 
 .new-client-title {
   margin: 0;
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: clamp(28px, 4vw, 38px);
   line-height: 1.15;
 }
 
 #new-client-description {
   margin: 8px 0 0;
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: 15px;
 }
 
@@ -65,7 +65,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background-color: var(--surface);
-  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.05);
+  box-shadow: 0 6px 18px var(--shadow-soft);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -73,12 +73,12 @@
 
 #client-form fieldset:focus-within {
   border-color: var(--blue);
-  box-shadow: 0 6px 18px rgba(30, 58, 95, 0.12);
+  box-shadow: 0 6px 18px var(--shadow);
 }
 
 #client-form legend {
   padding: 0 6px;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 17px;
   font-weight: 700;
 }
@@ -105,7 +105,7 @@
 #client-form input:focus-visible,
 #client-form select:focus-visible,
 #client-form button:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -115,8 +115,8 @@
   padding: 10px 14px;
   border: 1px solid var(--blue);
   border-radius: 7px;
-  background-color: var(--blue);
-  color: var(--surface);
+  background-color: var(--button-background);
+  color: var(--on-primary);
   cursor: pointer;
   font: inherit;
   font-size: 14px;

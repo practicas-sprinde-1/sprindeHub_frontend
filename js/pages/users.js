@@ -4,11 +4,12 @@ import { createEditUserModal } from "../components/user-edit-modal.js";
 import { createConfirmModal } from "../components/confirm-modal.js";
 import { deleteUser, getUsers } from "../api/user.api.js";
 import { showNotification } from "../components/notifications.js";
+import { getProfile } from "../api/profile.api.js";
 
-// Solo los administradores pueden consultar esta página.
+const user = await getProfile();
 
 const headerContainer = document.querySelector("#header-container");
-const header = createHeader("César", "./profile.html");
+const header = createHeader(user.username, "./profile.html");
 headerContainer.append(header);
 
 const tableBody = document.querySelector("#users-table-body");
@@ -21,11 +22,30 @@ const createUserButton = document.querySelector("#button-new-user");
 const editUserButton = document.querySelector("#button-edit-user");
 const deleteUserButton = document.querySelector("#button-delete-user");
 
-let currentPage = 1;
-let recordsPerPage = Number(recordsPerPageSelect.value);
+// Solo los administradores pueden consultar esta página.
+
+if (user.role !== "ADMIN") {
+  showNotification({
+    type: "error",
+    title: "Acceso no autorizado",
+    message: "No tienes acceso a esta página. Contacta con un administrador.",
+    duration: 5000,
+  });
+  createUserButton.disabled = true;
+  editUserButton.disabled = true;
+  deleteUserButton.disabled = true;
+  setTimeout(() => {
+    window.location.href = "../index.html";
+  }, 1500);
+}
+
 let selectedUser = null;
-let search = "";
-let users = await getUsers("users", 20, 0);
+let users = [];
+let tableState = {
+  search: "",
+  page: 1,
+  limit: Number(recordsPerPageSelect.value),
+};
 
 function renderTable(users) {
   tableBody.replaceChildren();
@@ -75,71 +95,60 @@ function selectUser(user, row) {
   row.classList.add("user-row-selected");
 }
 
-function showTableRows() {
-  const rows = tableBody.querySelectorAll("tr");
-
-  const firstRow = (currentPage - 1) * recordsPerPage;
-  const lastRow = firstRow + recordsPerPage;
-
-  rows.forEach(function (row, index) {
-    row.hidden = index < firstRow || index >= lastRow;
-  });
-
-  pageInformation.textContent = "Página " + currentPage;
-  previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = users.length !== recordsPerPage;
-}
 let timeOut;
-async function showUsers() {
-  clearTimeout(timeOut);
-  timeOut = setTimeout(async () => {
-    if (!users.includes(selectedUser)) {
-      selectedUser = null;
+async function loadUsers() {
+  try {
+    const offset = (tableState.page - 1) * tableState.limit;
+    users = await getUsers(
+      "users",
+      tableState.limit,
+      offset,
+      tableState.search,
+    );
+    selectedUser = null;
+    renderTable(users);
+    pageInformation.textContent = "Página " + tableState.page;
+    previousPageButton.disabled = tableState.page === 1;
+    nextPageButton.disabled = users.length < tableState.limit;
+  } catch (error) {
+    if (user.role === "ADMIN") {
+      showNotification({
+        type: "error",
+        title: "No se han podido cargar los usuarios",
+        message: error.message,
+        duration: 7000,
+      });
     }
-
-    search = searchInput.value.trim().toLowerCase();
-    const filteredUsers = await getUsers("users", 100, 0, search);
-    renderTable(filteredUsers);
-    showTableRows();
-  }, 250);
+  }
 }
 
-searchInput.addEventListener("input", showUsers);
+searchInput.addEventListener("input", () => {
+  clearTimeout(timeOut);
+  timeOut = setTimeout(() => {
+    tableState.search = searchInput.value.trim().toLowerCase();
+    tableState.page = 1;
+    loadUsers();
+  }, 500);
+});
 
-recordsPerPageSelect.addEventListener("change", async () => {
-  if (search !== "") {
-    return;
-  }
-  recordsPerPage = Number(recordsPerPageSelect.value);
-  currentPage = 1;
-  users = await getUsers(
-    "users",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-
-  showTableRows();
+recordsPerPageSelect.addEventListener("change", () => {
+  tableState.limit = Number(recordsPerPageSelect.value);
+  tableState.page = 1;
+  loadUsers();
 });
 
 previousPageButton.addEventListener("click", async () => {
-  currentPage = currentPage - 1;
-  users = await getUsers(
-    "users",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-
-  showTableRows();
+  if (tableState.page > 1) {
+    tableState.page--;
+    await loadUsers();
+    window.scrollTo(0, 0);
+  }
 });
 
 nextPageButton.addEventListener("click", async () => {
-  currentPage = currentPage + 1;
-  users = await getUsers(
-    "users",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  showTableRows();
+  tableState.page++;
+  await loadUsers();
+  window.scrollTo(0, 0);
 });
 
 createUserButton.addEventListener("click", () => {
@@ -147,7 +156,7 @@ createUserButton.addEventListener("click", () => {
     return;
   }
 
-  const modal = createNewUserModal(showUsers);
+  const modal = createNewUserModal(loadUsers);
   document.body.append(modal);
 });
 
@@ -165,7 +174,7 @@ editUserButton.addEventListener("click", async () => {
     return;
   }
 
-  const modal = await createEditUserModal(selectedUser, showUsers);
+  const modal = await createEditUserModal(selectedUser, loadUsers);
   document.body.append(modal);
 });
 
@@ -190,7 +199,7 @@ deleteUserButton.addEventListener("click", () => {
     `¿Estás seguro de que deseas borrar el usuario "${selectedUser.username}"?`,
     async () => {
       await deleteUser(selectedUser.id);
-      showUsers();
+      loadUsers();
       showNotification({
         type: "success",
         title: "Usuario borrado",
@@ -202,4 +211,4 @@ deleteUserButton.addEventListener("click", () => {
   document.body.append(confirmModal);
 });
 
-showUsers();
+await loadUsers();

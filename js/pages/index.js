@@ -4,12 +4,16 @@ import { getArchivedProjects, getProjects } from "../api/project.api.js";
 import { getCommandsByProjectId } from "../api/command.api.js";
 import { getLinksByProjectId } from "../api/link.api.js";
 import { getNotesByProjectId } from "../api/note.api.js";
-// checkToken();
+import { getProfile } from "../api/profile.api.js";
+
+const user = await getProfile();
+
+sessionStorage.setItem("userInfo", JSON.stringify(user));
 
 //Devuelve el primer elemento que tenga ese #id o .clase
 const headerContainer = document.querySelector("#header-container");
 
-const header = createHeader("César", "./pages/profile.html");
+const header = createHeader(user.username, "./pages/profile.html");
 
 headerContainer.append(header);
 
@@ -21,69 +25,57 @@ const searchInput = document.querySelector("#input-index");
 const showArchivedButton = document.querySelector("#archived-projects");
 const showActivedButton = document.querySelector("#actived-projects");
 
-let currentPage = 1;
-let recordsPerPage = Number(recordsPerPageSelect.value);
-let search = "";
+let projects = [];
+let tableState = {
+  search: "",
+  page: 1,
+  limit: Number(recordsPerPageSelect.value),
+  view: "active",
+};
 
-const projectsTableRead = await getProjects("projects", 20, 0);
+async function loadProjects() {
+  const offset = (tableState.page - 1) * tableState.limit;
+  let response;
 
-let projects = projectsTableRead.items;
-
-function showTableRows() {
-  const tableRows = document.querySelectorAll("#projects-table-body tr");
-
-  const firstRow = (currentPage - 1) * recordsPerPage;
-  const lastRow = firstRow + recordsPerPage;
-
-  tableRows.forEach(function (row, index) {
-    row.hidden = index < firstRow || index >= lastRow;
-  });
-
-  pageInformation.textContent = "Página " + currentPage;
-
-  previousPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = projects.length !== recordsPerPage;
-  renderTable(projects);
-}
-
-recordsPerPageSelect.addEventListener("change", async () => {
-  if (search !== "") {
-    return;
+  if (tableState.view === "archived") {
+    response = await getArchivedProjects(
+      tableState.limit,
+      offset,
+      tableState.search,
+    );
+  } else {
+    response = await getProjects(
+      "projects",
+      tableState.limit,
+      offset,
+      tableState.search,
+    );
   }
-  recordsPerPage = Number(recordsPerPageSelect.value);
-  currentPage = 1;
-  const response = await getProjects(
-    "projects",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
   projects = response.items;
   renderTable(projects);
-  showTableRows();
+  pageInformation.textContent = "Página " + tableState.page;
+  previousPageButton.disabled = tableState.page === 1;
+  nextPageButton.disabled = projects.length < tableState.limit;
+}
+
+recordsPerPageSelect.addEventListener("change", () => {
+  tableState.limit = Number(recordsPerPageSelect.value);
+  tableState.page = 1;
+  loadProjects();
 });
 
 previousPageButton.addEventListener("click", async () => {
-  if (currentPage === 1) return;
-  currentPage -= 1;
-  const response = await getProjects(
-    "projects",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  projects = response.items;
-  showTableRows();
+  if (tableState.page > 1) {
+    tableState.page--;
+    await loadProjects();
+    window.scrollTo(0, 0);
+  }
 });
 
 nextPageButton.addEventListener("click", async () => {
-  if (projects.length < 0) return;
-  currentPage += 1;
-  const response = await getProjects(
-    "projects",
-    recordsPerPage,
-    (currentPage - 1) * recordsPerPage,
-  );
-  projects = response.items;
-  showTableRows();
+  tableState.page++;
+  await loadProjects();
+  window.scrollTo(0, 0);
 });
 
 const tableBody = document.querySelector("#projects-table-body");
@@ -92,10 +84,6 @@ const tableTitles = document.querySelector(".table-titles");
 
 function renderTable(projects) {
   tableBody.replaceChildren();
-
-  currentPage = 1;
-  nextPageButton.disabled = projects.length !== recordsPerPage;
-  previousPageButton.disabled = currentPage === 1;
 
   projects.forEach(async (project) => {
     // Creamos la fila
@@ -273,27 +261,16 @@ function renderTable(projects) {
     tableBody.append(row);
   });
 }
-renderTable(projects);
-showTableRows();
+loadProjects();
 
 let timeOut;
 searchInput.addEventListener("input", () => {
   clearTimeout(timeOut);
 
-  timeOut = setTimeout(async () => {
-    search = searchInput.value.trim().toLowerCase();
-    if (search === "") {
-      showTableRows();
-      return;
-    }
-    const response = await getProjects("projects", 100, 0, search);
-    const filteredProjects = response.items;
-
-    currentPage = 1;
-    previousPageButton.disabled = currentPage === 1;
-    nextPageButton.disabled = filteredProjects.length !== recordsPerPage;
-
-    renderTable(filteredProjects);
+  timeOut = setTimeout(() => {
+    tableState.search = searchInput.value.trim().toLowerCase();
+    tableState.page = 1;
+    loadProjects();
   }, 500);
 });
 
@@ -331,14 +308,14 @@ function showDetailCard(row, title, items, projectId, contentType) {
   openedDetailCard = detailCard;
 }
 
-showArchivedButton.onclick = async () => {
-  const archivedProjects = await getArchivedProjects();
-
-  projects = archivedProjects.items;
-  renderTable(projects);
+showArchivedButton.onclick = () => {
+  tableState.view = "archived";
+  tableState.page = 1;
+  loadProjects();
 };
 
-showActivedButton.onclick = async () => {
-  projects = projectsTableRead.items;
-  renderTable(projects);
+showActivedButton.onclick = () => {
+  tableState.view = "active";
+  tableState.page = 1;
+  loadProjects();
 };

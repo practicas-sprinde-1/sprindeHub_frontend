@@ -5,8 +5,14 @@ import { getClientById, deleteClientById } from "../api/client.api.js";
 import { getProjectByClientId } from "../api/project.api.js";
 import { showNotification } from "../components/notifications.js";
 
-const headerContainer = document.querySelector("#header-container");
-headerContainer.append(createHeader("César", "./profile.html"));
+const user = sessionStorage.getItem("userInfo");
+let cachedUser;
+if (user) {
+  cachedUser = JSON.parse(user);
+}
+document
+  .querySelector("#header-container")
+  .append(createHeader(cachedUser.username, "./profile.html"));
 
 const clientDetail = document.querySelector("#client-detail");
 const clientError = document.querySelector("#client-error");

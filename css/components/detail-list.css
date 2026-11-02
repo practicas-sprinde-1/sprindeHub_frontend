@@ -4,7 +4,7 @@
 }
 
 .detail-list-title {
-  color: var(--navy);
+  color: var(--heading);
   font-size: 13px;
 }
 
@@ -22,7 +22,7 @@
 }
 
 .detail-list-link:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

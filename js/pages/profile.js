@@ -5,10 +5,10 @@ import { getClientById } from "../api/client.api.js";
 import { getRelationshipByUser } from "../api/user_client.api.js";
 import { showNotification } from "../components/notifications.js";
 
-const headerContainer = document.querySelector("#header-container");
-headerContainer.append(createHeader("César", "./profile.html"));
-
 const user = await getProfile();
+
+const headerContainer = document.querySelector("#header-container");
+headerContainer.append(createHeader(user.username, "./profile.html"));
 
 async function renderUser(user) {
   document.title = `${user.username} - Sprinde`;

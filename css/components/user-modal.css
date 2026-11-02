@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background-color: rgba(30, 58, 95, 0.55);
+  background-color: var(--overlay);
 }
 
 .user-modal {
@@ -19,12 +19,12 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+  box-shadow: 0 12px 30px var(--shadow-strong);
 }
 
 .user-modal .modal-title {
   margin: 0 40px 0 0;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 28px;
   line-height: 1.15;
 }
@@ -61,7 +61,7 @@
 .user-modal-field input:focus-visible,
 .user-modal-field select:focus-visible,
 .user-modal button:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -96,8 +96,8 @@
 }
 
 .user-modal .modal-save-button {
-  background-color: var(--blue);
-  color: var(--surface);
+  background-color: var(--button-background);
+  color: var(--on-primary);
 }
 
 .user-modal .modal-save-button:hover {
@@ -107,11 +107,11 @@
 .user-modal .modal-delete-button {
   border-color: var(--test);
   background-color: var(--test);
-  color: var(--surface);
+  color: var(--on-primary);
 }
 
 .user-modal .modal-delete-button:hover {
-  background-color: #b91c1c;
+  background-color: var(--danger-hover);
 }
 
 .user-client-access {
@@ -124,7 +124,7 @@
   margin: 0;
   padding: 14px 20px;
   background-color: var(--navy);
-  color: var(--surface);
+  color: var(--on-primary);
   font-size: 17px;
 }
 

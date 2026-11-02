@@ -214,14 +214,54 @@ async function getResponseError(response, defaultMessage) {
   } catch (error) {
     data = null;
   }
-  let message = defaultMessage;
 
-  if (data && data.detail) {
-    message = data.detail;
-  }
+  const message = getErrorMessage(data?.detail, defaultMessage);
 
   const newError = new Error(message);
   newError.code = data?.code;
   newError.status = response.status;
   return newError;
+}
+
+function getErrorMessage(detail, defaultMessage) {
+  if (!detail) {
+    return defaultMessage;
+  }
+
+  if (typeof detail === "string") {
+    return detail;
+  }
+
+  if (detail.message) {
+    return detail.message;
+  }
+
+  if (detail.msg) {
+    return detail.msg;
+  }
+
+  if (Array.isArray(detail)) {
+    return translateErrorMessage(detail[0]?.msg) || defaultMessage;
+  }
+
+  return JSON.stringify(detail);
+}
+
+function translateErrorMessage(msg) {
+  let error;
+  if (msg === "String should match pattern '^https?://'") {
+    return (error = "Debe empezar por http://");
+  }
+  if (msg === "String should have at least 1 character") {
+    return (error = "El campo no debe estar vacío");
+  }
+  if (
+    msg ===
+    "value is not a valid email address: An email address must have an @-sign."
+  ) {
+    return (error = "Introduce un e-mail válido");
+  }
+  if (msg === "String should have at least 10 characters") {
+    return (error = "La contraseña debe tener al menos 10 caracteres");
+  }
 }

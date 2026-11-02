@@ -5,8 +5,14 @@ import { showNotification } from "../components/notifications.js";
 start();
 
 function start() {
-  const headerContainer = document.querySelector("#header-container");
-  headerContainer.append(createHeader("César", "./profile.html"));
+  const user = sessionStorage.getItem("userInfo");
+  let cachedUser;
+  if (user) {
+    cachedUser = JSON.parse(user);
+  }
+  document
+    .querySelector("#header-container")
+    .append(createHeader(cachedUser.username, "./profile.html"));
 
   const clientForm = document.querySelector("#client-form");
   configureClientForm(clientForm);
