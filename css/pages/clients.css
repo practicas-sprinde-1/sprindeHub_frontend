@@ -11,7 +11,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.08);
+  box-shadow: 0 12px 30px var(--shadow-soft);
   color: var(--text);
 }
 
@@ -41,7 +41,7 @@ main {
 
 .clients-table h1 {
   margin: 0;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 24px;
   letter-spacing: -0.4px;
 }
@@ -52,8 +52,8 @@ main {
 .actived-clients {
   border: 1px solid var(--blue);
   border-radius: 7px;
-  background-color: var(--blue);
-  color: white;
+  background-color: var(--button-background);
+  color: var(--on-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 700;
@@ -95,13 +95,13 @@ main {
   height: 44px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: #fbfdff;
+  background-color: var(--input-surface);
   color: var(--muted);
 }
 
 .search:focus-within {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 168, 0.14);
+  box-shadow: 0 0 0 3px var(--focus-ring-soft);
 }
 
 .search input {
@@ -129,7 +129,7 @@ main {
 .clients-table th {
   padding: 14px 20px;
   background-color: var(--navy);
-  color: white;
+  color: var(--on-primary);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -147,7 +147,7 @@ main {
 }
 
 .clients-table tbody tr:hover {
-  background-color: #f8fbff;
+  background-color: var(--hover-surface);
 }
 
 .client-link {
@@ -200,11 +200,11 @@ main {
 }
 
 .status--active {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--success-background);
+  color: var(--success-text);
 }
 .status--inactive {
-  background: #fee2e2;
+  background: var(--inactive-background);
   color: var(--test);
 }
 
@@ -218,7 +218,7 @@ main {
   padding: 5px 24px 5px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: white;
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -227,7 +227,7 @@ main {
 .actived-clients {
   margin-left: 8px;
   padding: 7px 11px;
-  background: white;
+  background: var(--surface);
   color: var(--blue);
   font-size: 13px;
   white-space: nowrap;
@@ -240,6 +240,6 @@ main {
 }
 .pagination button:disabled {
   border-color: var(--border);
-  color: #94a3b8;
+  color: var(--muted);
   cursor: not-allowed;
 }

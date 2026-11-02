@@ -4,11 +4,12 @@ import { createEditUserModal } from "../components/user-edit-modal.js";
 import { createConfirmModal } from "../components/confirm-modal.js";
 import { deleteUser, getUsers } from "../api/user.api.js";
 import { showNotification } from "../components/notifications.js";
+import { getProfile } from "../api/profile.api.js";
 
-// Solo los administradores pueden consultar esta página.
+const user = await getProfile();
 
 const headerContainer = document.querySelector("#header-container");
-const header = createHeader("César", "./profile.html");
+const header = createHeader(user.username, "./profile.html");
 headerContainer.append(header);
 
 const tableBody = document.querySelector("#users-table-body");
@@ -20,6 +21,23 @@ const pageInformation = document.querySelector("#page-information");
 const createUserButton = document.querySelector("#button-new-user");
 const editUserButton = document.querySelector("#button-edit-user");
 const deleteUserButton = document.querySelector("#button-delete-user");
+
+// Solo los administradores pueden consultar esta página.
+
+if (user.role !== "ADMIN") {
+  showNotification({
+    type: "error",
+    title: "Acceso no autorizado",
+    message: "No tienes acceso a esta página. Contacta con un administrador.",
+    duration: 5000,
+  });
+  createUserButton.disabled = true;
+  editUserButton.disabled = true;
+  deleteUserButton.disabled = true;
+  setTimeout(() => {
+    window.location.href = "../index.html";
+  }, 1500);
+}
 
 let selectedUser = null;
 let users = [];
@@ -93,12 +111,14 @@ async function loadUsers() {
     previousPageButton.disabled = tableState.page === 1;
     nextPageButton.disabled = users.length < tableState.limit;
   } catch (error) {
-    showNotification({
-      type: "error",
-      title: "No se han podido cargar los usuarios",
-      message: error.message,
-      duration: 7000,
-    });
+    if (user.role === "ADMIN") {
+      showNotification({
+        type: "error",
+        title: "No se han podido cargar los usuarios",
+        message: error.message,
+        duration: 7000,
+      });
+    }
   }
 }
 

@@ -1,9 +1,15 @@
 import { getArchivedClients, getClients } from "../api/client.api.js";
 import { getProjectByClientId } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
+
+const user = sessionStorage.getItem("userInfo");
+let cachedUser;
+if (user) {
+  cachedUser = JSON.parse(user);
+}
 document
   .querySelector("#header-container")
-  .append(createHeader("César", "./profile.html"));
+  .append(createHeader(cachedUser.username, "./profile.html"));
 
 const tableBody = document.querySelector("#clients-table-body");
 const searchInput = document.querySelector("#input-clients");

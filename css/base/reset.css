@@ -15,3 +15,21 @@ input,
 button {
   font: inherit;
 }
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  border-color: var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+body.dark-mode .search input {
+  background-color: transparent;
+}

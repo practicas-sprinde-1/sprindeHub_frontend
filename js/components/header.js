@@ -1,5 +1,10 @@
 import { logout } from "../api/session.js";
 
+// Comprueba la preferencia guardada antes de renderizar el encabezado.
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark-mode");
+}
+
 export function createHeader(userName, profileUrl) {
   const header = document.createElement("header");
   header.classList.add("main-header");
@@ -17,6 +22,12 @@ export function createHeader(userName, profileUrl) {
   logoutButton.addEventListener("click", () => {
     logout();
   });
+
+  const themeButton = document.createElement("button");
+  themeButton.classList.add("main-header-theme");
+  themeButton.id = "theme-toggle";
+  themeButton.type = "button";
+  themeButton.textContent = "Modo oscuro";
 
   const projectButton = document.createElement("button");
   projectButton.classList.add("main-header-projects");
@@ -59,7 +70,23 @@ export function createHeader(userName, profileUrl) {
 
   actionButtons.append(projectButton, clientButton);
 
-  actionButtons.append(usersButton, logsButton, logoutButton);
+  actionButtons.append(usersButton, logsButton, logoutButton, themeButton);
+
+  if (document.body.classList.contains("dark-mode")) {
+    themeButton.textContent = "Modo claro";
+  }
+
+  themeButton.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+      localStorage.setItem("theme", "dark");
+      themeButton.textContent = "Modo claro";
+    } else {
+      localStorage.setItem("theme", "light");
+      themeButton.textContent = "Modo oscuro";
+    }
+  });
 
   header.appendChild(profileLink);
   header.appendChild(actionButtons);

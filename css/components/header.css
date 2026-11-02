@@ -4,7 +4,7 @@
   align-items: center;
   padding: 15px 48px;
   background-color: var(--navy);
-  box-shadow: 0 2px 10px rgba(30, 58, 95, 0.18);
+  box-shadow: 0 2px 10px var(--shadow);
 }
 
 /* Agrupa la navegación generada por el componente del encabezado. */
@@ -17,7 +17,7 @@
 }
 
 .main-header-profile {
-  color: white;
+  color: var(--on-primary);
   font-size: 16px;
   font-weight: 700;
   text-decoration: none;
@@ -27,12 +27,13 @@
   text-decoration: underline;
 }
 
-.main-header-logout {
+.main-header-logout,
+.main-header-theme {
   padding: 8px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--header-border);
   border-radius: 6px;
   background-color: transparent;
-  color: white;
+  color: var(--on-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -43,10 +44,10 @@
 
 .main-header-clients {
   padding: 8px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--header-border);
   border-radius: 6px;
   background-color: transparent;
-  color: white;
+  color: var(--on-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -58,10 +59,10 @@
 .main-header-projects {
   padding: 8px 13px;
   margin: 0;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--header-border);
   border-radius: 6px;
   background-color: transparent;
-  color: white;
+  color: var(--on-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -73,10 +74,10 @@
 .main-header-users {
   padding: 8px 13px;
   margin: 0;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--header-border);
   border-radius: 6px;
   background-color: transparent;
-  color: white;
+  color: var(--on-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -88,10 +89,10 @@
 .main-header-logs {
   padding: 8px 13px;
   margin: 0;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--header-border);
   border-radius: 6px;
   background-color: transparent;
-  color: white;
+  color: var(--on-primary);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -101,10 +102,11 @@
 }
 
 .main-header-logout:hover,
+.main-header-theme:hover,
 .main-header-projects:hover,
 .main-header-users:hover,
 .main-header-clients:hover,
 .main-header-logs:hover {
-  background-color: white;
-  color: var(--navy);
+  background-color: var(--header-hover-background);
+  color: var(--text);
 }

@@ -4,12 +4,16 @@ import { getArchivedProjects, getProjects } from "../api/project.api.js";
 import { getCommandsByProjectId } from "../api/command.api.js";
 import { getLinksByProjectId } from "../api/link.api.js";
 import { getNotesByProjectId } from "../api/note.api.js";
-// checkToken();
+import { getProfile } from "../api/profile.api.js";
+
+const user = await getProfile();
+
+sessionStorage.setItem("userInfo", JSON.stringify(user));
 
 //Devuelve el primer elemento que tenga ese #id o .clase
 const headerContainer = document.querySelector("#header-container");
 
-const header = createHeader("César", "./pages/profile.html");
+const header = createHeader(user.username, "./pages/profile.html");
 
 headerContainer.append(header);
 

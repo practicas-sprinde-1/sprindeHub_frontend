@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background-color: rgba(30, 58, 95, 0.55);
+  background-color: var(--overlay);
 }
 
 .confirm-modal {
@@ -14,7 +14,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: var(--surface);
-  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.25);
+  box-shadow: 0 12px 30px var(--shadow-strong);
 }
 
 .confirm-modal .modal-title {
@@ -45,7 +45,7 @@
 .confirm-modal .modal-delete-button {
   border: 1px solid var(--test);
   background-color: var(--test);
-  color: var(--surface);
+  color: var(--on-primary);
 }
 
 .confirm-modal .modal-cancel-button {

@@ -10,10 +10,28 @@ import { getRepositoryById } from "../api/repository.api.js";
 import { getServiceById } from "../api/service.api.js";
 import { getUsers } from "../api/user.api.js";
 import { createHeader } from "../components/header.js";
+import { showNotification } from "../components/notifications.js";
 
+const user = sessionStorage.getItem("userInfo");
+let cachedUser;
+if (user) {
+  cachedUser = JSON.parse(user);
+}
 document
   .querySelector("#header-container")
-  .append(createHeader("César", "./profile.html"));
+  .append(createHeader(cachedUser.username, "./profile.html"));
+
+if (cachedUser.role !== "ADMIN") {
+  showNotification({
+    type: "error",
+    title: "Acceso no autorizado",
+    message: "No tienes acceso a esta página. Contacta con un administrador.",
+    duration: 5000,
+  });
+  setTimeout(() => {
+    window.location.href = "../index.html";
+  }, 1500);
+}
 
 const tableBody = document.querySelector("#logs-table-body");
 const searchInput = document.querySelector("#input-logs");
@@ -97,7 +115,9 @@ async function renderTable(logs, users) {
     }
 
     const dateCell = document.createElement("td");
-    dateCell.textContent = log.created_at;
+    const date = new Date(log.created_at);
+    const formatedDate = date.toLocaleString("es-ES");
+    dateCell.textContent = formatedDate;
 
     row.append(
       userCell,
@@ -115,12 +135,7 @@ async function renderTable(logs, users) {
 
 async function loadLogs() {
   const offset = (tableState.page - 1) * tableState.limit;
-  logs = await getLogs(
-    "logs",
-    tableState.limit,
-    offset,
-    tableState.search,
-  );
+  logs = await getLogs("logs", tableState.limit, offset, tableState.search);
   await renderTable(logs, users);
   pageInformation.textContent = "Página " + tableState.page;
   previousPageButton.disabled = tableState.page === 1;

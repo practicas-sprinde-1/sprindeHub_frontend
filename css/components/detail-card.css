@@ -11,7 +11,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background-color: var(--surface);
-  box-shadow: 0 12px 28px rgba(30, 58, 95, 0.2);
+  box-shadow: 0 12px 28px var(--shadow);
   color: var(--text);
 }
 
@@ -26,7 +26,7 @@
 
 .info-card-header h3 {
   margin: 0;
-  color: var(--navy);
+  color: var(--heading);
   font-size: 16px;
 }
 
@@ -83,6 +83,6 @@
 
 .info-card button:focus-visible,
 .info-card a:focus-visible {
-  outline: 3px solid rgba(37, 99, 168, 0.32);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
