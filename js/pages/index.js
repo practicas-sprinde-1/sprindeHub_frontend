@@ -1,6 +1,10 @@
 import { createHeader } from "../components/header.js";
 import { createDetailCard } from "../components/detail-card.js";
-import { getArchivedProjects, getProjects } from "../api/project.api.js";
+import {
+  getArchivedProjects,
+  getFavoriteProjects,
+  getProjects,
+} from "../api/project.api.js";
 import { getCommandsByProjectId } from "../api/command.api.js";
 import { getLinksByProjectId } from "../api/link.api.js";
 import { getNotesByProjectId } from "../api/note.api.js";
@@ -24,6 +28,7 @@ const pageInformation = document.querySelector("#page-information");
 const searchInput = document.querySelector("#input-index");
 const showArchivedButton = document.querySelector("#archived-projects");
 const showActivedButton = document.querySelector("#actived-projects");
+const showFavoritesButton = document.querySelector("#favorite-projects");
 
 let projects = [];
 let tableState = {
@@ -37,7 +42,9 @@ async function loadProjects() {
   const offset = (tableState.page - 1) * tableState.limit;
   let response;
 
-  if (tableState.view === "archived") {
+  if (tableState.view === "favorites") {
+    response = await getFavoriteProjects(tableState.limit, offset);
+  } else if (tableState.view === "archived") {
     response = await getArchivedProjects(
       tableState.limit,
       offset,
@@ -111,10 +118,14 @@ function renderTable(projects) {
 
     environments.forEach((environment) => {
       const environmentLabel = document.createElement("span");
+      const environmentLink = document.createElement("a");
 
       environmentLabel.classList.add("environment");
       environmentLabel.classList.add(`environment--${environment.type}`);
-      environmentLabel.textContent = environment.type;
+      environmentLink.textContent = environment.type;
+      environmentLink.href = environment.url;
+      environmentLabel.append(environmentLink);
+      console.log(environmentLink);
 
       environmentsCell.append(environmentLabel);
     });
@@ -316,6 +327,12 @@ showArchivedButton.onclick = () => {
 
 showActivedButton.onclick = () => {
   tableState.view = "active";
+  tableState.page = 1;
+  loadProjects();
+};
+
+showFavoritesButton.onclick = () => {
+  tableState.view = "favorites";
   tableState.page = 1;
   loadProjects();
 };

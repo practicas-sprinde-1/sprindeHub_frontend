@@ -37,6 +37,29 @@ export async function getArchivedProjects(limit = 20, offset = 0, search = "") {
   );
 }
 
+export async function getFavoriteProjects(limit = 20, offset = 0) {
+  return getPaginatedData(
+    "projects/favorites",
+    limit,
+    offset,
+    "No se han podido obtener los proyectos favoritos.",
+  );
+}
+
+export async function favoriteProject(projectId) {
+  return archiveOrRestoreData(
+    `${API_URL}/projects/${projectId}/favorite?project_id=${projectId}`,
+    "No se ha podido añadir el proyecto a favoritos.",
+  );
+}
+
+export async function unfavoriteProject(projectId) {
+  return archiveOrRestoreData(
+    `${API_URL}/projects/${projectId}/unfavorite?project_id=${projectId}`,
+    "No se ha podido eliminar el proyecto de favoritos.",
+  );
+}
+
 export async function getProjectById(id) {
   return getData(
     `${API_URL}/projects/${id}`,

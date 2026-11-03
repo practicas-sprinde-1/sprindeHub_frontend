@@ -1,7 +1,12 @@
 import { createHeader } from "../components/header.js";
 import { createConfirmModal } from "../components/confirm-modal.js";
 import { createEditModalClient } from "../components/client-edit-modal.js";
-import { getClientById, deleteClientById } from "../api/client.api.js";
+import {
+  getClientById,
+  deleteClientById,
+  favoriteClient,
+  unfavoriteClient,
+} from "../api/client.api.js";
 import { getProjectByClientId } from "../api/project.api.js";
 import { showNotification } from "../components/notifications.js";
 
@@ -67,6 +72,50 @@ async function renderClient(client) {
 
     const modal = await createEditModalClient(client, renderClient, projects);
     document.body.append(modal);
+  };
+
+  const favoriteButton = document.querySelector("#button-favorite-client");
+
+  function updateFavoriteButtonUI() {
+    favoriteButton.textContent = client.is_favorite
+      ? "Quitar de favoritos"
+      : "Añadir a favoritos";
+  }
+  updateFavoriteButtonUI();
+
+  favoriteButton.onclick = async () => {
+    favoriteButton.disabled = true;
+    const isAlreadyFavorite = client.is_favorite;
+    try {
+      if (isAlreadyFavorite) {
+        await unfavoriteClient(client.id);
+        client.is_favorite = false;
+        showNotification({
+          type: "success",
+          title: "Cliente eliminado de favoritos",
+          message: "Se ha eliminado de favoritos correctamente",
+        });
+      } else {
+        await favoriteClient(client.id);
+        client.is_favorite = true;
+        showNotification({
+          type: "success",
+          title: "Cliente añadido a favoritos",
+          message: "Se ha añadido a favoritos correctamente",
+        });
+      }
+      updateFavoriteButtonUI();
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: isAlreadyFavorite
+          ? "Error al eliminar de favoritos"
+          : "Error al añadirlo a favoritos",
+        message: error.message,
+      });
+    } finally {
+      favoriteButton.disabled = false;
+    }
   };
 
   const deleteClient = document.querySelector(".button-delete-client");

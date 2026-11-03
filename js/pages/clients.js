@@ -1,4 +1,8 @@
-import { getArchivedClients, getClients } from "../api/client.api.js";
+import {
+  getArchivedClients,
+  getClients,
+  getFavoriteClients,
+} from "../api/client.api.js";
 import { getProjectByClientId } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
 
@@ -20,6 +24,7 @@ const pageInformation = document.querySelector("#page-information");
 
 const showArchivedButton = document.querySelector("#archived-clients");
 const showActivedButton = document.querySelector("#actived-clients");
+const showFavoritesButton = document.querySelector("#favorite-clients");
 
 let clients = [];
 let tableState = {
@@ -79,7 +84,9 @@ async function loadClients() {
   const offset = (tableState.page - 1) * tableState.limit;
   let response;
 
-  if (tableState.view === "archived") {
+  if (tableState.view === "favorites") {
+    response = await getFavoriteClients(tableState.limit, offset);
+  } else if (tableState.view === "archived") {
     response = await getArchivedClients(
       tableState.limit,
       offset,
@@ -142,6 +149,12 @@ showArchivedButton.onclick = () => {
 
 showActivedButton.onclick = () => {
   tableState.view = "active";
+  tableState.page = 1;
+  loadClients();
+};
+
+showFavoritesButton.onclick = () => {
+  tableState.view = "favorites";
   tableState.page = 1;
   loadClients();
 };

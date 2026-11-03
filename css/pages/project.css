@@ -131,13 +131,15 @@
   font-weight: 700;
 }
 
-.button-edit-project {
+.button-edit-project,
+.button-favorite-project {
   border: 1px solid var(--blue);
   background-color: var(--button-background);
   color: var(--on-primary);
 }
 
-.button-edit-project:hover {
+.button-edit-project:hover,
+.button-favorite-project:hover {
   background-color: var(--navy);
 }
 

@@ -276,7 +276,8 @@ main {
 
 .pagination button,
 .archived-projects,
-.actived-projects {
+.actived-projects,
+.favorite-projects {
   margin-left: 8px;
   padding: 7px 11px;
   border: 1px solid var(--blue);
@@ -291,7 +292,8 @@ main {
 /*Comportamiento cuando pasas el ratón sobre un botón que esté activado*/
 .pagination button:hover:not(:disabled),
 .archived-projects:hover,
-.actived-projects:hover {
+.actived-projects:hover,
+.favorite-projects:hover {
   background-color: var(--blue-light);
 }
 
