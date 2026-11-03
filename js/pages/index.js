@@ -118,10 +118,14 @@ function renderTable(projects) {
 
     environments.forEach((environment) => {
       const environmentLabel = document.createElement("span");
+      const environmentLink = document.createElement("a");
 
       environmentLabel.classList.add("environment");
       environmentLabel.classList.add(`environment--${environment.type}`);
-      environmentLabel.textContent = environment.type;
+      environmentLink.textContent = environment.type;
+      environmentLink.href = environment.url;
+      environmentLabel.append(environmentLink);
+      console.log(environmentLink);
 
       environmentsCell.append(environmentLabel);
     });

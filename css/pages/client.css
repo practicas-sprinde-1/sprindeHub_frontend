@@ -102,12 +102,14 @@
   font-weight: 700;
 }
 
+.button-favorite-client,
 .button-edit-client {
   border: 1px solid var(--blue);
   background-color: var(--button-background);
   color: var(--on-primary);
 }
 
+.button-favorite-client:hover:not(:disabled),
 .button-edit-client:hover {
   background-color: var(--navy);
 }

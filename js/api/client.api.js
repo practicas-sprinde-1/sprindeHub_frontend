@@ -37,6 +37,30 @@ export async function getArchivedClients(limit, offset, search) {
   );
 }
 
+export async function getFavoriteClients(limit = 20, offset = 0) {
+  return getPaginatedData(
+    "clients/favorites",
+    limit,
+    offset,
+    "",
+    "No se han podido obtener los clientes favoritos.",
+  );
+}
+
+export async function favoriteClient(clientId) {
+  return archiveOrRestoreData(
+    `${API_URL}/clients/${clientId}/favorite?client_id=${clientId}`,
+    "No se ha podido añadir el cliente a favoritos.",
+  );
+}
+
+export async function unfavoriteClient(clientId) {
+  return archiveOrRestoreData(
+    `${API_URL}/clients/${clientId}/unfavorite?client_id=${clientId}`,
+    "No se ha podido eliminar el cliente de favoritos.",
+  );
+}
+
 export async function getClientById(id) {
   return getData(
     `${API_URL}/clients/${id}`,

@@ -1,10 +1,4 @@
-import {
-  getData,
-  sendData,
-  modifyData,
-  deleteData,
-  archiveOrRestoreData,
-} from "./methods.js";
+import { getData, sendData, deleteData } from "./methods.js";
 
 const API_URL = "http://127.0.0.1:8000/api/v1";
 

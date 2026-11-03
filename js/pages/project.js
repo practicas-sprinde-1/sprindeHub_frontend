@@ -7,6 +7,7 @@ import { createEditModalProject } from "../components/project-edit-modal.js";
 import {
   deleteProjectById,
   favoriteProject,
+  unfavoriteProject,
   getProjectById,
 } from "../api/project.api.js";
 import { showNotification } from "../components/notifications.js";
@@ -116,20 +117,46 @@ function renderProject(project) {
   };
 
   const favoriteButton = document.querySelector("#button-favorite-project");
+
+  function updateFavoriteButtonUI() {
+    favoriteButton.textContent = project.is_favorite
+      ? "Quitar de favoritos"
+      : "Añadir a favoritos";
+  }
+  updateFavoriteButtonUI();
+
   favoriteButton.onclick = async () => {
+    favoriteButton.disabled = true;
+    const isAlreadyFavorite = project.is_favorite;
     try {
-      await favoriteProject(project.id);
-      showNotification({
-        type: "success",
-        title: "Proyecto añadido a favoritos",
-        message: "Se ha añadido a favoritos correctamente",
-      });
+      if (isAlreadyFavorite) {
+        await unfavoriteProject(project.id);
+        project.is_favorite = false;
+        showNotification({
+          type: "success",
+          title: "Proyecto eliminado de favoritos",
+          message: "Se ha eliminado de favoritos correctamente",
+        });
+      } else {
+        await favoriteProject(project.id);
+        project.is_favorite = true;
+        showNotification({
+          type: "success",
+          title: "Proyecto añadido a favoritos",
+          message: "Se ha añadido a favoritos correctamente",
+        });
+      }
+      updateFavoriteButtonUI();
     } catch (error) {
       showNotification({
         type: "error",
-        title: "No se ha podido añadir a favoritos",
+        title: isAlreadyFavorite
+          ? "Error al eliminar de favoritos"
+          : "Error al añadirlo a favoritos",
         message: error.message,
       });
+    } finally {
+      favoriteButton.disabled = false;
     }
   };
 
