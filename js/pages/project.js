@@ -4,7 +4,12 @@ import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
 import { createEditModalProject } from "../components/project-edit-modal.js";
-import { deleteProjectById, getProjectById } from "../api/project.api.js";
+import {
+  deleteProjectById,
+  favoriteProject,
+  getProjectById,
+} from "../api/project.api.js";
+import { showNotification } from "../components/notifications.js";
 
 start();
 
@@ -108,6 +113,24 @@ function renderProject(project) {
     if (document.querySelector(".modal-overlay")) return;
     const modal = await createEditModalProject(project, renderProject);
     document.body.append(modal);
+  };
+
+  const favoriteButton = document.querySelector("#button-favorite-project");
+  favoriteButton.onclick = async () => {
+    try {
+      await favoriteProject(project.id);
+      showNotification({
+        type: "success",
+        title: "Proyecto añadido a favoritos",
+        message: "Se ha añadido a favoritos correctamente",
+      });
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido añadir a favoritos",
+        message: error.message,
+      });
+    }
   };
 
   const deleteProject = document.querySelector(".button-delete-project");
