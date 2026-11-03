@@ -6,15 +6,34 @@ export function showNotification({
   message,
   duration = DEFAULT_DURATION,
 }) {
-  let container = document.querySelector("#notifications");
+  const container = getNotificationContainer();
+  const { notification, close } = createNotification({ type, title, message });
 
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "notifications";
-    container.classList.add("notifications");
-    document.body.append(container);
+  container.append(notification);
+
+  if (duration > 0) {
+    window.setTimeout(close, duration);
   }
 
+  return close;
+}
+
+function getNotificationContainer() {
+  const existingContainer = document.querySelector("#notifications");
+
+  if (existingContainer) {
+    return existingContainer;
+  }
+
+  const container = document.createElement("div");
+  container.id = "notifications";
+  container.classList.add("notifications");
+  document.body.append(container);
+
+  return container;
+}
+
+function createNotification({ type, title, message }) {
   const notification = document.createElement("div");
   notification.classList.add("notification", `notification-${type}`);
 
@@ -38,11 +57,6 @@ export function showNotification({
 
   content.append(titleElement, messageElement);
   notification.append(content, closeButton);
-  container.append(notification);
 
-  if (duration > 0) {
-    window.setTimeout(close, duration);
-  }
-
-  return close;
+  return { notification, close };
 }

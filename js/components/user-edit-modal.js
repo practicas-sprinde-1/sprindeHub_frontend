@@ -2,13 +2,12 @@ import { getLightClients } from "../api/client.api.js";
 import { modifyUser } from "../api/user.api.js";
 import {
   assignUserToClient,
-  getRelationshipByClient,
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
 import { showNotification } from "./notifications.js";
 
-export async function createEditUserModal(user, showUsers) {
+export async function createEditUserModal(user, refreshUsers) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -21,122 +20,143 @@ export async function createEditUserModal(user, showUsers) {
 
   const closeButton = createCloseButton(overlay);
 
-  const emailInput = document.createElement("input");
-  emailInput.type = "email";
-  emailInput.name = "email";
-  emailInput.id = "edit-user-email";
-  emailInput.required = true;
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "username";
-  usernameInput.id = "edit-user-username";
-  usernameInput.required = true;
-
+  const emailInput = createUserInput("email", "email", user.email);
+  const usernameInput = createUserInput("text", "username", user.username);
   const roleSelect = createRoleSelect();
-  emailInput.value = user.email;
-  usernameInput.value = user.username;
   roleSelect.value = user.role;
 
   const clients = await getLightClients("clients");
   const relationships = await getRelationshipByUser(user.id);
 
-  const clientsWithRelation = relationships.map(
+  const relatedClientIds = relationships.map(
     (relationship) => relationship.client_id,
   );
 
   const initialClients = clients.filter((client) =>
-    clientsWithRelation.includes(client.id),
+    relatedClientIds.includes(client.id),
   );
 
-  const initialClientsId = initialClients.map((client) => client.id);
+  const initialClientIds = initialClients.map((client) => client.id);
 
-  const clientCheckBoxList = createClientCheckBoxList(
+  const clientCheckboxList = createClientCheckboxList(
     clients,
-    initialClientsId,
+    initialClientIds,
   );
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.classList.add("modal-save-button");
-  saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", async () => {
-    try {
-      const email = emailInput.value.trim();
-      const username = usernameInput.value.trim();
-
-      if (email === "" || username === "") {
-        return;
-      }
-
-      user.email = email;
-      user.username = username;
-      user.role = roleSelect.value;
-
-      await modifyUser(user, user.id);
-
-    const selectedClientsId = clientCheckBoxList.getSelectedClientsId();
-
-    const addedClientsId = selectedClientsId.filter((clientId) => {
-      return !initialClientsId.includes(clientId);
-    });
-
-    const addedClients = clients.filter((client) =>
-      addedClientsId.includes(client.id),
-    );
-
-    const removeClientsId = initialClientsId.filter((clientId) => {
-      return !selectedClientsId.includes(clientId);
-    });
-
-    const removeClients = clients.filter((client) => {
-      return removeClientsId.includes(client.id);
-    });
-
-    for (const client of addedClients) {
-      const updatedRelationship = {
-        client_id: client.id,
-      };
-      await assignUserToClient(updatedRelationship, user.id);
-    }
-
-    for (const client of removeClients) {
-      await revokeClientAccess(user.id, client.id);
-    }
-
-      showUsers();
-      overlay.remove();
-      showNotification({
-        type: "success",
-        title: "Usuario modificado",
-        message: "Los cambios se han guardado correctamente.",
-      });
-    } catch (error) {
-      showNotification({
-        type: "error",
-        title: "No se ha podido modificar el usuario",
-        message: error.message,
-        duration: 7000,
-      });
-    }
-  });
-
-  const cancelButton = createCancelButton(overlay);
-
-  const actions = document.createElement("div");
-  actions.classList.add("modal-actions");
-  actions.append(saveButton, cancelButton);
+  const actions = createModalActions(overlay, () =>
+    saveUserChanges({
+      user,
+      refreshUsers,
+      overlay,
+      emailInput,
+      usernameInput,
+      roleSelect,
+      clients,
+      initialClientIds,
+      clientCheckboxList,
+    }),
+  );
 
   modal.append(closeButton);
   modal.append(title);
   modal.append(createField("Email", emailInput));
   modal.append(createField("Nombre de usuario", usernameInput));
   modal.append(createField("Rol", roleSelect));
-  modal.append(clientCheckBoxList.element);
+  modal.append(clientCheckboxList.element);
   modal.append(actions);
 
   overlay.append(modal);
   return overlay;
+}
+
+function createUserInput(type, name, value) {
+  const input = document.createElement("input");
+  input.type = type;
+  input.name = name;
+  input.id = `edit-user-${name}`;
+  input.required = true;
+  input.value = value;
+  return input;
+}
+
+function createModalActions(overlay, onSave) {
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.classList.add("modal-save-button");
+  saveButton.textContent = "Guardar";
+  saveButton.addEventListener("click", onSave);
+
+  const actions = document.createElement("div");
+  actions.classList.add("modal-actions");
+  actions.append(saveButton, createCancelButton(overlay));
+  return actions;
+}
+
+async function saveUserChanges({
+  user,
+  refreshUsers,
+  overlay,
+  emailInput,
+  usernameInput,
+  roleSelect,
+  clients,
+  initialClientIds,
+  clientCheckboxList,
+}) {
+  try {
+    const email = emailInput.value.trim();
+    const username = usernameInput.value.trim();
+
+    if (email === "" || username === "") {
+      return;
+    }
+
+    user.email = email;
+    user.username = username;
+    user.role = roleSelect.value;
+
+    await modifyUser(user, user.id);
+    await updateClientAccess(
+      user.id,
+      clients,
+      initialClientIds,
+      clientCheckboxList.getSelectedClientIds(),
+    );
+
+    refreshUsers();
+    overlay.remove();
+    showNotification({
+      type: "success",
+      title: "Usuario modificado",
+      message: "Los cambios se han guardado correctamente.",
+    });
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: "No se ha podido modificar el usuario",
+      message: error.message,
+      duration: 7000,
+    });
+  }
+}
+
+async function updateClientAccess(userId, clients, initialClientIds, selectedClientIds) {
+  const addedClientIds = selectedClientIds.filter(
+    (clientId) => !initialClientIds.includes(clientId),
+  );
+  const removedClientIds = initialClientIds.filter(
+    (clientId) => !selectedClientIds.includes(clientId),
+  );
+  const addedClients = clients.filter((client) => addedClientIds.includes(client.id));
+  const removedClients = clients.filter((client) => removedClientIds.includes(client.id));
+
+  for (const client of addedClients) {
+    await assignUserToClient({ client_id: client.id }, userId);
+  }
+
+  for (const client of removedClients) {
+    await revokeClientAccess(userId, client.id);
+  }
 }
 
 function createRoleSelect() {
@@ -190,7 +210,7 @@ function createCancelButton(overlay) {
   return cancelButton;
 }
 
-function createClientCheckBoxList(clients, initialClientsId) {
+function createClientCheckboxList(clients, initialClientIds) {
   const section = document.createElement("section");
   section.classList.add("user-client-access");
   const title = document.createElement("h2");
@@ -199,14 +219,14 @@ function createClientCheckBoxList(clients, initialClientsId) {
   const list = document.createElement("ul");
   list.classList.add("user-client-access-list");
 
-  let selectedClientsId = [...initialClientsId];
+  let selectedClientIds = [...initialClientIds];
 
   const assignedClients = clients.filter((client) => {
-    return initialClientsId.includes(client.id);
+    return initialClientIds.includes(client.id);
   });
 
   const unassignedClients = clients.filter((client) => {
-    return !initialClientsId.includes(client.id);
+    return !initialClientIds.includes(client.id);
   });
 
   const orderedClients = [...assignedClients, ...unassignedClients];
@@ -222,19 +242,19 @@ function createClientCheckBoxList(clients, initialClientsId) {
     const clientName = document.createElement("span");
     clientName.textContent = client.name;
 
-    checkbox.checked = initialClientsId.includes(client.id);
+    checkbox.checked = initialClientIds.includes(client.id);
 
     checkbox.addEventListener("change", () => {
       if (checkbox.checked) {
-        const selected = selectedClientsId.includes(client.id);
-
-        if (!selected) {
-          selectedClientsId.push(client.id);
+        if (selectedClientIds.includes(client.id)) {
+          return;
         }
+
+        selectedClientIds.push(client.id);
         return;
       }
 
-      selectedClientsId = selectedClientsId.filter((clientId) => {
+      selectedClientIds = selectedClientIds.filter((clientId) => {
         return clientId !== client.id;
       });
     });
@@ -248,8 +268,8 @@ function createClientCheckBoxList(clients, initialClientsId) {
 
   return {
     element: section,
-    getSelectedClientsId: () => {
-      return selectedClientsId;
+    getSelectedClientIds: () => {
+      return selectedClientIds;
     },
   };
 }

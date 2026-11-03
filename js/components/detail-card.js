@@ -6,6 +6,25 @@ export function createDetailCard(title, items, projectUrl, contentType) {
   const card = document.createElement("section");
   card.classList.add("info-card");
 
+  const { header, closeButton } = createCardHeader(title);
+  const list = document.createElement("ul");
+  list.classList.add("info-card-list");
+  renderDetailItems(list, items, contentType);
+
+  const projectLink = document.createElement("a");
+  projectLink.href = projectUrl;
+  projectLink.textContent = "Ver proyecto completo";
+
+  card.append(header, list, projectLink);
+
+  closeButton.addEventListener("click", () => {
+    card.remove();
+  });
+
+  return card;
+}
+
+function createCardHeader(title) {
   const header = document.createElement("header");
   header.classList.add("info-card-header");
 
@@ -18,33 +37,28 @@ export function createDetailCard(title, items, projectUrl, contentType) {
 
   header.append(titleElement, closeButton);
 
-  const list = document.createElement("ul");
-  list.classList.add("info-card-list");
+  return { header, closeButton };
+}
 
-  // Cada tipo de detalle se pinta con su formato propio.
+function renderDetailItems(list, items, contentType) {
   if (contentType === "commands") {
     renderCommands(list, items);
-  } else if (contentType === "links") {
-    renderDocumentationLinks(list, items);
-  } else if (contentType === "notes") {
-    renderNotes(list, items);
-  } else {
-    items.forEach((itemData) => {
-      const item = document.createElement("li");
-      item.textContent = itemData;
-      list.append(item);
-    });
+    return;
   }
 
-  const detailLink = document.createElement("a");
-  detailLink.href = projectUrl;
-  detailLink.textContent = "Ver proyecto completo";
+  if (contentType === "links") {
+    renderDocumentationLinks(list, items);
+    return;
+  }
 
-  card.append(header, list, detailLink);
+  if (contentType === "notes") {
+    renderNotes(list, items);
+    return;
+  }
 
-  closeButton.addEventListener("click", () => {
-    card.remove();
+  items.forEach((itemText) => {
+    const listItem = document.createElement("li");
+    listItem.textContent = itemText;
+    list.append(listItem);
   });
-
-  return card;
 }

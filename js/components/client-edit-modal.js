@@ -31,65 +31,24 @@ export async function createEditModalClient(
     overlay.remove();
   });
 
-  const nameInput = document.createElement("input");
-  nameInput.type = "text";
-  nameInput.name = "name";
-  nameInput.value = client.name;
-
-  const cifInput = document.createElement("input");
-  cifInput.type = "text";
-  cifInput.name = "cif";
-  cifInput.value = client.cif;
-
-  const phoneInput = document.createElement("input");
-  phoneInput.type = "tel";
-  phoneInput.name = "phone";
-  phoneInput.value = client.phone;
-
-  const statusInput = document.createElement("select");
-  statusInput.name = "is_active";
-
-  const activeOption = document.createElement("option");
-  activeOption.value = "true";
-  activeOption.textContent = "Activo";
-
-  const inactiveOption = document.createElement("option");
-  inactiveOption.value = "false";
-  inactiveOption.textContent = "Inactivo";
-
-  statusInput.append(activeOption, inactiveOption);
-  statusInput.value = String(client.is_active);
-
-  const nameField = createClientField("Nombre", nameInput);
-  const cifField = createClientField("CIF", cifInput);
-  const phoneField = createClientField("Teléfono", phoneInput);
-  const statusField = createClientStatusField(statusInput);
+  const { fields, inputs } = createClientForm(client);
 
   const projects = await getLightProjects("projects");
 
-  const initialProjectsId = assignedProjects.map((project) => project.id);
+  const initialProjectIds = assignedProjects.map((project) => project.id);
 
-  const projectCheckBoxList = createProjectCheckBoxList(
+  const projectSelection = createProjectSelection(
     projects,
-    initialProjectsId,
+    initialProjectIds,
   );
 
   const user = await getProfile();
 
-  const userName = user.username;
-
-  const userRelationship = await getRelationshipByUser(user.id);
-
-  const userRelationshipClientsId = userRelationship.map((r) => r.client_id);
-
-  const individualRelationshipClientId = userRelationshipClientsId.filter(
-    (id) => id === client.id,
+  const userRelationships = await getRelationshipByUser(user.id);
+  const hadAccess = userRelationships.some(
+    (relationship) => relationship.client_id === client.id,
   );
-
-  const userCheckBoxList = createUserCheckBoxList(
-    userName,
-    individualRelationshipClientId,
-  );
+  const userAccessControl = createUserAccessControl(user.username, hadAccess);
 
   const saveButton = document.createElement("button");
   saveButton.type = "button";
@@ -98,51 +57,21 @@ export async function createEditModalClient(
 
   saveButton.addEventListener("click", async () => {
     try {
-      client.name = nameInput.value.trim();
-    client.cif = cifInput.value.trim();
-    client.phone = phoneInput.value.trim();
-    client.is_active = statusInput.value === "true";
+      updateClientFromInputs(client, inputs);
+      await modifyClient(client, client.id);
 
-    await modifyClient(client, client.id);
-
-    const selectedProjectsIds = projectCheckBoxList.getSelectedProjectsId();
-
-    const addedProjectsid = selectedProjectsIds.filter((projectId) => {
-      return !initialProjectsId.includes(projectId);
-    });
-
-    const addedProjects = projects.filter((project) => {
-      return addedProjectsid.includes(project.id);
-    });
-
-    const removeProjectsIds = initialProjectsId.filter((projectId) => {
-      return !selectedProjectsIds.includes(projectId);
-    });
-
-    const removeProjects = projects.filter((project) => {
-      return removeProjectsIds.includes(project.id);
-    });
-
-    for (const project of addedProjects) {
-      const updatedProject = {
-        client_id: client.id,
-      };
-      await modifyProject(updatedProject, project.id);
-    }
-
-    for (const project of removeProjects) {
-      const updatedProject = {
-        client_id: null,
-      };
-      await modifyProject(updatedProject, project.id);
-    }
-
-    const hadAccess = individualRelationshipClientId.length > 0;
-    const hasAccess = userCheckBoxList.getState();
-
-    if (hadAccess && !hasAccess) {
-      await revokeClientAccess(user.id, client.id);
-    }
+      await updateProjectAssignments(
+        projects,
+        initialProjectIds,
+        projectSelection.getSelectedProjectIds(),
+        client.id,
+      );
+      await revokeAccessIfDeselected(
+        user.id,
+        client.id,
+        hadAccess,
+        userAccessControl,
+      );
 
       await onSave(client);
       overlay.remove();
@@ -174,33 +103,104 @@ export async function createEditModalClient(
   modalActions.classList.add("modal-actions");
   modalActions.append(saveButton, cancelButton);
 
-  if (individualRelationshipClientId.length <= 0) {
-    modal.append(
-      closeButton,
-      title,
-      nameField,
-      cifField,
-      phoneField,
-      statusField,
-      projectCheckBoxList.element,
-      modalActions,
-    );
-  } else {
-    modal.append(
-      closeButton,
-      title,
-      nameField,
-      cifField,
-      phoneField,
-      statusField,
-      userCheckBoxList.element,
-      projectCheckBoxList.element,
-      modalActions,
-    );
+  modal.append(closeButton, title, ...fields);
+  if (hadAccess) {
+    modal.append(userAccessControl.element);
   }
+  modal.append(projectSelection.element, modalActions);
 
   overlay.append(modal);
   return overlay;
+}
+
+function createClientForm(client) {
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.name = "name";
+  nameInput.value = client.name;
+
+  const cifInput = document.createElement("input");
+  cifInput.type = "text";
+  cifInput.name = "cif";
+  cifInput.value = client.cif;
+
+  const phoneInput = document.createElement("input");
+  phoneInput.type = "tel";
+  phoneInput.name = "phone";
+  phoneInput.value = client.phone;
+
+  const statusInput = document.createElement("select");
+  statusInput.name = "is_active";
+
+  const activeOption = document.createElement("option");
+  activeOption.value = "true";
+  activeOption.textContent = "Activo";
+
+  const inactiveOption = document.createElement("option");
+  inactiveOption.value = "false";
+  inactiveOption.textContent = "Inactivo";
+
+  statusInput.append(activeOption, inactiveOption);
+  statusInput.value = String(client.is_active);
+
+  return {
+    fields: [
+      createClientField("Nombre", nameInput),
+      createClientField("CIF", cifInput),
+      createClientField("Teléfono", phoneInput),
+      createClientStatusField(statusInput),
+    ],
+    inputs: { nameInput, cifInput, phoneInput, statusInput },
+  };
+}
+
+function updateClientFromInputs(
+  client,
+  { nameInput, cifInput, phoneInput, statusInput },
+) {
+  client.name = nameInput.value.trim();
+  client.cif = cifInput.value.trim();
+  client.phone = phoneInput.value.trim();
+  client.is_active = statusInput.value === "true";
+}
+
+async function updateProjectAssignments(
+  projects,
+  initialProjectIds,
+  selectedProjectIds,
+  clientId,
+) {
+  const addedProjectIds = selectedProjectIds.filter(
+    (projectId) => !initialProjectIds.includes(projectId),
+  );
+  const addedProjects = projects.filter((project) =>
+    addedProjectIds.includes(project.id),
+  );
+  const removedProjectIds = initialProjectIds.filter(
+    (projectId) => !selectedProjectIds.includes(projectId),
+  );
+  const removedProjects = projects.filter((project) =>
+    removedProjectIds.includes(project.id),
+  );
+
+  for (const project of addedProjects) {
+    await modifyProject({ client_id: clientId }, project.id);
+  }
+  for (const project of removedProjects) {
+    await modifyProject({ client_id: null }, project.id);
+  }
+}
+
+async function revokeAccessIfDeselected(
+  userId,
+  clientId,
+  hadAccess,
+  userAccessControl,
+) {
+  const hasAccess = userAccessControl.getState();
+  if (!hadAccess || hasAccess) return;
+
+  await revokeClientAccess(userId, clientId);
 }
 
 function createClientField(labelText, input) {
@@ -245,21 +245,21 @@ function createClientStatusField(statusInput) {
   return field;
 }
 
-function createProjectCheckBoxList(projects, initialProjectsIds) {
+function createProjectSelection(projects, initialProjectIds) {
   const section = document.createElement("section");
   const title = document.createElement("h2");
   title.textContent = "Proyectos";
 
   const list = document.createElement("ul");
 
-  let selectedProjectsIds = [...initialProjectsIds];
+  let selectedProjectIds = [...initialProjectIds];
 
   const assignedProjects = projects.filter((project) => {
-    return initialProjectsIds.includes(project.id);
+    return initialProjectIds.includes(project.id);
   });
 
   const unassignedProjects = projects.filter((project) => {
-    return !initialProjectsIds.includes(project.id);
+    return !initialProjectIds.includes(project.id);
   });
 
   const orderedProjects = [...assignedProjects, ...unassignedProjects];
@@ -274,19 +274,19 @@ function createProjectCheckBoxList(projects, initialProjectsIds) {
     const projectName = document.createElement("span");
     projectName.textContent = project.name;
 
-    checkbox.checked = initialProjectsIds.includes(project.id);
+    checkbox.checked = initialProjectIds.includes(project.id);
 
     checkbox.addEventListener("change", () => {
       if (checkbox.checked) {
-        const selected = selectedProjectsIds.includes(project.id);
+        const isAlreadySelected = selectedProjectIds.includes(project.id);
 
-        if (!selected) {
-          selectedProjectsIds.push(project.id);
+        if (!isAlreadySelected) {
+          selectedProjectIds.push(project.id);
         }
         return;
       }
 
-      selectedProjectsIds = selectedProjectsIds.filter((projectId) => {
+      selectedProjectIds = selectedProjectIds.filter((projectId) => {
         return projectId !== project.id;
       });
     });
@@ -300,13 +300,13 @@ function createProjectCheckBoxList(projects, initialProjectsIds) {
 
   return {
     element: section,
-    getSelectedProjectsId: () => {
-      return selectedProjectsIds;
+    getSelectedProjectIds: () => {
+      return selectedProjectIds;
     },
   };
 }
 
-function createUserCheckBoxList(userName, relationship) {
+function createUserAccessControl(userName, hasAccess) {
   const section = document.createElement("section");
   section.classList.add("client-user-access");
   const title = document.createElement("h2");
@@ -320,21 +320,11 @@ function createUserCheckBoxList(userName, relationship) {
   const spanUserName = document.createElement("span");
   spanUserName.textContent = userName;
 
-  let state;
-  if (relationship.length > 0) {
-    state = true;
-  } else {
-    state = false;
-  }
-
-  checkbox.checked = state;
+  let isAccessSelected = hasAccess;
+  checkbox.checked = isAccessSelected;
 
   checkbox.addEventListener("change", () => {
-    if (checkbox.checked) {
-      state = true;
-    } else {
-      state = false;
-    }
+    isAccessSelected = checkbox.checked;
   });
 
   label.append(checkbox, spanUserName);
@@ -344,7 +334,7 @@ function createUserCheckBoxList(userName, relationship) {
   return {
     element: section,
     getState: () => {
-      return state;
+      return isAccessSelected;
     },
   };
 }

@@ -14,23 +14,9 @@ export function createNewUserModal(showUsers) {
 
   const closeButton = createCloseButton(overlay);
 
-  const emailInput = document.createElement("input");
-  emailInput.type = "email";
-  emailInput.name = "email";
-  emailInput.id = "new-user-email";
-  emailInput.required = true;
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "username";
-  usernameInput.id = "new-user-username";
-  usernameInput.required = true;
-
-  const passwordInput = document.createElement("input");
-  passwordInput.type = "password";
-  passwordInput.name = "password";
-  passwordInput.id = "new-user-password";
-  passwordInput.required = true;
+  const emailInput = createRequiredInput("email", "email");
+  const usernameInput = createRequiredInput("text", "username");
+  const passwordInput = createRequiredInput("password", "password");
 
   const roleSelect = createRoleSelect("new-user-role");
 
@@ -38,58 +24,17 @@ export function createNewUserModal(showUsers) {
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    if (email === "" || username === "" || password === "") {
-      showNotification({
-        type: "warning",
-        title: "Campos obligatorios",
-        message: "Completa el email, el nombre de usuario y la contraseña.",
-      });
-      return;
-    }
-
-    if (password.length < 10) {
-      showNotification({
-        type: "error",
-        title: "Contraseña no válida",
-        message: "La contraseña debe tener al menos 10 caracteres.",
-      });
-      passwordInput.focus();
-      return;
-    }
-
-    const newUser = {
-      email: email,
-      username: username,
-      password: password,
-      role: roleSelect.value,
-    };
-
-    try {
-      saveButton.disabled = true;
-      await setUser(newUser);
-      await showUsers();
-      overlay.remove();
-      showNotification({
-        type: "success",
-        title: "Usuario creado",
-        message: `Se ha creado el usuario ${username}.`,
-      });
-    } catch (error) {
-      showNotification({
-        type: "error",
-        title: "No se pudo crear el usuario",
-        message: getCreateUserErrorMessage(error),
-        duration: 7000,
-      });
-    } finally {
-      saveButton.disabled = false;
-    }
-  });
+  saveButton.addEventListener("click", () =>
+    submitNewUser({
+      emailInput,
+      usernameInput,
+      passwordInput,
+      roleSelect,
+      saveButton,
+      overlay,
+      refreshUsers: showUsers,
+    }),
+  );
 
   const cancelButton = createCancelButton(overlay);
 
@@ -107,6 +52,81 @@ export function createNewUserModal(showUsers) {
 
   overlay.append(modal);
   return overlay;
+}
+
+function createRequiredInput(type, name) {
+  const input = document.createElement("input");
+  input.type = type;
+  input.name = name;
+  input.id = `new-user-${name}`;
+  input.required = true;
+  return input;
+}
+
+function validateNewUser({ email, username, password }, passwordInput) {
+  if (email === "" || username === "" || password === "") {
+    showNotification({
+      type: "warning",
+      title: "Campos obligatorios",
+      message: "Completa el email, el nombre de usuario y la contraseña.",
+    });
+    return false;
+  }
+
+  if (password.length < 10) {
+    showNotification({
+      type: "error",
+      title: "Contraseña no válida",
+      message: "La contraseña debe tener al menos 10 caracteres.",
+    });
+    passwordInput.focus();
+    return false;
+  }
+
+  return true;
+}
+
+async function submitNewUser({
+  emailInput,
+  usernameInput,
+  passwordInput,
+  roleSelect,
+  saveButton,
+  overlay,
+  refreshUsers,
+}) {
+  const userDetails = {
+    email: emailInput.value.trim(),
+    username: usernameInput.value.trim(),
+    password: passwordInput.value,
+  };
+
+  if (!validateNewUser(userDetails, passwordInput)) {
+    return;
+  }
+
+  const newUser = { ...userDetails, role: roleSelect.value };
+
+  try {
+    saveButton.disabled = true;
+    await setUser(newUser);
+    await refreshUsers();
+    overlay.remove();
+    showNotification({
+      type: "success",
+      title: "Usuario creado",
+      message: `Se ha creado el usuario ${newUser.username}.`,
+    });
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: "No se pudo crear el usuario",
+      message: getCreateUserErrorMessage(error),
+      duration: 7000,
+    });
+  } finally {
+    saveButton.disabled = false;
+  }
 }
 
 function createRoleSelect(id) {

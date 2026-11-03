@@ -14,53 +14,68 @@ export function createEditProfileModal(user, renderUser) {
 
   const closeButton = createCloseButton(overlay);
 
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "username";
-  usernameInput.id = "profile-username";
-  usernameInput.value = user.username;
-  usernameInput.required = true;
+  const usernameInput = createProfileInput("text", "username", user.username);
+  const emailInput = createProfileInput("email", "email", user.email);
+  const actions = createModalActions(overlay, () =>
+    saveProfileChanges(user, renderUser, overlay, usernameInput, emailInput),
+  );
 
-  const emailInput = document.createElement("input");
-  emailInput.type = "email";
-  emailInput.name = "email";
-  emailInput.id = "profile-email";
-  emailInput.value = user.email;
-  emailInput.required = true;
+  modal.append(closeButton);
+  modal.append(title);
+  modal.append(createField("Nombre de usuario", usernameInput));
+  modal.append(createField("Email", emailInput));
+  modal.append(actions);
 
+  overlay.append(modal);
+  return overlay;
+}
+
+function createProfileInput(type, name, value) {
+  const input = document.createElement("input");
+  input.type = type;
+  input.name = name;
+  input.id = `profile-${name}`;
+  input.value = value;
+  input.required = true;
+  return input;
+}
+
+async function saveProfileChanges(user, renderUser, overlay, usernameInput, emailInput) {
+  const username = usernameInput.value.trim();
+  const email = emailInput.value.trim();
+
+  if (username === "" || email === "") {
+    return;
+  }
+
+  user.username = username;
+  user.email = email;
+
+  try {
+    await modifyProfile(user);
+    await renderUser(user);
+    overlay.remove();
+    showNotification({
+      type: "success",
+      title: "Perfil modificado",
+      message: "Los datos se han guardado correctamente.",
+    });
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: "No se ha podido modificar el perfil",
+      message: error.message,
+      duration: 7000,
+    });
+  }
+}
+
+function createModalActions(overlay, onSave) {
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", async () => {
-    const username = usernameInput.value.trim();
-    const email = emailInput.value.trim();
-
-    if (username === "" || email === "") {
-      return;
-    }
-
-    user.username = username;
-    user.email = email;
-
-    try {
-      await modifyProfile(user);
-      await renderUser(user);
-      overlay.remove();
-      showNotification({
-        type: "success",
-        title: "Perfil modificado",
-        message: "Los datos se han guardado correctamente.",
-      });
-    } catch (error) {
-      showNotification({
-        type: "error",
-        title: "No se ha podido modificar el perfil",
-        message: error.message,
-        duration: 7000,
-      });
-    }
-  });
+  saveButton.addEventListener("click", onSave);
 
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
@@ -74,14 +89,7 @@ export function createEditProfileModal(user, renderUser) {
   actions.classList.add("modal-actions");
   actions.append(saveButton, cancelButton);
 
-  modal.append(closeButton);
-  modal.append(title);
-  modal.append(createField("Nombre de usuario", usernameInput));
-  modal.append(createField("Email", emailInput));
-  modal.append(actions);
-
-  overlay.append(modal);
-  return overlay;
+  return actions;
 }
 
 function createField(labelText, input) {

@@ -30,7 +30,6 @@ import {
 import { showNotification } from "./notifications.js";
 
 export async function createEditModalProject(project, onSave) {
-  // Reúne en un solo modal las colecciones editables de un proyecto.
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
@@ -58,34 +57,7 @@ export async function createEditModalProject(project, onSave) {
 
   saveButton.addEventListener("click", async () => {
     try {
-      project.name = projectName.value.trim();
-      project.description = projectDescription.value.trim();
-      project.client_id = Number(clientSelect.value);
-
-      const previousState = project.is_active;
-      let selectedState;
-
-      if (statusSelect.value === "true") {
-        selectedState = true;
-      } else {
-        selectedState = false;
-      }
-
-      if (previousState !== selectedState) {
-        if (selectedState) {
-          await restoreProject(project.id);
-        } else {
-          await archiveProject(project.id);
-        }
-        project.is_active = selectedState;
-      }
-
-      //Metodo para que aparezca por pantalla el cliente nuevo seleccionado
-      project.client = clients.find(
-        (client) => client.id === project.client_id,
-      );
-
-      await modifyProject(project, project.id);
+      await saveProjectChanges(project, fields, clients);
 
       await onSave(project);
 
@@ -114,6 +86,73 @@ export async function createEditModalProject(project, onSave) {
     overlay.remove();
   });
 
+  const clients = await getLightClients("clients");
+  const fields = createProjectForm(project, clients);
+
+  const environmentsSection = createEnvironmentsSection(
+    project.environments,
+    project.id,
+  );
+  const repositoriesSection = createRepositoriesSection(
+    project.repositories,
+    project.id,
+  );
+  const servicesSection = createServicesSection(project.services, project.id);
+  const domainsSection = createDomainsSection(project.domains, project.id);
+  const commandsSection = createCommandsSection(project.commands, project.id);
+  const linksSection = createLinksSection(project.links, project.id);
+  const notesSection = createNotesSection(project.notes, project.id);
+
+  const modalActions = document.createElement("div");
+  modalActions.classList.add("modal-actions");
+  modalActions.append(saveButton, cancelButton);
+
+  modal.append(
+    closeButton,
+    title,
+    createProjectField("Nombre del proyecto", fields.projectName),
+    createProjectField("Descripción", fields.projectDescription),
+    createProjectField("Cliente", fields.clientSelect),
+    createStatusField(fields.statusSelect),
+    environmentsSection,
+    repositoriesSection,
+    servicesSection,
+    domainsSection,
+    commandsSection,
+    linksSection,
+    notesSection,
+    modalActions,
+  );
+
+  overlay.append(modal);
+
+  return overlay;
+}
+
+async function saveProjectChanges(project, fields, clients) {
+  project.name = fields.projectName.value.trim();
+  project.description = fields.projectDescription.value.trim();
+  project.client_id = Number(fields.clientSelect.value);
+
+  await updateProjectStatus(project, fields.statusSelect.value === "true");
+
+  project.client = clients.find((client) => client.id === project.client_id);
+  await modifyProject(project, project.id);
+}
+
+async function updateProjectStatus(project, isActive) {
+  if (project.is_active === isActive) return;
+
+  if (isActive) {
+    await restoreProject(project.id);
+  } else {
+    await archiveProject(project.id);
+  }
+
+  project.is_active = isActive;
+}
+
+function createProjectForm(project, clients) {
   const projectName = document.createElement("input");
   projectName.type = "text";
   projectName.name = "name";
@@ -124,8 +163,6 @@ export async function createEditModalProject(project, onSave) {
   projectDescription.name = "description";
   projectDescription.value = project.description;
   projectDescription.placeholder = "Descripción del proyecto";
-
-  const clients = await getLightClients("clients");
 
   const clientSelect = document.createElement("select");
   clientSelect.name = "client_id";
@@ -152,56 +189,7 @@ export async function createEditModalProject(project, onSave) {
   statusSelect.append(activeOption, inactiveOption);
   statusSelect.value = project.is_active;
 
-  const projectNameField = createProjectField(
-    "Nombre del proyecto",
-    projectName,
-  );
-  const projectDescriptionField = createProjectField(
-    "Descripción",
-    projectDescription,
-  );
-  const clientField = createProjectField("Cliente", clientSelect);
-  const statusField = createStatusField(statusSelect);
-
-  const environmentsSection = createEnvironmentsRead(
-    project.environments,
-    project.id,
-  );
-  const repositoriesSection = createRepositoriesRead(
-    project.repositories,
-    project.id,
-  );
-  const servicesSection = createServicesRead(project.services, project.id);
-  const domainsSection = createDomainsRead(project.domains, project.id);
-  const commandsSection = createCommandsRead(project.commands, project.id);
-  const linksSection = createLinksRead(project.links, project.id);
-  const notesSection = createNotesRead(project.notes, project.id);
-
-  // Agrupa las acciones para colocarlas juntas en la primera columna del grid del modal.
-  const modalActions = document.createElement("div");
-  modalActions.classList.add("modal-actions");
-  modalActions.append(saveButton, cancelButton);
-
-  modal.append(
-    closeButton,
-    title,
-    projectNameField,
-    projectDescriptionField,
-    clientField,
-    statusField,
-    environmentsSection,
-    repositoriesSection,
-    servicesSection,
-    domainsSection,
-    commandsSection,
-    linksSection,
-    notesSection,
-    modalActions,
-  );
-
-  overlay.append(modal);
-
-  return overlay;
+  return { projectName, projectDescription, clientSelect, statusSelect };
 }
 
 function createProjectField(labelText, input) {
@@ -246,34 +234,19 @@ function createStatusField(statusSelect) {
   return field;
 }
 
-function createEnvironmentsRead(environments, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Entornos";
-
-  const environmentsList = document.createElement("ul");
-  const addButton = createAddButton("Añadir entorno", () => {
-    const environment = {
+function createEnvironmentsSection(environments, projectId) {
+  return createCollectionSection({
+    title: "Entornos",
+    addLabel: "Añadir entorno",
+    collection: environments,
+    createItem: () => ({
       type: "",
       url: "",
       project_id: projectId,
-    };
-    const listItem = document.createElement("li");
-    environmentsList.append(listItem);
-    createEnvironmentsEdit(listItem, environment, environments, true);
+    }),
+    renderItem: renderEnvironmentRead,
+    editItem: createEnvironmentsEdit,
   });
-
-  environments.forEach((environment) => {
-    const listItem = document.createElement("li");
-
-    renderEnvironmentRead(listItem, environment, environments);
-
-    environmentsList.append(listItem);
-  });
-
-  section.append(title, environmentsList, addButton);
-
-  return section;
 }
 
 function createEnvironmentsEdit(
@@ -303,11 +276,7 @@ function createEnvironmentsEdit(
 
   typeSelect.append(optionDev, optionTest, optionStaging, optionProd);
 
-  if (environment.type === "") {
-    typeSelect.value = optionDev.value;
-  } else {
-    typeSelect.value = environment.type;
-  }
+  typeSelect.value = environment.type === "" ? optionDev.value : environment.type;
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
@@ -339,19 +308,15 @@ function createEnvironmentsEdit(
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdEnvironment = await setEnvironment(updatedEnvironment);
-        environments.push(createdEnvironment);
-        renderEnvironmentRead(listItem, createdEnvironment, environments);
-        return;
-      }
-
-      await modifyEnvironment(updatedEnvironment, updatedEnvironment.id);
-
-      environment.type = updatedEnvironment.type;
-      environment.url = updatedEnvironment.url;
-
-      renderEnvironmentRead(listItem, environment, environments);
+      const savedItem = await persistChildItem({
+        item: environment,
+        updatedItem: updatedEnvironment,
+        collection: environments,
+        isNew,
+        createItem: setEnvironment,
+        updateItem: modifyEnvironment,
+      });
+      renderEnvironmentRead(listItem, savedItem, environments);
     }, "entorno");
   });
 
@@ -382,27 +347,16 @@ function renderEnvironmentRead(listItem, environment, environments) {
   );
 }
 
-function createRepositoriesRead(repositories, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Repositorios";
-  const repositoriesList = document.createElement("ul");
-  const addButton = createAddButton("Añadir repositorio", () => {
-    const repository = { project_id: projectId, type: "", url: "" };
-    const listItem = document.createElement("li");
-    repositoriesList.append(listItem);
-    createRepositoryEdit(listItem, repository, repositories, true);
+
+function createRepositoriesSection(repositories, projectId) {
+  return createCollectionSection({
+    title: "Repositorios",
+    addLabel: "Añadir repositorio",
+    collection: repositories,
+    createItem: () => ({ project_id: projectId, type: "", url: "" }),
+    renderItem: renderRepositoryRead,
+    editItem: createRepositoryEdit,
   });
-
-  repositories.forEach((repository) => {
-    const listItem = document.createElement("li");
-
-    renderRepositoryRead(listItem, repository, repositories);
-    repositoriesList.append(listItem);
-  });
-
-  section.append(title, repositoriesList, addButton);
-  return section;
 }
 
 function createRepositoryEdit(
@@ -432,11 +386,7 @@ function createRepositoryEdit(
 
   typeSelect.append(optionBack, optionFront, optionDevOps, optionQa);
 
-  if (repository.type === "") {
-    typeSelect.value = optionBack.value;
-  } else {
-    typeSelect.value = repository.type;
-  }
+  typeSelect.value = repository.type === "" ? optionBack.value : repository.type;
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
@@ -468,18 +418,15 @@ function createRepositoryEdit(
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdRepository = await setRepository(updatedRepository);
-        repositories.push(createdRepository);
-        renderRepositoryRead(listItem, createdRepository, repositories);
-        return;
-      }
-
-      await modifyRepository(updatedRepository, updatedRepository.id);
-
-      repository.type = updatedRepository.type;
-      repository.url = updatedRepository.url;
-      renderRepositoryRead(listItem, repository, repositories);
+      const savedItem = await persistChildItem({
+        item: repository,
+        updatedItem: updatedRepository,
+        collection: repositories,
+        isNew,
+        createItem: setRepository,
+        updateItem: modifyRepository,
+      });
+      renderRepositoryRead(listItem, savedItem, repositories);
     }, "repositorio");
   });
 
@@ -510,27 +457,16 @@ function renderRepositoryRead(listItem, repository, repositories) {
   );
 }
 
-function createServicesRead(services, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Servicios";
-  const servicesList = document.createElement("ul");
-  const addButton = createAddButton("Añadir servicio", () => {
-    const service = { project_id: projectId, name: "" };
-    const listItem = document.createElement("li");
-    servicesList.append(listItem);
-    createServiceEdit(listItem, service, services, true);
+
+function createServicesSection(services, projectId) {
+  return createCollectionSection({
+    title: "Servicios",
+    addLabel: "Añadir servicio",
+    collection: services,
+    createItem: () => ({ project_id: projectId, name: "" }),
+    renderItem: renderServiceRead,
+    editItem: createServiceEdit,
   });
-
-  services.forEach((service) => {
-    const listItem = document.createElement("li");
-
-    renderServiceRead(listItem, service, services);
-    servicesList.append(listItem);
-  });
-
-  section.append(title, servicesList, addButton);
-  return section;
 }
 
 function createServiceEdit(listItem, service, services, isNew = false) {
@@ -565,17 +501,15 @@ function createServiceEdit(listItem, service, services, isNew = false) {
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdService = await setService(updatedService);
-        services.push(createdService);
-        renderServiceRead(listItem, createdService, services);
-        return;
-      }
-
-      await modifyService(updatedService, updatedService.id);
-
-      service.name = updatedService.name;
-      renderServiceRead(listItem, service, services);
+      const savedItem = await persistChildItem({
+        item: service,
+        updatedItem: updatedService,
+        collection: services,
+        isNew,
+        createItem: setService,
+        updateItem: modifyService,
+      });
+      renderServiceRead(listItem, savedItem, services);
     }, "servicio");
   });
 
@@ -603,27 +537,16 @@ function renderServiceRead(listItem, service, services) {
   );
 }
 
-function createDomainsRead(domains, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Dominios";
-  const domainsList = document.createElement("ul");
-  const addButton = createAddButton("Añadir dominio", () => {
-    const domain = { project_id: projectId, url: "" };
-    const listItem = document.createElement("li");
-    domainsList.append(listItem);
-    createDomainEdit(listItem, domain, domains, true);
+
+function createDomainsSection(domains, projectId) {
+  return createCollectionSection({
+    title: "Dominios",
+    addLabel: "Añadir dominio",
+    collection: domains,
+    createItem: () => ({ project_id: projectId, url: "" }),
+    renderItem: renderDomainRead,
+    editItem: createDomainEdit,
   });
-
-  domains.forEach((domain) => {
-    const listItem = document.createElement("li");
-
-    renderDomainRead(listItem, domain, domains);
-    domainsList.append(listItem);
-  });
-
-  section.append(title, domainsList, addButton);
-  return section;
 }
 
 function createDomainEdit(listItem, domain, domains, isNew = false) {
@@ -658,17 +581,15 @@ function createDomainEdit(listItem, domain, domains, isNew = false) {
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdDomain = await setDomain(updatedDomain);
-        domains.push(createdDomain);
-        renderDomainRead(listItem, createdDomain, domains);
-        return;
-      }
-
-      await modifyDomain(updatedDomain, updatedDomain.id);
-
-      domain.url = updatedDomain.url;
-      renderDomainRead(listItem, domain, domains);
+      const savedItem = await persistChildItem({
+        item: domain,
+        updatedItem: updatedDomain,
+        collection: domains,
+        isNew,
+        createItem: setDomain,
+        updateItem: modifyDomain,
+      });
+      renderDomainRead(listItem, savedItem, domains);
     }, "dominio");
   });
 
@@ -699,27 +620,16 @@ function renderDomainRead(listItem, domain, domains) {
   );
 }
 
-function createCommandsRead(commands, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Comandos";
-  const commandsList = document.createElement("ul");
-  const addButton = createAddButton("Añadir comando", () => {
-    const command = { project_id: projectId, name: "", instruction: "" };
-    const listItem = document.createElement("li");
-    commandsList.append(listItem);
-    createCommandEdit(listItem, command, commands, true);
+
+function createCommandsSection(commands, projectId) {
+  return createCollectionSection({
+    title: "Comandos",
+    addLabel: "Añadir comando",
+    collection: commands,
+    createItem: () => ({ project_id: projectId, name: "", instruction: "" }),
+    renderItem: renderCommandRead,
+    editItem: createCommandEdit,
   });
-
-  commands.forEach((command) => {
-    const listItem = document.createElement("li");
-
-    renderCommandRead(listItem, command, commands);
-    commandsList.append(listItem);
-  });
-
-  section.append(title, commandsList, addButton);
-  return section;
 }
 
 function createCommandEdit(listItem, command, commands, isNew = false) {
@@ -760,18 +670,15 @@ function createCommandEdit(listItem, command, commands, isNew = false) {
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdCommand = await setCommand(updatedCommand);
-        commands.push(createdCommand);
-        renderCommandRead(listItem, createdCommand, commands);
-        return;
-      }
-
-      await modifyCommand(updatedCommand, updatedCommand.id);
-
-      command.name = updatedCommand.name;
-      command.instruction = updatedCommand.instruction;
-      renderCommandRead(listItem, command, commands);
+      const savedItem = await persistChildItem({
+        item: command,
+        updatedItem: updatedCommand,
+        collection: commands,
+        isNew,
+        createItem: setCommand,
+        updateItem: modifyCommand,
+      });
+      renderCommandRead(listItem, savedItem, commands);
     }, "comando");
   });
 
@@ -804,27 +711,16 @@ function renderCommandRead(listItem, command, commands) {
   );
 }
 
-function createLinksRead(links, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Documentación";
-  const linksList = document.createElement("ul");
-  const addButton = createAddButton("Añadir documentación", () => {
-    const linkData = { project_id: projectId, title: "", url: "" };
-    const listItem = document.createElement("li");
-    linksList.append(listItem);
-    createLinkEdit(listItem, linkData, links, true);
+
+function createLinksSection(links, projectId) {
+  return createCollectionSection({
+    title: "Documentación",
+    addLabel: "Añadir documentación",
+    collection: links,
+    createItem: () => ({ project_id: projectId, title: "", url: "" }),
+    renderItem: renderLinkRead,
+    editItem: createLinkEdit,
   });
-
-  links.forEach((link) => {
-    const listItem = document.createElement("li");
-
-    renderLinkRead(listItem, link, links);
-    linksList.append(listItem);
-  });
-
-  section.append(title, linksList, addButton);
-  return section;
 }
 
 function createLinkEdit(listItem, linkData, links, isNew = false) {
@@ -865,18 +761,15 @@ function createLinkEdit(listItem, linkData, links, isNew = false) {
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdLink = await setLink(updatedLink);
-        links.push(createdLink);
-        renderLinkRead(listItem, createdLink, links);
-        return;
-      }
-
-      await modifyLink(updatedLink, updatedLink.id);
-
-      linkData.title = updatedLink.title;
-      linkData.url = updatedLink.url;
-      renderLinkRead(listItem, linkData, links);
+      const savedItem = await persistChildItem({
+        item: linkData,
+        updatedItem: updatedLink,
+        collection: links,
+        isNew,
+        createItem: setLink,
+        updateItem: modifyLink,
+      });
+      renderLinkRead(listItem, savedItem, links);
     }, "documentación");
   });
 
@@ -912,27 +805,16 @@ function renderLinkRead(listItem, linkData, links) {
   );
 }
 
-function createNotesRead(notes, projectId) {
-  const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = "Notas";
-  const notesList = document.createElement("ul");
-  const addButton = createAddButton("Añadir nota", () => {
-    const note = { project_id: projectId, description: "", content: "" };
-    const listItem = document.createElement("li");
-    notesList.append(listItem);
-    createNoteEdit(listItem, note, notes, true);
+
+function createNotesSection(notes, projectId) {
+  return createCollectionSection({
+    title: "Notas",
+    addLabel: "Añadir nota",
+    collection: notes,
+    createItem: () => ({ project_id: projectId, description: "", content: "" }),
+    renderItem: renderNoteRead,
+    editItem: createNoteEdit,
   });
-
-  notes.forEach((note) => {
-    const listItem = document.createElement("li");
-
-    renderNoteRead(listItem, note, notes);
-    notesList.append(listItem);
-  });
-
-  section.append(title, notesList, addButton);
-  return section;
 }
 
 function createNoteEdit(listItem, note, notes, isNew = false) {
@@ -973,18 +855,15 @@ function createNoteEdit(listItem, note, notes, isNew = false) {
     };
 
     await saveChildItem(async () => {
-      if (isNew) {
-        const createdNote = await setNote(updatedNote);
-        notes.push(createdNote);
-        renderNoteRead(listItem, createdNote, notes);
-        return;
-      }
-
-      await modifyNote(updatedNote, updatedNote.id);
-
-      note.description = updatedNote.description;
-      note.content = updatedNote.content;
-      renderNoteRead(listItem, note, notes);
+      const savedItem = await persistChildItem({
+        item: note,
+        updatedItem: updatedNote,
+        collection: notes,
+        isNew,
+        createItem: setNote,
+        updateItem: modifyNote,
+      });
+      renderNoteRead(listItem, savedItem, notes);
     }, "nota");
   });
 
@@ -1015,6 +894,55 @@ function renderNoteRead(listItem, note, notes) {
     editButton,
     createDeleteButton(notes, note, listItem, deleteNote),
   );
+}
+
+function createCollectionSection({
+  title: titleText,
+  addLabel,
+  collection,
+  createItem,
+  renderItem,
+  editItem,
+}) {
+  const section = document.createElement("section");
+  const title = document.createElement("h3");
+  title.textContent = titleText;
+  const list = document.createElement("ul");
+
+  const addButton = createAddButton(addLabel, () => {
+    const item = createItem();
+    const listItem = document.createElement("li");
+    list.append(listItem);
+    editItem(listItem, item, collection, true);
+  });
+
+  collection.forEach((item) => {
+    const listItem = document.createElement("li");
+    renderItem(listItem, item, collection);
+    list.append(listItem);
+  });
+
+  section.append(title, list, addButton);
+  return section;
+}
+
+async function persistChildItem({
+  item,
+  updatedItem,
+  collection,
+  isNew,
+  createItem,
+  updateItem,
+}) {
+  if (isNew) {
+    const createdItem = await createItem(updatedItem);
+    collection.push(createdItem);
+    return createdItem;
+  }
+
+  await updateItem(updatedItem, updatedItem.id);
+  Object.assign(item, updatedItem);
+  return item;
 }
 
 function createAddButton(text, onClick) {
