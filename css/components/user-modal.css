@@ -35,19 +35,22 @@
   line-height: 1.5;
 }
 
-.user-modal-field {
+.user-modal-field,
+.edit-user-field {
   display: grid;
   gap: 8px;
 }
 
-.user-modal-field label {
+.user-modal-field label,
+.edit-user-field label {
   color: var(--text);
   font-size: 14px;
   font-weight: 600;
 }
 
 .user-modal-field input,
-.user-modal-field select {
+.user-modal-field select,
+.edit-user-field select {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 12px;
@@ -60,6 +63,7 @@
 
 .user-modal-field input:focus-visible,
 .user-modal-field select:focus-visible,
+.edit-user-field select:focus-visible,
 .user-modal button:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
@@ -149,4 +153,25 @@
   color: var(--text);
   cursor: pointer;
   font-size: 14px;
+}
+
+.user-status-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-status-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.user-status-indicator--active {
+  background-color: var(--production);
+}
+
+.user-status-indicator--inactive {
+  background-color: var(--test);
 }

@@ -39,6 +39,7 @@ export async function createEditUserModal(user, refreshUsers) {
     createField("Email", formInputs.emailInput),
     createField("Nombre de usuario", formInputs.usernameInput),
     createField("Rol", formInputs.roleSelect),
+    formInputs.statusSelect,
     clientAccessList.element,
     createModalActions(overlay, saveChanges),
   );
@@ -49,12 +50,14 @@ export async function createEditUserModal(user, refreshUsers) {
 
 function createUserFormInputs(user) {
   const roleSelect = createRoleSelect();
+  const statusSelect = createUserStatusField(user.is_active);
   roleSelect.value = user.role;
 
   return {
     emailInput: createUserInput("email", "email", user.email),
     usernameInput: createUserInput("text", "username", user.username),
     roleSelect,
+    statusSelect,
   };
 }
 
@@ -114,7 +117,7 @@ async function saveUserChanges({
     user.username = userChanges.username;
     user.role = userChanges.role;
 
-    await persistUserChanges({
+    await saveUserAndClients({
       user,
       clients,
       initialClientIds,
@@ -149,7 +152,7 @@ function getUserChanges({ emailInput, usernameInput, roleSelect }) {
   return { email, username, role: roleSelect.value };
 }
 
-async function persistUserChanges({
+async function saveUserAndClients({
   user,
   clients,
   initialClientIds,
@@ -218,6 +221,54 @@ function createRoleSelect() {
 
   select.append(adminOption, userOption);
   return select;
+}
+
+function createUserStatusField(isActive = true) {
+  const field = document.createElement("div");
+  field.classList.add("edit-user-field");
+
+  const label = document.createElement("label");
+  label.textContent = "Estado";
+  label.htmlFor = "edit-user-status";
+
+  const select = document.createElement("select");
+  select.name = "status";
+  select.id = "edit-user-status";
+
+  const options = [
+    { value: "true", text: "Activo" },
+    { value: "false", text: "Inactivo" },
+  ];
+
+  options.forEach(({ value, text }) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    select.append(option);
+  });
+
+  const statusContainer = document.createElement("div");
+  statusContainer.classList.add("user-status-container");
+
+  const indicator = document.createElement("span");
+  indicator.classList.add("user-status-indicator");
+
+  select.value = String(isActive);
+
+  const updateStatusIndicator = () => {
+    const isActive = select.value === "true";
+
+    indicator.classList.toggle("user-status-indicator--active", isActive);
+    indicator.classList.toggle("user-status-indicator--inactive", !isActive);
+  };
+
+  select.addEventListener("change", updateStatusIndicator);
+  updateStatusIndicator();
+
+  statusContainer.append(indicator, select);
+  field.append(label, statusContainer);
+
+  return field;
 }
 
 function createField(labelText, input) {
