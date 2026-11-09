@@ -19,6 +19,7 @@ function start() {
 export function configureProjectForm(form) {
   configureClientSelection(form);
   configureCollectionSections(form);
+  form.noValidate = true;
   form.addEventListener("submit", (event) => submitProject(event, form));
 }
 
@@ -41,6 +42,15 @@ function configureCollectionSections(form) {
 async function submitProject(event, form) {
   event.preventDefault();
 
+  if (!validateRequiredFields(form)) {
+    return;
+  }
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   try {
     await setFullProject(buildProjectData(form));
     window.location.href = "../index.html";
@@ -52,6 +62,24 @@ async function submitProject(event, form) {
       duration: 7000,
     });
   }
+}
+
+function validateRequiredFields(form) {
+  const requiredFields = form.querySelectorAll("[required]:not(:disabled)");
+
+  for (const field of requiredFields) {
+    if (field.value.trim() === "") {
+      showNotification({
+        type: "warning",
+        title: "Campos obligatorios",
+        message: "Completa todos los campos antes de guardar el proyecto.",
+      });
+      field.focus();
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function buildProjectData(form) {

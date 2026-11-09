@@ -12,6 +12,7 @@ function startPage() {
 }
 
 export function configureClientForm(form) {
+  form.noValidate = true;
   form.addEventListener("submit", (event) => handleFormSubmit(event, form));
 }
 
@@ -33,6 +34,15 @@ function getCachedUser() {
 async function handleFormSubmit(event, form) {
   event.preventDefault();
 
+  if (!validateRequiredFields(form)) {
+    return;
+  }
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   const clientData = buildClientData(form);
 
   try {
@@ -41,6 +51,24 @@ async function handleFormSubmit(event, form) {
   } catch (error) {
     notifyClientSaveError(error);
   }
+}
+
+function validateRequiredFields(form) {
+  const requiredFields = form.querySelectorAll("[required]:not(:disabled)");
+
+  for (const field of requiredFields) {
+    if (field.value.trim() === "") {
+      showNotification({
+        type: "warning",
+        title: "Campos obligatorios",
+        message: "Completa todos los campos antes de guardar el cliente.",
+      });
+      field.focus();
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function buildClientData(form) {
