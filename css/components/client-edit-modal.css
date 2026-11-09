@@ -62,7 +62,7 @@
   outline-offset: 2px;
 }
 
-.client-status-control {
+.client-status-container {
   display: flex;
   align-items: center;
   gap: 10px;

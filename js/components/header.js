@@ -1,96 +1,122 @@
-import { logout } from "../api/session.js";
+import { expireSession } from "../api/methods.js";
 
-if (localStorage.getItem("theme") === "dark") {
-  document.body.classList.add("dark-mode");
-}
+const DARK_MODE_CLASS = "dark-mode";
+const THEME_STORAGE_KEY = "theme";
+const DARK_THEME = "dark";
+const LIGHT_THEME = "light";
+
+const NAVIGATION_ITEMS = [
+  {
+    className: "main-header-projects",
+    label: "Proyectos",
+    pageName: "index.html",
+  },
+  {
+    className: "main-header-clients",
+    label: "Clientes",
+    pageName: "clients.html",
+  },
+  { className: "main-header-users", label: "Usuarios", pageName: "users.html" },
+  { className: "main-header-logs", label: "Registros", pageName: "logs.html" },
+];
+
+loadTheme();
 
 export function createHeader(userName, profileUrl) {
   const header = document.createElement("header");
   header.classList.add("main-header");
+  header.append(
+    createProfileLink(userName, profileUrl),
+    createHeaderActions(profileUrl),
+  );
 
+  return header;
+}
+
+function loadTheme() {
+  if (localStorage.getItem(THEME_STORAGE_KEY) !== DARK_THEME) {
+    return;
+  }
+
+  document.body.classList.add(DARK_MODE_CLASS);
+}
+
+function createProfileLink(userName, profileUrl) {
   const profileLink = document.createElement("a");
   profileLink.classList.add("main-header-profile");
   profileLink.href = profileUrl;
   profileLink.textContent = userName;
 
-  const actionButtons = document.createElement("div");
-  actionButtons.classList.add("main-header-actions");
-  actionButtons.append(
+  return profileLink;
+}
+
+function createHeaderActions(profileUrl) {
+  const actionContainer = document.createElement("div");
+  actionContainer.classList.add("main-header-actions");
+  actionContainer.append(
     ...createNavigationButtons(profileUrl),
     createLogoutButton(),
     createThemeButton(),
   );
 
-  header.append(profileLink, actionButtons);
-  return header;
+  return actionContainer;
+}
+
+function createNavigationButtons(profileUrl) {
+  return NAVIGATION_ITEMS.map(({ className, label, pageName }) => {
+    const navigationButton = createButton(className, label);
+    navigationButton.addEventListener("click", () => {
+      window.location.href = getPageUrl(profileUrl, pageName);
+    });
+
+    return navigationButton;
+  });
 }
 
 function createLogoutButton() {
-  const logoutButton = document.createElement("button");
-  logoutButton.classList.add("main-header-logout");
-  logoutButton.type = "button";
-  logoutButton.textContent = "Salir";
-
-  logoutButton.addEventListener("click", () => {
-    logout();
-  });
+  const logoutButton = createButton("main-header-logout", "Salir");
+  logoutButton.addEventListener("click", expireSession);
 
   return logoutButton;
 }
 
 function createThemeButton() {
-  const themeButton = document.createElement("button");
-  themeButton.classList.add("main-header-theme");
+  const themeButton = createButton("main-header-theme", getThemeButtonLabel());
   themeButton.id = "theme-toggle";
-  themeButton.type = "button";
-  themeButton.textContent = "Modo oscuro";
-
-  if (document.body.classList.contains("dark-mode")) {
-    themeButton.textContent = "Modo claro";
-  }
-
-  themeButton.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-
-    if (document.body.classList.contains("dark-mode")) {
-      localStorage.setItem("theme", "dark");
-      themeButton.textContent = "Modo claro";
-      return;
-    }
-
-    localStorage.setItem("theme", "light");
-    themeButton.textContent = "Modo oscuro";
-  });
+  themeButton.addEventListener("click", () => changeTheme(themeButton));
 
   return themeButton;
 }
 
-function createNavigationButtons(profileUrl) {
-  const navigationItems = [
-    { className: "main-header-projects", label: "Proyectos", pageName: "index.html" },
-    { className: "main-header-clients", label: "Clientes", pageName: "clients.html" },
-    { className: "main-header-users", label: "Usuarios", pageName: "users.html" },
-    { className: "main-header-logs", label: "Registros", pageName: "logs.html" },
-  ];
+function createButton(className, label) {
+  const button = document.createElement("button");
+  button.classList.add(className);
+  button.type = "button";
+  button.textContent = label;
 
-  return navigationItems.map(({ className, label, pageName }) => {
-    const navigationButton = document.createElement("button");
-    navigationButton.classList.add(className);
-    navigationButton.type = "button";
-    navigationButton.textContent = label;
-    navigationButton.addEventListener("click", () => {
-      window.location.href = getPageUrl(profileUrl, pageName);
-    });
-    return navigationButton;
-  });
+  return button;
+}
+
+function changeTheme(themeButton) {
+  const isDarkModeEnabled = document.body.classList.toggle(DARK_MODE_CLASS);
+  const selectedTheme = isDarkModeEnabled ? DARK_THEME : LIGHT_THEME;
+
+  localStorage.setItem(THEME_STORAGE_KEY, selectedTheme);
+  themeButton.textContent = getThemeButtonLabel();
+}
+
+function getThemeButtonLabel() {
+  return document.body.classList.contains(DARK_MODE_CLASS)
+    ? "Modo claro"
+    : "Modo oscuro";
 }
 
 function getPageUrl(profileUrl, pageName) {
-  const isRootPage = profileUrl.startsWith("./pages/");
+  const isPagesRoute = profileUrl.startsWith("./pages/");
 
   if (pageName === "index.html") {
-    return isRootPage ? "./index.html" : "../index.html";
+    return isPagesRoute ? "./index.html" : "../index.html";
   }
 
-  return isRootPage ? `./pages/${pageName}` : `./${pageName}`;
+  return isPagesRoute ? `./pages/${pageName}` : `./${pageName}`;
 }

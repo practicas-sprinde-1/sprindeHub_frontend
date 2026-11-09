@@ -3,12 +3,11 @@ import {
   sendData,
   modifyData,
   deleteData,
-  archiveOrRestoreData,
+  changeStatus,
   getLightData,
   getPaginatedData,
 } from "./methods.js";
-
-const API_URL = "http://127.0.0.1:8000/api/v1";
+import { API_BASE_URL } from "./config.js";
 
 export async function getProjects(entity, limit, offset, search) {
   return getPaginatedData(
@@ -37,46 +36,47 @@ export async function getArchivedProjects(limit = 20, offset = 0, search = "") {
   );
 }
 
-export async function getFavoriteProjects(limit = 20, offset = 0) {
+export async function getFavoriteProjects(limit = 20, offset = 0, search = "") {
   return getPaginatedData(
     "projects/favorites",
     limit,
     offset,
+    search,
     "No se han podido obtener los proyectos favoritos.",
   );
 }
 
 export async function favoriteProject(projectId) {
-  return archiveOrRestoreData(
-    `${API_URL}/projects/${projectId}/favorite?project_id=${projectId}`,
+  return changeStatus(
+    `${API_BASE_URL}/projects/${projectId}/favorite?project_id=${projectId}`,
     "No se ha podido añadir el proyecto a favoritos.",
   );
 }
 
 export async function unfavoriteProject(projectId) {
-  return archiveOrRestoreData(
-    `${API_URL}/projects/${projectId}/unfavorite?project_id=${projectId}`,
+  return changeStatus(
+    `${API_BASE_URL}/projects/${projectId}/unfavorite?project_id=${projectId}`,
     "No se ha podido eliminar el proyecto de favoritos.",
   );
 }
 
 export async function getProjectById(id) {
   return getData(
-    `${API_URL}/projects/${id}`,
+    `${API_BASE_URL}/projects/${id}`,
     "No se ha podido obtener el proyecto con ese id",
   );
 }
 
 export async function getProjectByClientId(id) {
   return getData(
-    `${API_URL}/projects/client/${id}`,
+    `${API_BASE_URL}/projects/client/${id}`,
     "No se ha podido obtener el proyecto con ese id",
   );
 }
 
 export async function setProject(project) {
   return sendData(
-    `${API_URL}/projects`,
+    `${API_BASE_URL}/projects`,
     project,
     "No se ha podido guardar el proyecto. Inténtelo de nuevo.",
   );
@@ -84,7 +84,7 @@ export async function setProject(project) {
 
 export async function setFullProject(project) {
   return sendData(
-    `${API_URL}/projects/create-completed-project`,
+    `${API_BASE_URL}/projects/create-completed-project`,
     project,
     "No se ha podido guardar el proyecto. Inténtelo de nuevo.",
   );
@@ -92,7 +92,7 @@ export async function setFullProject(project) {
 
 export async function modifyProject(project, id) {
   return modifyData(
-    `${API_URL}/projects/${id}`,
+    `${API_BASE_URL}/projects/${id}`,
     project,
     "No se ha podido modificar el proyecto.",
   );
@@ -100,21 +100,21 @@ export async function modifyProject(project, id) {
 
 export async function deleteProjectById(id) {
   return deleteData(
-    `${API_URL}/projects/${id}`,
+    `${API_BASE_URL}/projects/${id}`,
     "No se ha podido borrar el proyecto",
   );
 }
 
 export async function archiveProject(id) {
-  return archiveOrRestoreData(
-    `${API_URL}/projects/${id}/archive`,
+  return changeStatus(
+    `${API_BASE_URL}/projects/${id}/archive`,
     "No se ha podido archivar el proyecto.",
   );
 }
 
 export async function restoreProject(id) {
-  return archiveOrRestoreData(
-    `${API_URL}/projects/${id}/restore`,
+  return changeStatus(
+    `${API_BASE_URL}/projects/${id}/restore`,
     "No se ha podido restaurar el proyecto.",
   );
 }

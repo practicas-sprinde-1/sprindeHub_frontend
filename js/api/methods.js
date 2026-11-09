@@ -1,23 +1,20 @@
 import { refreshAccessToken } from "./auth.api.js";
+import { API_BASE_URL } from "./config.js";
 
-//Solicita datos al endpoint indicado
+const JSON_HEADERS = {
+  "Content-Type": "application/json",
+};
+
+const ACCEPT_JSON_HEADERS = {
+  Accept: "application/json",
+};
+
+const FORBIDDEN_ERROR_MESSAGE = "No has podido acceder a estos archivos";
+const EXPIRED_SESSION_ERROR_MESSAGE = "La sesión ha caducado";
+const LOGIN_URL = "/pages/login.html";
+
 export async function getData(url, errorMessage) {
-  const response = await requestWithToken(url, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  });
-
-  if (response.status == 403) {
-    throw new Error("No has podido acceder a estos archivos");
-  }
-
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
-
-  return response.json();
+  return getJson(url, errorMessage);
 }
 
 export async function getPaginatedData(
@@ -27,36 +24,12 @@ export async function getPaginatedData(
   search,
   errorMessage,
 ) {
-  const params = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-  if (search !== null && search !== undefined && search !== "") {
-    params.set("search", search);
-  }
-  const response = await requestWithToken(
-    `http://127.0.0.1:8000/api/v1/${entity}?${params}`,
-    {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  if (response.status == 403) {
-    throw new Error("No has podido acceder a estos archivos");
-  }
-
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
-
-  return response.json();
+  const query = buildPaginationQuery(limit, offset, search);
+  return getJson(`${API_BASE_URL}/${entity}?${query}`, errorMessage);
 }
 
 export async function getLightData(entity, errorMessage) {
-  return getData(`http://127.0.0.1:8000/api/v1/${entity}/light`, errorMessage);
+  return getData(`${API_BASE_URL}/${entity}/light`, errorMessage);
 }
 
 export async function getAdminData(
@@ -66,80 +39,25 @@ export async function getAdminData(
   search,
   errorMessage,
 ) {
-  const params = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-  if (search !== undefined && search !== null && search !== "") {
-    params.set("search", search);
-  }
-  const response = await requestWithToken(
-    `http://127.0.0.1:8000/api/v1/admin/${entity}?${params}`,
-    {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  if (response.status == 403) {
-    throw new Error("No has podido acceder a estos archivos");
-  }
-
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
-
-  return response.json();
+  const query = buildPaginationQuery(limit, offset, search);
+  return getJson(`${API_BASE_URL}/admin/${entity}?${query}`, errorMessage);
 }
 
-//Envía los datos del cliente al endpoint indicado
 export async function sendData(url, data, errorMessage) {
-  const response = await requestWithToken(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
-
-  return response.json();
+  return sendJson(url, "POST", data, errorMessage);
 }
 
-//Envía los datos modificados del cliente al endpoint indicado
 export async function modifyData(url, data, errorMessage) {
-  const response = await requestWithToken(url, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
-
-  return response.json();
+  return sendJson(url, "PATCH", data, errorMessage);
 }
 
-//Envía los datos modificados del cliente al endpoint indicado
 export async function deleteData(url, errorMessage) {
   const response = await requestWithToken(url, {
     method: "DELETE",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: ACCEPT_JSON_HEADERS,
   });
 
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
+  await checkResponse(response, errorMessage);
 
   if (response.status === 204) {
     return null;
@@ -148,42 +66,77 @@ export async function deleteData(url, errorMessage) {
   return response.json();
 }
 
-//Envía los datos modificados del cliente al endpoint indicado
-export async function archiveOrRestoreData(url, errorMessage) {
+export async function changeStatus(url, errorMessage) {
   const response = await requestWithToken(url, {
     method: "PATCH",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: ACCEPT_JSON_HEADERS,
   });
 
-  if (!response.ok) {
-    throw await getResponseError(response, errorMessage);
-  }
+  await checkResponse(response, errorMessage);
 
   return response.json();
 }
 
-//Metodo auxiliar para comprobar el token y hacer un refresh en la API
+function buildPaginationQuery(limit, offset, search) {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+
+  if (search !== null && search !== undefined && search !== "") {
+    query.set("search", search);
+  }
+
+  return query;
+}
+
+async function getJson(url, errorMessage) {
+  const response = await requestWithToken(url, {
+    method: "GET",
+    headers: ACCEPT_JSON_HEADERS,
+  });
+
+  if (response.status === 403) {
+    throw new Error(FORBIDDEN_ERROR_MESSAGE);
+  }
+
+  await checkResponse(response, errorMessage);
+  return response.json();
+}
+
+async function sendJson(url, method, data, errorMessage) {
+  const response = await requestWithToken(url, {
+    method,
+    headers: JSON_HEADERS,
+    body: JSON.stringify(data),
+  });
+
+  await checkResponse(response, errorMessage);
+  return response.json();
+}
+
+async function checkResponse(response, errorMessage) {
+  if (!response.ok) {
+    throw await getResponseError(response, errorMessage);
+  }
+}
 
 async function requestWithToken(url, options) {
   let response = await makeRequest(url, options);
 
-  if (response.status === 401) {
-    try {
-      await refreshAccessToken();
-      response = await makeRequest(url, options);
-    } catch (error) {
-      clearSessionAndRedirect();
-      throw new Error("La sesión ha caducado");
-    }
+  if (response.status !== 401) {
+    return response;
   }
 
-  //Verifica de nuevo la petición después de probar el metodo refreshAccessToken();
+  try {
+    await refreshAccessToken();
+    response = await makeRequest(url, options);
+  } catch {
+    expireSession();
+  }
 
   if (response.status === 401) {
-    clearSessionAndRedirect();
-    throw new Error("La sesión ha caducado");
+    expireSession();
   }
 
   return response;
@@ -200,27 +153,30 @@ async function makeRequest(url, options) {
   });
 }
 
-function clearSessionAndRedirect() {
+export function expireSession() {
   sessionStorage.removeItem("accessToken");
   sessionStorage.removeItem("refreshToken");
-
-  window.location.replace("/pages/login.html");
+  window.location.replace(LOGIN_URL);
+  throw new Error(EXPIRED_SESSION_ERROR_MESSAGE);
 }
 
 async function getResponseError(response, defaultMessage) {
-  let data;
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = null;
-  }
+  const data = await getJsonData(response);
 
   const message = getErrorMessage(data?.detail, defaultMessage);
 
-  const newError = new Error(message);
-  newError.code = data?.code;
-  newError.status = response.status;
-  return newError;
+  const responseError = new Error(message);
+  responseError.code = data?.code;
+  responseError.status = response.status;
+  return responseError;
+}
+
+async function getJsonData(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 function getErrorMessage(detail, defaultMessage) {
@@ -248,20 +204,14 @@ function getErrorMessage(detail, defaultMessage) {
 }
 
 function translateErrorMessage(msg) {
-  let error;
-  if (msg === "String should match pattern '^https?://'") {
-    return (error = "Debe empezar por http://");
-  }
-  if (msg === "String should have at least 1 character") {
-    return (error = "El campo no debe estar vacío");
-  }
-  if (
-    msg ===
-    "value is not a valid email address: An email address must have an @-sign."
-  ) {
-    return (error = "Introduce un e-mail válido");
-  }
-  if (msg === "String should have at least 10 characters") {
-    return (error = "La contraseña debe tener al menos 10 caracteres");
-  }
+  const translations = {
+    "String should match pattern '^https?://'": "Debe empezar por http://",
+    "String should have at least 1 character": "El campo no debe estar vacío",
+    "value is not a valid email address: An email address must have an @-sign.":
+      "Introduce un e-mail válido",
+    "String should have at least 10 characters":
+      "La contraseña debe tener al menos 10 caracteres",
+  };
+
+  return translations[msg] || "Ha ocurrido un error inesperado";
 }

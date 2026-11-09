@@ -1,9 +1,22 @@
 import { getLightClients } from "../api/client.api.js";
 import {
+  deleteCommand,
+  modifyCommand,
+  setCommand,
+} from "../api/command.api.js";
+import { deleteDomain, modifyDomain, setDomain } from "../api/domain.api.js";
+import {
   deleteEnvironment,
   modifyEnvironment,
   setEnvironment,
 } from "../api/environment.api.js";
+import { deleteLink, modifyLink, setLink } from "../api/link.api.js";
+import { deleteNote, modifyNote, setNote } from "../api/note.api.js";
+import {
+  archiveProject,
+  modifyProject,
+  restoreProject,
+} from "../api/project.api.js";
 import {
   deleteRepository,
   modifyRepository,
@@ -14,127 +27,93 @@ import {
   modifyService,
   setService,
 } from "../api/service.api.js";
-import { deleteDomain, modifyDomain, setDomain } from "../api/domain.api.js";
-import {
-  deleteCommand,
-  modifyCommand,
-  setCommand,
-} from "../api/command.api.js";
-import { deleteLink, modifyLink, setLink } from "../api/link.api.js";
-import { deleteNote, modifyNote, setNote } from "../api/note.api.js";
-import {
-  archiveProject,
-  modifyProject,
-  restoreProject,
-} from "../api/project.api.js";
 import { showNotification } from "./notifications.js";
 
+const SAVE_ERROR_DURATION = 7000;
+
+//Se utiliza un array de tuplas [valor, etiqueta] en lugar de un objeto para
+// facilitar la iteración y desestructuración directa al crear los <option> en createSelect().
+const ENVIRONMENT_TYPES = [
+  ["development", "Development"],
+  ["test", "Test"],
+  ["staging", "Staging"],
+  ["production", "Production"],
+];
+
+const REPOSITORY_TYPES = [
+  ["backend", "Backend"],
+  ["frontend", "Frontend"],
+  ["devops", "Devops"],
+  ["qa", "QA"],
+];
+
 export async function createEditModalProject(project, onSave) {
-  const overlay = document.createElement("div");
-  overlay.classList.add("modal-overlay");
+  const overlay = createElement("div", "modal-overlay");
+  const modal = createElement("section", "project-edit-modal");
+  const clients = await getLightClients("clients");
+  const projectFields = createProjectForm(project, clients);
 
-  const modal = document.createElement("section");
-  modal.classList.add("project-edit-modal");
-
-  const title = document.createElement("h1");
+  const title = createElement("h1", "modal-title");
   title.textContent = `Editando proyecto: ${project.name}`;
-  title.classList.add("modal-title");
 
-  const closeButton = document.createElement("button");
-  closeButton.classList.add("modal-close-button");
-  closeButton.type = "button";
-  closeButton.textContent = "×";
-
+  const closeButton = createButton("×", "modal-close-button");
   closeButton.addEventListener("click", () => {
     onSave(project);
     overlay.remove();
   });
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
+  const saveButton = createButton("Guardar", "modal-save-button");
   saveButton.addEventListener("click", async () => {
-    try {
-      await saveProjectChanges(project, fields, clients);
-
-      await onSave(project);
-
-      overlay.remove();
-      showNotification({
-        type: "success",
-        title: "Proyecto modificado",
-        message: "Los cambios se han guardado correctamente.",
-      });
-    } catch (error) {
-      showNotification({
-        type: "error",
-        title: "No se ha podido modificar el proyecto",
-        message: error.message,
-        duration: 7000,
-      });
-    }
+    await saveProject(project, projectFields, clients, onSave, overlay);
   });
 
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-  cancelButton.classList.add("modal-cancel-button");
+  const cancelButton = createButton("Cancelar", "modal-cancel-button");
+  cancelButton.addEventListener("click", () => overlay.remove());
 
-  cancelButton.addEventListener("click", () => {
-    overlay.remove();
-  });
-
-  const clients = await getLightClients("clients");
-  const fields = createProjectForm(project, clients);
-
-  const environmentsSection = createEnvironmentsSection(
-    project.environments,
-    project.id,
-  );
-  const repositoriesSection = createRepositoriesSection(
-    project.repositories,
-    project.id,
-  );
-  const servicesSection = createServicesSection(project.services, project.id);
-  const domainsSection = createDomainsSection(project.domains, project.id);
-  const commandsSection = createCommandsSection(project.commands, project.id);
-  const linksSection = createLinksSection(project.links, project.id);
-  const notesSection = createNotesSection(project.notes, project.id);
-
-  const modalActions = document.createElement("div");
-  modalActions.classList.add("modal-actions");
+  const modalActions = createElement("div", "modal-actions");
   modalActions.append(saveButton, cancelButton);
 
   modal.append(
     closeButton,
     title,
-    createProjectField("Nombre del proyecto", fields.projectName),
-    createProjectField("Descripción", fields.projectDescription),
-    createProjectField("Cliente", fields.clientSelect),
-    createStatusField(fields.statusSelect),
-    environmentsSection,
-    repositoriesSection,
-    servicesSection,
-    domainsSection,
-    commandsSection,
-    linksSection,
-    notesSection,
+    createProjectField("Nombre del proyecto", projectFields.name),
+    createProjectField("Descripción", projectFields.description),
+    createProjectField("Cliente", projectFields.client),
+    createStatusField(projectFields.status),
+    ...buildProjectSections(project),
     modalActions,
   );
-
   overlay.append(modal);
 
   return overlay;
 }
 
-async function saveProjectChanges(project, fields, clients) {
-  project.name = fields.projectName.value.trim();
-  project.description = fields.projectDescription.value.trim();
-  project.client_id = Number(fields.clientSelect.value);
+async function saveProject(project, fields, clients, onSave, overlay) {
+  try {
+    await updateProjectChanges(project, fields, clients);
+    await onSave(project);
+    overlay.remove();
+    showNotification({
+      type: "success",
+      title: "Proyecto modificado",
+      message: "Los cambios se han guardado correctamente.",
+    });
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: "No se ha podido modificar el proyecto",
+      message: error.message,
+      duration: SAVE_ERROR_DURATION,
+    });
+  }
+}
 
-  await updateProjectStatus(project, fields.statusSelect.value === "true");
+async function updateProjectChanges(project, fields, clients) {
+  project.name = fields.name.value.trim();
+  project.description = fields.description.value.trim();
+  project.client_id = Number(fields.client.value);
+
+  await updateProjectStatus(project, fields.status.value === "true");
 
   project.client = clients.find((client) => client.id === project.client_id);
   await modifyProject(project, project.id);
@@ -153,72 +132,40 @@ async function updateProjectStatus(project, isActive) {
 }
 
 function createProjectForm(project, clients) {
-  const projectName = document.createElement("input");
-  projectName.type = "text";
-  projectName.name = "name";
-  projectName.value = project.name;
+  const name = createInput("text", project.name, "name");
+  const description = createInput(
+    "text",
+    project.description,
+    "description",
+    "Descripción del proyecto",
+  );
+  const client = createSelect(
+    clients.map(({ id, name: clientName }) => [id, clientName]),
+    project.client_id,
+    "client_id",
+  );
+  const status = createSelect(
+    [
+      ["true", "Activo"],
+      ["false", "Inactivo"],
+    ],
+    project.is_active,
+    "is_active",
+  );
 
-  const projectDescription = document.createElement("input");
-  projectDescription.type = "text";
-  projectDescription.name = "description";
-  projectDescription.value = project.description;
-  projectDescription.placeholder = "Descripción del proyecto";
-
-  const clientSelect = document.createElement("select");
-  clientSelect.name = "client_id";
-
-  clients.forEach((client) => {
-    const option = document.createElement("option");
-    option.value = client.id;
-    option.textContent = client.name;
-    clientSelect.append(option);
-  });
-
-  clientSelect.value = project.client_id;
-
-  const statusSelect = document.createElement("select");
-  statusSelect.name = "is_active";
-
-  const activeOption = document.createElement("option");
-  activeOption.value = "true";
-  activeOption.textContent = "Activo";
-  const inactiveOption = document.createElement("option");
-  inactiveOption.value = "false";
-  inactiveOption.textContent = "Inactivo";
-
-  statusSelect.append(activeOption, inactiveOption);
-  statusSelect.value = project.is_active;
-
-  return { projectName, projectDescription, clientSelect, statusSelect };
+  return { name, description, client, status };
 }
 
-function createProjectField(labelText, input) {
-  const field = document.createElement("div");
-  field.classList.add("project-edit-field");
-
-  const label = document.createElement("label");
-  label.textContent = labelText;
-  label.htmlFor = input.name;
-  input.id = input.name;
-
-  field.append(label, input);
+function createProjectField(labelText, inputElement) {
+  const field = createElement("div", "project-edit-field");
+  field.append(createLabel(labelText, inputElement), inputElement);
   return field;
 }
 
 function createStatusField(statusSelect) {
-  const field = document.createElement("div");
-  field.classList.add("project-edit-field");
-
-  const label = document.createElement("label");
-  label.textContent = "Estado";
-  label.htmlFor = statusSelect.name;
-  statusSelect.id = statusSelect.name;
-
-  const control = document.createElement("div");
-  control.classList.add("project-status-control");
-
-  const indicator = document.createElement("span");
-  indicator.classList.add("project-status-indicator");
+  const field = createElement("div", "project-edit-field");
+  const statusContainer = createElement("div", "project-status-container");
+  const indicator = createElement("span", "project-status-indicator");
 
   const updateIndicator = () => {
     const isActive = statusSelect.value === "true";
@@ -228,697 +175,252 @@ function createStatusField(statusSelect) {
 
   statusSelect.addEventListener("change", updateIndicator);
   updateIndicator();
-
-  control.append(indicator, statusSelect);
-  field.append(label, control);
+  statusContainer.append(indicator, statusSelect);
+  field.append(createLabel("Estado", statusSelect), statusContainer);
   return field;
 }
 
-function createEnvironmentsSection(environments, projectId) {
-  return createCollectionSection({
-    title: "Entornos",
-    addLabel: "Añadir entorno",
-    collection: environments,
-    createItem: () => ({
-      type: "",
-      url: "",
-      project_id: projectId,
+function buildProjectSections(project) {
+  return [
+    createTypedUrlSection({
+      title: "Entornos",
+      addLabel: "Añadir entorno",
+      itemName: "entorno",
+      list: project.environments,
+      projectId: project.id,
+      typeOptions: ENVIRONMENT_TYPES,
+      createItem: setEnvironment,
+      updateItem: modifyEnvironment,
+      deleteItem: deleteEnvironment,
     }),
-    renderItem: renderEnvironmentRead,
-    editItem: createEnvironmentsEdit,
+    createTypedUrlSection({
+      title: "Repositorios",
+      addLabel: "Añadir repositorio",
+      itemName: "repositorio",
+      list: project.repositories,
+      projectId: project.id,
+      typeOptions: REPOSITORY_TYPES,
+      createItem: setRepository,
+      updateItem: modifyRepository,
+      deleteItem: deleteRepository,
+    }),
+    createServiceSection(project.services, project.id),
+    createDomainSection(project.domains, project.id),
+    createCommandSection(project.commands, project.id),
+    createLinkSection(project.links, project.id),
+    createNoteSection(project.notes, project.id),
+  ];
+}
+
+function createTypedUrlSection(sectionOptions) {
+  const {
+    title,
+    addLabel,
+    itemName,
+    list,
+    projectId,
+    typeOptions,
+    createItem,
+    updateItem,
+    deleteItem,
+  } = sectionOptions;
+
+  return createEditableListSection({
+    title,
+    addLabel,
+    itemName,
+    list,
+    createEmptyItem: () => ({ type: "", url: "", project_id: projectId }),
+    createItem,
+    updateItem,
+    deleteItem,
+    createEditorSections: (item) => {
+      const type = createSelect(typeOptions, item.type || typeOptions[0][0]);
+      type.name = "type";
+      const url = createInput("url", item.url, "", "Introduce una url válida");
+      return {
+        inputElements: [type, url],
+        getChanges: () => ({
+          type: type.value.trim(),
+          url: url.value.trim(),
+        }),
+      };
+    },
+    createReadContent: (item) =>
+      createExternalLink(item.url, `${item.type}: ${item.url}`),
   });
 }
 
-function createEnvironmentsEdit(
-  listItem,
-  environment,
-  environments,
-  isNew = false,
-) {
-  listItem.replaceChildren();
-
-  const typeSelect = document.createElement("select");
-  typeSelect.name = "type";
-
-  const optionDev = document.createElement("option");
-  const optionTest = document.createElement("option");
-  const optionStaging = document.createElement("option");
-  const optionProd = document.createElement("option");
-
-  optionDev.textContent = "Development";
-  optionDev.value = "development";
-  optionTest.textContent = "Test";
-  optionTest.value = "test";
-  optionStaging.textContent = "Staging";
-  optionStaging.value = "staging";
-  optionProd.textContent = "Production";
-  optionProd.value = "production";
-
-  typeSelect.append(optionDev, optionTest, optionStaging, optionProd);
-
-  typeSelect.value = environment.type === "" ? optionDev.value : environment.type;
-
-  const urlInput = document.createElement("input");
-  urlInput.type = "url";
-  urlInput.value = environment.url;
-  urlInput.placeholder = "Introduce una url válida";
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderEnvironmentRead(listItem, environment, environments);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedEnvironment = {
-      ...environment,
-      type: typeSelect.value.trim(),
-      url: urlInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: environment,
-        updatedItem: updatedEnvironment,
-        collection: environments,
-        isNew,
-        createItem: setEnvironment,
-        updateItem: modifyEnvironment,
-      });
-      renderEnvironmentRead(listItem, savedItem, environments);
-    }, "entorno");
-  });
-
-  listItem.append(typeSelect, urlInput, saveButton, cancelButton);
-}
-
-function renderEnvironmentRead(listItem, environment, environments) {
-  listItem.replaceChildren();
-
-  const link = document.createElement("a");
-  link.href = environment.url;
-  link.textContent = `${environment.type}: ${environment.url}`;
-  link.target = "_blank";
-  link.rel = "noreferrer";
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createEnvironmentsEdit(listItem, environment, environments);
-  });
-
-  listItem.append(
-    link,
-    editButton,
-    createDeleteButton(environments, environment, listItem, deleteEnvironment),
-  );
-}
-
-
-function createRepositoriesSection(repositories, projectId) {
-  return createCollectionSection({
-    title: "Repositorios",
-    addLabel: "Añadir repositorio",
-    collection: repositories,
-    createItem: () => ({ project_id: projectId, type: "", url: "" }),
-    renderItem: renderRepositoryRead,
-    editItem: createRepositoryEdit,
-  });
-}
-
-function createRepositoryEdit(
-  listItem,
-  repository,
-  repositories,
-  isNew = false,
-) {
-  listItem.replaceChildren();
-
-  const typeSelect = document.createElement("select");
-  typeSelect.name = "type";
-
-  const optionBack = document.createElement("option");
-  const optionFront = document.createElement("option");
-  const optionDevOps = document.createElement("option");
-  const optionQa = document.createElement("option");
-
-  optionBack.textContent = "Backend";
-  optionBack.value = "backend";
-  optionFront.textContent = "Frontend";
-  optionFront.value = "frontend";
-  optionDevOps.textContent = "Devops";
-  optionDevOps.value = "devops";
-  optionQa.textContent = "QA";
-  optionQa.value = "qa";
-
-  typeSelect.append(optionBack, optionFront, optionDevOps, optionQa);
-
-  typeSelect.value = repository.type === "" ? optionBack.value : repository.type;
-
-  const urlInput = document.createElement("input");
-  urlInput.type = "url";
-  urlInput.value = repository.url;
-  urlInput.placeholder = "Introduce una url válida";
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderRepositoryRead(listItem, repository, repositories);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedRepository = {
-      ...repository,
-      type: typeSelect.value.trim(),
-      url: urlInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: repository,
-        updatedItem: updatedRepository,
-        collection: repositories,
-        isNew,
-        createItem: setRepository,
-        updateItem: modifyRepository,
-      });
-      renderRepositoryRead(listItem, savedItem, repositories);
-    }, "repositorio");
-  });
-
-  listItem.append(typeSelect, urlInput, saveButton, cancelButton);
-}
-
-function renderRepositoryRead(listItem, repository, repositories) {
-  listItem.replaceChildren();
-
-  const link = document.createElement("a");
-  link.href = repository.url;
-  link.textContent = `${repository.type}: ${repository.url}`;
-  link.target = "_blank";
-  link.rel = "noreferrer";
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createRepositoryEdit(listItem, repository, repositories);
-  });
-
-  listItem.append(
-    link,
-    editButton,
-    createDeleteButton(repositories, repository, listItem, deleteRepository),
-  );
-}
-
-
-function createServicesSection(services, projectId) {
-  return createCollectionSection({
+function createServiceSection(services, projectId) {
+  return createEditableListSection({
     title: "Servicios",
     addLabel: "Añadir servicio",
-    collection: services,
-    createItem: () => ({ project_id: projectId, name: "" }),
-    renderItem: renderServiceRead,
-    editItem: createServiceEdit,
+    itemName: "servicio",
+    list: services,
+    createEmptyItem: () => ({ project_id: projectId, name: "" }),
+    createItem: setService,
+    updateItem: modifyService,
+    deleteItem: deleteService,
+    createEditorSections: (service) => {
+      const name = createInput("text", service.name, "", "Nombre del servicio");
+      return {
+        inputElements: [name],
+        getChanges: () => ({ name: name.value.trim() }),
+      };
+    },
+    createReadContent: (service) => createTextElement("span", service.name),
   });
 }
 
-function createServiceEdit(listItem, service, services, isNew = false) {
-  listItem.replaceChildren();
-
-  const nameInput = document.createElement("input");
-  nameInput.type = "text";
-  nameInput.value = service.name;
-  nameInput.placeholder = "Nombre del servicio";
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderServiceRead(listItem, service, services);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedService = {
-      ...service,
-      name: nameInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: service,
-        updatedItem: updatedService,
-        collection: services,
-        isNew,
-        createItem: setService,
-        updateItem: modifyService,
-      });
-      renderServiceRead(listItem, savedItem, services);
-    }, "servicio");
-  });
-
-  listItem.append(nameInput, saveButton, cancelButton);
-}
-
-function renderServiceRead(listItem, service, services) {
-  listItem.replaceChildren();
-
-  const name = document.createElement("span");
-  name.textContent = service.name;
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createServiceEdit(listItem, service, services);
-  });
-
-  listItem.append(
-    name,
-    editButton,
-    createDeleteButton(services, service, listItem, deleteService),
-  );
-}
-
-
-function createDomainsSection(domains, projectId) {
-  return createCollectionSection({
+function createDomainSection(domains, projectId) {
+  return createEditableListSection({
     title: "Dominios",
     addLabel: "Añadir dominio",
-    collection: domains,
-    createItem: () => ({ project_id: projectId, url: "" }),
-    renderItem: renderDomainRead,
-    editItem: createDomainEdit,
+    itemName: "dominio",
+    list: domains,
+    createEmptyItem: () => ({ project_id: projectId, url: "" }),
+    createItem: setDomain,
+    updateItem: modifyDomain,
+    deleteItem: deleteDomain,
+    createEditorSections: (domain) => {
+      const url = createInput("url", domain.url, "", "URL del dominio");
+      return {
+        inputElements: [url],
+        getChanges: () => ({ url: url.value.trim() }),
+      };
+    },
+    createReadContent: (domain) => createExternalLink(domain.url, domain.url),
   });
 }
 
-function createDomainEdit(listItem, domain, domains, isNew = false) {
-  listItem.replaceChildren();
-
-  const urlInput = document.createElement("input");
-  urlInput.type = "url";
-  urlInput.value = domain.url;
-  urlInput.placeholder = "URL del dominio";
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderDomainRead(listItem, domain, domains);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedDomain = {
-      ...domain,
-      url: urlInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: domain,
-        updatedItem: updatedDomain,
-        collection: domains,
-        isNew,
-        createItem: setDomain,
-        updateItem: modifyDomain,
-      });
-      renderDomainRead(listItem, savedItem, domains);
-    }, "dominio");
-  });
-
-  listItem.append(urlInput, saveButton, cancelButton);
-}
-
-function renderDomainRead(listItem, domain, domains) {
-  listItem.replaceChildren();
-
-  const link = document.createElement("a");
-  link.href = domain.url;
-  link.textContent = domain.url;
-  link.target = "_blank";
-  link.rel = "noreferrer";
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createDomainEdit(listItem, domain, domains);
-  });
-
-  listItem.append(
-    link,
-    editButton,
-    createDeleteButton(domains, domain, listItem, deleteDomain),
-  );
-}
-
-
-function createCommandsSection(commands, projectId) {
-  return createCollectionSection({
+function createCommandSection(commands, projectId) {
+  return createEditableListSection({
     title: "Comandos",
     addLabel: "Añadir comando",
-    collection: commands,
-    createItem: () => ({ project_id: projectId, name: "", instruction: "" }),
-    renderItem: renderCommandRead,
-    editItem: createCommandEdit,
+    itemName: "comando",
+    list: commands,
+    createEmptyItem: () => ({
+      project_id: projectId,
+      name: "",
+      instruction: "",
+    }),
+    createItem: setCommand,
+    updateItem: modifyCommand,
+    deleteItem: deleteCommand,
+    createEditorSections: (command) => {
+      const name = createInput("text", command.name, "", "Nombre del comando");
+      const instruction = createInput(
+        "text",
+        command.instruction,
+        "",
+        "Instrucción",
+      );
+      return {
+        inputElements: [name, instruction],
+        getChanges: () => ({
+          name: name.value.trim(),
+          instruction: instruction.value.trim(),
+        }),
+      };
+    },
+    createReadContent: (command) =>
+      createContentGroup([
+        createTextElement("strong", command.name),
+        createTextElement("code", command.instruction),
+      ]),
   });
 }
 
-function createCommandEdit(listItem, command, commands, isNew = false) {
-  listItem.replaceChildren();
-
-  const nameInput = document.createElement("input");
-  nameInput.type = "text";
-  nameInput.value = command.name;
-  nameInput.placeholder = "Nombre del comando";
-
-  const instructionInput = document.createElement("input");
-  instructionInput.type = "text";
-  instructionInput.value = command.instruction;
-  instructionInput.placeholder = "Instrucción";
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderCommandRead(listItem, command, commands);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedCommand = {
-      ...command,
-      name: nameInput.value.trim(),
-      instruction: instructionInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: command,
-        updatedItem: updatedCommand,
-        collection: commands,
-        isNew,
-        createItem: setCommand,
-        updateItem: modifyCommand,
-      });
-      renderCommandRead(listItem, savedItem, commands);
-    }, "comando");
-  });
-
-  listItem.append(nameInput, instructionInput, saveButton, cancelButton);
-}
-
-function renderCommandRead(listItem, command, commands) {
-  listItem.replaceChildren();
-
-  const content = document.createElement("div");
-  const name = document.createElement("strong");
-  const instruction = document.createElement("code");
-
-  name.textContent = command.name;
-  instruction.textContent = command.instruction;
-  content.append(name, instruction);
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createCommandEdit(listItem, command, commands);
-  });
-
-  listItem.append(
-    content,
-    editButton,
-    createDeleteButton(commands, command, listItem, deleteCommand),
-  );
-}
-
-
-function createLinksSection(links, projectId) {
-  return createCollectionSection({
+function createLinkSection(links, projectId) {
+  return createEditableListSection({
     title: "Documentación",
     addLabel: "Añadir documentación",
-    collection: links,
-    createItem: () => ({ project_id: projectId, title: "", url: "" }),
-    renderItem: renderLinkRead,
-    editItem: createLinkEdit,
+    itemName: "documentación",
+    list: links,
+    createEmptyItem: () => ({ project_id: projectId, title: "", url: "" }),
+    createItem: setLink,
+    updateItem: modifyLink,
+    deleteItem: deleteLink,
+    createEditorSections: (link) => {
+      const title = createInput("text", link.title, "", "Título");
+      const url = createInput("url", link.url, "", "URL de documentación");
+      return {
+        inputElements: [title, url],
+        getChanges: () => ({
+          title: title.value.trim(),
+          url: url.value.trim(),
+        }),
+      };
+    },
+    createReadContent: (link) =>
+      createContentGroup([
+        createTextElement("strong", link.title),
+        createExternalLink(link.url, link.url),
+      ]),
   });
 }
 
-function createLinkEdit(listItem, linkData, links, isNew = false) {
-  listItem.replaceChildren();
-
-  const titleInput = document.createElement("input");
-  titleInput.type = "text";
-  titleInput.value = linkData.title;
-  titleInput.placeholder = "Título";
-
-  const urlInput = document.createElement("input");
-  urlInput.type = "url";
-  urlInput.value = linkData.url;
-  urlInput.placeholder = "URL de documentación";
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderLinkRead(listItem, linkData, links);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedLink = {
-      ...linkData,
-      title: titleInput.value.trim(),
-      url: urlInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: linkData,
-        updatedItem: updatedLink,
-        collection: links,
-        isNew,
-        createItem: setLink,
-        updateItem: modifyLink,
-      });
-      renderLinkRead(listItem, savedItem, links);
-    }, "documentación");
-  });
-
-  listItem.append(titleInput, urlInput, saveButton, cancelButton);
-}
-
-function renderLinkRead(listItem, linkData, links) {
-  listItem.replaceChildren();
-
-  const content = document.createElement("div");
-  const title = document.createElement("strong");
-  const link = document.createElement("a");
-
-  title.textContent = linkData.title;
-  link.href = linkData.url;
-  link.textContent = linkData.url;
-  link.target = "_blank";
-  link.rel = "noreferrer";
-  content.append(title, link);
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createLinkEdit(listItem, linkData, links);
-  });
-
-  listItem.append(
-    content,
-    editButton,
-    createDeleteButton(links, linkData, listItem, deleteLink),
-  );
-}
-
-
-function createNotesSection(notes, projectId) {
-  return createCollectionSection({
+function createNoteSection(notes, projectId) {
+  return createEditableListSection({
     title: "Notas",
     addLabel: "Añadir nota",
-    collection: notes,
-    createItem: () => ({ project_id: projectId, description: "", content: "" }),
-    renderItem: renderNoteRead,
-    editItem: createNoteEdit,
+    itemName: "nota",
+    list: notes,
+    createEmptyItem: () => ({
+      project_id: projectId,
+      description: "",
+      content: "",
+    }),
+    createItem: setNote,
+    updateItem: modifyNote,
+    deleteItem: deleteNote,
+    createEditorSections: (note) => {
+      const description = createInput(
+        "text",
+        note.description,
+        "",
+        "Título de la nota",
+      );
+      const content = document.createElement("textarea");
+      content.value = note.content;
+      content.placeholder = "Contenido de la nota";
+      content.rows = 4;
+      return {
+        inputElements: [description, content],
+        getChanges: () => ({
+          description: description.value.trim(),
+          content: content.value.trim(),
+        }),
+      };
+    },
+    createReadContent: (note) =>
+      createContentGroup([
+        createTextElement("strong", note.description),
+        createTextElement("p", note.content),
+      ]),
   });
 }
 
-function createNoteEdit(listItem, note, notes, isNew = false) {
-  listItem.replaceChildren();
-
-  const descriptionInput = document.createElement("input");
-  descriptionInput.type = "text";
-  descriptionInput.value = note.description;
-  descriptionInput.placeholder = "Título de la nota";
-
-  const contentInput = document.createElement("textarea");
-  contentInput.value = note.content;
-  contentInput.placeholder = "Contenido de la nota";
-  contentInput.rows = 4;
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.textContent = "Guardar";
-  saveButton.classList.add("modal-save-button");
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.textContent = "Cancelar";
-
-  cancelButton.addEventListener("click", () => {
-    if (isNew) {
-      listItem.remove();
-      return;
-    }
-    renderNoteRead(listItem, note, notes);
-  });
-
-  saveButton.addEventListener("click", async () => {
-    const updatedNote = {
-      ...note,
-      description: descriptionInput.value.trim(),
-      content: contentInput.value.trim(),
-    };
-
-    await saveChildItem(async () => {
-      const savedItem = await persistChildItem({
-        item: note,
-        updatedItem: updatedNote,
-        collection: notes,
-        isNew,
-        createItem: setNote,
-        updateItem: modifyNote,
-      });
-      renderNoteRead(listItem, savedItem, notes);
-    }, "nota");
-  });
-
-  listItem.append(descriptionInput, contentInput, saveButton, cancelButton);
-}
-
-function renderNoteRead(listItem, note, notes) {
-  listItem.replaceChildren();
-
-  const content = document.createElement("div");
-  const description = document.createElement("strong");
-  const noteContent = document.createElement("p");
-
-  description.textContent = note.description;
-  noteContent.textContent = note.content;
-  content.append(description, noteContent);
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "Editar";
-
-  editButton.addEventListener("click", () => {
-    createNoteEdit(listItem, note, notes);
-  });
-
-  listItem.append(
-    content,
-    editButton,
-    createDeleteButton(notes, note, listItem, deleteNote),
-  );
-}
-
-function createCollectionSection({
-  title: titleText,
-  addLabel,
-  collection,
-  createItem,
-  renderItem,
-  editItem,
-}) {
+function createEditableListSection(sectionOptions) {
   const section = document.createElement("section");
-  const title = document.createElement("h3");
-  title.textContent = titleText;
+  const title = createTextElement("h3", sectionOptions.title);
   const list = document.createElement("ul");
+  const addButton = createButton(sectionOptions.addLabel, "modal-add-button");
 
-  const addButton = createAddButton(addLabel, () => {
-    const item = createItem();
+  addButton.addEventListener("click", () => {
     const listItem = document.createElement("li");
     list.append(listItem);
-    editItem(listItem, item, collection, true);
+    renderItemEditor(
+      listItem,
+      sectionOptions.createEmptyItem(),
+      sectionOptions,
+      true,
+    );
   });
 
-  collection.forEach((item) => {
+  sectionOptions.list.forEach((item) => {
     const listItem = document.createElement("li");
-    renderItem(listItem, item, collection);
+    renderItemReadView(listItem, item, sectionOptions);
     list.append(listItem);
   });
 
@@ -926,35 +428,68 @@ function createCollectionSection({
   return section;
 }
 
-async function persistChildItem({
-  item,
-  updatedItem,
-  collection,
-  isNew,
-  createItem,
-  updateItem,
-}) {
+function renderItemEditor(listItem, item, sectionOptions, isNew = false) {
+  const { inputElements, getChanges } =
+    sectionOptions.createEditorSections(item);
+  const saveButton = createButton("Guardar", "modal-save-button");
+  const cancelButton = createButton("Cancelar");
+
+  cancelButton.addEventListener("click", () => {
+    if (isNew) {
+      listItem.remove();
+      return;
+    }
+    renderItemReadView(listItem, item, sectionOptions);
+  });
+
+  saveButton.addEventListener("click", async () => {
+    await saveListItem(async () => {
+      const updatedItem = { ...item, ...getChanges() };
+      const savedItem = await updateListItem(
+        item,
+        updatedItem,
+        sectionOptions,
+        isNew,
+      );
+      renderItemReadView(listItem, savedItem, sectionOptions);
+    }, sectionOptions.itemName);
+  });
+
+  listItem.replaceChildren(...inputElements, saveButton, cancelButton);
+}
+
+function renderItemReadView(listItem, item, sectionOptions) {
+  const editButton = createButton("Editar");
+  editButton.addEventListener("click", () => {
+    renderItemEditor(listItem, item, sectionOptions);
+  });
+
+  const deleteButton = createDeleteButton(
+    sectionOptions.list,
+    item,
+    listItem,
+    sectionOptions.deleteItem,
+  );
+  listItem.replaceChildren(
+    sectionOptions.createReadContent(item),
+    editButton,
+    deleteButton,
+  );
+}
+
+async function updateListItem(item, updatedItem, sectionOptions, isNew) {
   if (isNew) {
-    const createdItem = await createItem(updatedItem);
-    collection.push(createdItem);
+    const createdItem = await sectionOptions.createItem(updatedItem);
+    sectionOptions.list.push(createdItem);
     return createdItem;
   }
 
-  await updateItem(updatedItem, updatedItem.id);
+  await sectionOptions.updateItem(updatedItem, updatedItem.id);
   Object.assign(item, updatedItem);
   return item;
 }
 
-function createAddButton(text, onClick) {
-  const addButton = document.createElement("button");
-  addButton.type = "button";
-  addButton.classList.add("modal-add-button");
-  addButton.textContent = text;
-  addButton.addEventListener("click", onClick);
-  return addButton;
-}
-
-async function saveChildItem(saveItem, itemName) {
+async function saveListItem(saveItem, itemName) {
   try {
     await saveItem();
   } catch (error) {
@@ -962,25 +497,84 @@ async function saveChildItem(saveItem, itemName) {
       type: "error",
       title: `No se ha podido guardar el ${itemName}`,
       message: error.message,
-      duration: 7000,
+      duration: SAVE_ERROR_DURATION,
     });
   }
 }
 
-function createDeleteButton(collection, item, listItem, deleteItemFromApi) {
-  const deleteButton = document.createElement("button");
-  deleteButton.type = "button";
-  deleteButton.textContent = "Eliminar";
-
+function createDeleteButton(list, item, listItem, deleteItem) {
+  const deleteButton = createButton("Eliminar");
   deleteButton.addEventListener("click", async () => {
-    await deleteItemFromApi(item.id);
-    const itemPosition = collection.indexOf(item);
+    await deleteItem(item.id);
 
-    if (itemPosition !== -1) {
-      collection.splice(itemPosition, 1);
-    }
+    const itemIndex = list.indexOf(item);
+    if (itemIndex !== -1) list.splice(itemIndex, 1);
+
     listItem.remove();
   });
-
   return deleteButton;
+}
+
+function createElement(tagName, className) {
+  const element = document.createElement(tagName);
+  if (className) element.classList.add(className);
+  return element;
+}
+
+function createTextElement(tagName, text) {
+  const element = document.createElement(tagName);
+  element.textContent = text;
+  return element;
+}
+
+function createContentGroup(children) {
+  const content = document.createElement("div");
+  content.append(...children);
+  return content;
+}
+
+function createButton(text, className) {
+  const button = createElement("button", className);
+  button.type = "button";
+  button.textContent = text;
+  return button;
+}
+
+function createInput(type, value, name = "", placeholder = "") {
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = value;
+  input.name = name;
+  input.placeholder = placeholder;
+  return input;
+}
+
+function createSelect(options, selectedValue, name = "") {
+  const select = document.createElement("select");
+  select.name = name;
+  options.forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    select.append(option);
+  });
+  select.value = selectedValue;
+  return select;
+}
+
+function createLabel(text, input) {
+  const label = document.createElement("label");
+  input.id = input.name;
+  label.htmlFor = input.name;
+  label.textContent = text;
+  return label;
+}
+
+function createExternalLink(url, text) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.textContent = text;
+  link.target = "_blank"; //Nueva pestaña
+  link.rel = "noreferrer"; //Oculta el rastro de origen
+  return link;
 }

@@ -1,8 +1,8 @@
-const API_URL = "http://127.0.0.1:8000/api/v1";
+import { API_BASE_URL } from "./config.js";
 
 export async function login(credentials) {
   return sendCredentials(
-    `${API_URL}/auth/login`,
+    `${API_BASE_URL}/auth/login`,
     credentials,
     "No se ha podido iniciar sesión.",
   );
@@ -10,13 +10,12 @@ export async function login(credentials) {
 
 export async function register(credentials) {
   return sendCredentials(
-    `${API_URL}/auth/register`,
+    `${API_BASE_URL}/auth/register`,
     credentials,
     "No se ha podido completar el registro.",
   );
 }
 
-// Envía los datos de acceso al endpoint indicado y devuelve el usuario recibido.
 async function sendCredentials(url, credentials, errorMessage) {
   const response = await sendRequest(url, credentials);
 
@@ -39,7 +38,7 @@ export async function refreshAccessToken() {
   };
 
   const response = await sendRequest(
-    `${API_URL}/auth/refresh`,
+    `${API_BASE_URL}/auth/refresh`,
     refreshTokenData,
   );
 
@@ -63,19 +62,13 @@ async function sendRequest(url, data) {
       },
       body: JSON.stringify(data),
     });
-  } catch (error) {
+  } catch {
     throw new Error("No se ha podido conectar con el servidor.");
   }
 }
 
 async function getResponseError(response, defaultMessage) {
-  let data;
-
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = null;
-  }
+  const data = await getJsonData(response);
 
   let message = defaultMessage;
 
@@ -87,13 +80,21 @@ async function getResponseError(response, defaultMessage) {
     }
   }
 
-  const newError = new Error(message);
-  newError.statusCode = null;
+  const responseError = new Error(message);
+  responseError.statusCode = null;
 
   if (data) {
-    newError.statusCode = data.status_code;
+    responseError.statusCode = data.status_code;
   }
 
-  newError.status = response.status;
-  return newError;
+  responseError.status = response.status;
+  return responseError;
+}
+
+async function getJsonData(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }

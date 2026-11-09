@@ -10,129 +10,182 @@ import {
 import { getProjectByClientId } from "../api/project.api.js";
 import { showNotification } from "../components/notifications.js";
 
-const user = sessionStorage.getItem("userInfo");
-let cachedUser;
-if (user) {
-  cachedUser = JSON.parse(user);
-}
+const CLIENT_ERROR_MESSAGE =
+  "Ha ocurrido algún error con este cliente. Inténtelo de nuevo más tarde";
+
+const storedUser = sessionStorage.getItem("userInfo");
+const currentUser = storedUser ? JSON.parse(storedUser) : undefined;
+
 document
   .querySelector("#header-container")
-  .append(createHeader(cachedUser.username, "./profile.html"));
+  .append(createHeader(currentUser.username, "./profile.html"));
 
 const clientDetail = document.querySelector("#client-detail");
 const clientError = document.querySelector("#client-error");
-
-const searchParams = new URLSearchParams(window.location.search);
-
-const clientId = Number(searchParams.get("id"));
-
+const clientId = Number(new URLSearchParams(window.location.search).get("id"));
 const client = await getClientById(clientId);
 
-if (!Number.isInteger(clientId) || clientId < 1 || !client) {
-  clientError.hidden = false;
-  clientError.textContent =
-    "Ha ocurrido algún error con este cliente. Inténtelo de nuevo más tarde";
-} else {
+if (isValidClient(clientId, client)) {
   renderClient(client);
   clientDetail.hidden = false;
+} else {
+  showClientError();
 }
 
-async function renderClient(client) {
-  document.title = `${client.name} - Sprinde`;
+function isValidClient(id, clientData) {
+  const isIdAnInteger = Number.isInteger(id);
+  const isIdPositive = id >= 1;
+  const hasClientData = clientData !== null && clientData !== undefined; // Más claro en JS que usar Boolean()
 
-  document.querySelector("#client-title").textContent = client.name;
+  return isIdAnInteger && isIdPositive && hasClientData;
+}
+
+function showClientError() {
+  clientError.hidden = false;
+  clientError.textContent = CLIENT_ERROR_MESSAGE;
+}
+
+async function renderClient(clientData) {
+  renderClientInformation(clientData);
+  const assignedProjects = await loadAndRenderProjects(clientData.id);
+
+  configureEditAction(clientData, assignedProjects);
+  configureFavoriteAction(clientData);
+  configureDeleteAction(clientData);
+}
+
+function renderClientInformation(clientData) {
+  document.title = `${clientData.name} - Sprinde`;
+  document.querySelector("#client-title").textContent = clientData.name;
+  document.querySelector("#client-cif").textContent = clientData.cif;
+  document.querySelector("#client-phone").textContent = clientData.phone;
+
   const status = document.querySelector("#client-status");
+  status.textContent = clientData.is_active ? "Activo" : "Inactivo";
+  status.classList.toggle("client-status--active", clientData.is_active);
+  status.classList.toggle("client-status--inactive", !clientData.is_active);
+}
 
-  status.textContent = client.is_active ? "Activo" : "Inactivo";
-
-  status.classList.toggle("client-status--active", client.is_active);
-  status.classList.toggle("client-status--inactive", !client.is_active);
-
+async function loadAndRenderProjects(clientId) {
   const projectsList = document.querySelector("#client-list-projects");
   projectsList?.replaceChildren();
-  const projectsResponse = await getProjectByClientId(client.id);
+
+  const projectsResponse = await getProjectByClientId(clientId);
   const projects = projectsResponse.items;
+
   projects.forEach((project) => {
-    const listItem = document.createElement("li");
-    const link = document.createElement("a");
-
-    link.href = `./project.html?id=${project.id}`;
-    link.textContent = project.name;
-
-    listItem.append(link);
-    projectsList.append(listItem);
+    projectsList.append(createProjectListItem(project));
   });
-  document.querySelector("#client-cif").textContent = client.cif;
-  document.querySelector("#client-phone").textContent = client.phone;
 
-  const modifyClient = document.querySelector(".button-edit-client");
+  return projects;
+}
 
-  modifyClient.onclick = async () => {
+function createProjectListItem(project) {
+  const listItem = document.createElement("li");
+  const link = document.createElement("a");
+
+  link.href = `./project.html?id=${project.id}`;
+  link.textContent = project.name;
+  listItem.append(link);
+
+  return listItem;
+}
+
+function configureEditAction(clientData, assignedProjects) {
+  const editButton = document.querySelector(".button-edit-client");
+
+  editButton.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
 
-    const modal = await createEditModalClient(client, renderClient, projects);
+    const modal = await createEditModalClient(
+      clientData,
+      renderClient,
+      assignedProjects,
+    );
     document.body.append(modal);
   };
+}
 
+function configureFavoriteAction(clientData) {
   const favoriteButton = document.querySelector("#button-favorite-client");
+  updateFavoriteButton(favoriteButton, clientData.is_favorite);
 
-  function updateFavoriteButtonUI() {
-    favoriteButton.textContent = client.is_favorite
-      ? "Quitar de favoritos"
-      : "Añadir a favoritos";
+  favoriteButton.onclick = () =>
+    toggleFavoriteClient(clientData, favoriteButton);
+}
+
+async function toggleFavoriteClient(clientData, favoriteButton) {
+  favoriteButton.disabled = true;
+  const wasFavorite = clientData.is_favorite;
+
+  try {
+    await updateClientFavoriteStatus(clientData.id, wasFavorite);
+    clientData.is_favorite = !wasFavorite;
+    showFavoriteSuccess(wasFavorite);
+    updateFavoriteButton(favoriteButton, clientData.is_favorite);
+  } catch (error) {
+    showFavoriteError(wasFavorite, error.message);
+  } finally {
+    favoriteButton.disabled = false;
   }
-  updateFavoriteButtonUI();
+}
 
-  favoriteButton.onclick = async () => {
-    favoriteButton.disabled = true;
-    const isAlreadyFavorite = client.is_favorite;
-    try {
-      if (isAlreadyFavorite) {
-        await unfavoriteClient(client.id);
-        client.is_favorite = false;
-        showNotification({
-          type: "success",
-          title: "Cliente eliminado de favoritos",
-          message: "Se ha eliminado de favoritos correctamente",
-        });
-      } else {
-        await favoriteClient(client.id);
-        client.is_favorite = true;
-        showNotification({
-          type: "success",
-          title: "Cliente añadido a favoritos",
-          message: "Se ha añadido a favoritos correctamente",
-        });
-      }
-      updateFavoriteButtonUI();
-    } catch (error) {
-      showNotification({
-        type: "error",
-        title: isAlreadyFavorite
-          ? "Error al eliminar de favoritos"
-          : "Error al añadirlo a favoritos",
-        message: error.message,
-      });
-    } finally {
-      favoriteButton.disabled = false;
-    }
-  };
+async function updateClientFavoriteStatus(clientId, wasFavorite) {
+  if (wasFavorite) {
+    await unfavoriteClient(clientId);
+    return;
+  }
 
-  const deleteClient = document.querySelector(".button-delete-client");
-  deleteClient.onclick = () => {
+  await favoriteClient(clientId);
+}
+
+function updateFavoriteButton(button, isFavorite) {
+  button.textContent = isFavorite
+    ? "Quitar de favoritos"
+    : "Añadir a favoritos";
+}
+
+function showFavoriteSuccess(wasFavorite) {
+  showNotification({
+    type: "success",
+    title: wasFavorite
+      ? "Cliente eliminado de favoritos"
+      : "Cliente añadido a favoritos",
+    message: wasFavorite
+      ? "Se ha eliminado de favoritos correctamente"
+      : "Se ha añadido a favoritos correctamente",
+  });
+}
+
+function showFavoriteError(wasFavorite, message) {
+  showNotification({
+    type: "error",
+    title: wasFavorite
+      ? "Error al eliminar de favoritos"
+      : "Error al añadirlo a favoritos",
+    message,
+  });
+}
+
+function configureDeleteAction(clientData) {
+  const deleteButton = document.querySelector(".button-delete-client");
+
+  deleteButton.onclick = () => {
     if (document.querySelector(".confirm-overlay")) return;
 
     const confirmModal = createConfirmModal(
       "Borrar cliente",
-      `¿Estás seguro de que deseas borrar el cliente "${client.name}"?`,
-      async () => {
-        await deleteClientById(client.id);
-        setTimeout(() => {
-          window.location.href = "./clients.html";
-        }, 1000);
-      },
+      `¿Estás seguro de que deseas borrar el cliente "${clientData.name}"?`,
+      () => deleteClientAndRedirect(clientData.id),
     );
 
     document.body.append(confirmModal);
   };
+}
+
+async function deleteClientAndRedirect(clientId) {
+  await deleteClientById(clientId);
+  setTimeout(() => {
+    window.location.href = "./clients.html";
+  }, 1000);
 }

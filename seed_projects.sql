@@ -1,5 +1,4 @@
 -- Seed de 50 proyectos vinculados a los clientes de seed_clients.sql.
--- Si el modelo del backend usa el nombre singular, sustituye `projects` por `project`.
 INSERT INTO projects (id, name, client_id) VALUES
   (1, 'ERP corporativo', 1),
   (2, 'Portal de clientes', 2),

@@ -1,23 +1,31 @@
 import { showNotification } from "./notifications.js";
 
 export function createConfirmModal(title, description, onConfirm) {
-  const modalOverlay = document.createElement("div");
-  modalOverlay.classList.add("confirm-overlay");
+  const modalElements = createModalElements(title, description);
 
-  const modal = document.createElement("section");
-  modal.classList.add("confirm-modal");
+  registerModalEvents(modalElements, onConfirm);
 
-  const { titleElement, descriptionElement } = createModalContent(title, description);
-  const { actionsContainer, deleteButton, cancelButton } = createModalActions();
+  return modalElements.overlay;
+}
 
-  deleteButton.addEventListener("click", () =>
-    handleDeletionConfirmation(modalOverlay, deleteButton, onConfirm),
-  );
-  cancelButton.addEventListener("click", () => modalOverlay.remove());
+function createModalElements(title, description) {
+  const overlay = document.createElement("div");
+  overlay.classList.add("confirm-overlay");
 
-  modal.append(titleElement, descriptionElement, actionsContainer);
-  modalOverlay.append(modal);
-  return modalOverlay;
+  const dialog = document.createElement("section");
+  dialog.classList.add("confirm-modal");
+
+  const content = createModalContent(title, description);
+  const actions = createModalActions();
+
+  dialog.append(content.title, content.description, actions.container);
+  overlay.append(dialog);
+
+  return {
+    overlay,
+    confirmButton: actions.confirmButton,
+    cancelButton: actions.cancelButton,
+  };
 }
 
 function createModalContent(title, description) {
@@ -28,39 +36,50 @@ function createModalContent(title, description) {
   const descriptionElement = document.createElement("p");
   descriptionElement.textContent = description;
 
-  return { titleElement, descriptionElement };
+  return { title: titleElement, description: descriptionElement };
 }
 
 function createModalActions() {
-  const deleteButton = document.createElement("button");
-  deleteButton.type = "button";
-  deleteButton.classList.add("modal-delete-button");
-  deleteButton.textContent = "Borrar";
+  const confirmButton = document.createElement("button");
+  confirmButton.type = "button";
+  confirmButton.classList.add("modal-delete-button");
+  confirmButton.textContent = "Borrar";
 
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
   cancelButton.classList.add("modal-cancel-button");
   cancelButton.textContent = "Cancelar";
 
-  const actionsContainer = document.createElement("div");
-  actionsContainer.classList.add("modal-actions");
-  actionsContainer.append(deleteButton, cancelButton);
+  const actions = document.createElement("div");
+  actions.classList.add("modal-actions");
+  actions.append(confirmButton, cancelButton);
 
-  return { actionsContainer, deleteButton, cancelButton };
+  return { container: actions, confirmButton, cancelButton };
 }
 
-async function handleDeletionConfirmation(modalOverlay, deleteButton, onConfirm) {
+function registerModalEvents(
+  { overlay, confirmButton, cancelButton },
+  onConfirm,
+) {
+  confirmButton.addEventListener("click", () =>
+    confirmDeletion({ overlay, confirmButton, onConfirm }),
+  );
+
+  cancelButton.addEventListener("click", () => overlay.remove());
+}
+
+async function confirmDeletion({ overlay, confirmButton, onConfirm }) {
   try {
-    deleteButton.disabled = true;
+    confirmButton.disabled = true;
     await onConfirm();
     showNotification({
       type: "success",
       title: "Eliminado",
       message: "Los datos se han eliminado correctamente.",
     });
-    modalOverlay.remove();
+    overlay.remove();
   } catch (error) {
-    deleteButton.disabled = false;
+    confirmButton.disabled = false;
     showNotification({
       type: "error",
       title: "No se ha podido borrar",

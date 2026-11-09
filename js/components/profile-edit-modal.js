@@ -5,6 +5,25 @@ export function createEditProfileModal(user, renderUser) {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
+  const inputs = createProfileInputs(user);
+  const closeModal = () => overlay.remove();
+  const saveChanges = () =>
+    saveProfileChanges(user, renderUser, overlay, inputs);
+
+  const modal = createModalContent(inputs, closeModal, saveChanges);
+
+  overlay.append(modal);
+  return overlay;
+}
+
+function createProfileInputs(user) {
+  return {
+    username: createProfileInput("text", "username", user.username),
+    email: createProfileInput("email", "email", user.email),
+  };
+}
+
+function createModalContent(inputs, closeModal, saveChanges) {
   const modal = document.createElement("section");
   modal.classList.add("edit-profile-modal");
 
@@ -12,22 +31,15 @@ export function createEditProfileModal(user, renderUser) {
   title.classList.add("modal-title");
   title.textContent = "Modificar datos";
 
-  const closeButton = createCloseButton(overlay);
-
-  const usernameInput = createProfileInput("text", "username", user.username);
-  const emailInput = createProfileInput("email", "email", user.email);
-  const actions = createModalActions(overlay, () =>
-    saveProfileChanges(user, renderUser, overlay, usernameInput, emailInput),
+  modal.append(
+    createCloseButton(closeModal),
+    title,
+    createField("Nombre de usuario", inputs.username),
+    createField("Email", inputs.email),
+    createModalActions(closeModal, saveChanges),
   );
 
-  modal.append(closeButton);
-  modal.append(title);
-  modal.append(createField("Nombre de usuario", usernameInput));
-  modal.append(createField("Email", emailInput));
-  modal.append(actions);
-
-  overlay.append(modal);
-  return overlay;
+  return modal;
 }
 
 function createProfileInput(type, name, value) {
@@ -40,16 +52,15 @@ function createProfileInput(type, name, value) {
   return input;
 }
 
-async function saveProfileChanges(user, renderUser, overlay, usernameInput, emailInput) {
-  const username = usernameInput.value.trim();
-  const email = emailInput.value.trim();
+async function saveProfileChanges(user, renderUser, overlay, inputs) {
+  const profileChanges = readProfileChanges(inputs);
 
-  if (username === "" || email === "") {
+  if (!hasRequiredProfileData(profileChanges)) {
     return;
   }
 
-  user.username = username;
-  user.email = email;
+  user.username = profileChanges.username;
+  user.email = profileChanges.email;
 
   try {
     await modifyProfile(user);
@@ -70,20 +81,29 @@ async function saveProfileChanges(user, renderUser, overlay, usernameInput, emai
   }
 }
 
-function createModalActions(overlay, onSave) {
+function readProfileChanges(inputs) {
+  return {
+    username: inputs.username.value.trim(),
+    email: inputs.email.value.trim(),
+  };
+}
+
+function hasRequiredProfileData({ username, email }) {
+  return username !== "" && email !== "";
+}
+
+function createModalActions(closeModal, saveChanges) {
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Guardar";
-  saveButton.addEventListener("click", onSave);
+  saveButton.addEventListener("click", saveChanges);
 
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
   cancelButton.classList.add("modal-cancel-button");
   cancelButton.textContent = "Cancelar";
-  cancelButton.addEventListener("click", () => {
-    overlay.remove();
-  });
+  cancelButton.addEventListener("click", closeModal);
 
   const actions = document.createElement("div");
   actions.classList.add("modal-actions");
@@ -104,13 +124,11 @@ function createField(labelText, input) {
   return field;
 }
 
-function createCloseButton(overlay) {
+function createCloseButton(closeModal) {
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.classList.add("modal-close-button");
   closeButton.textContent = "×";
-  closeButton.addEventListener("click", () => {
-    overlay.remove();
-  });
+  closeButton.addEventListener("click", closeModal);
   return closeButton;
 }

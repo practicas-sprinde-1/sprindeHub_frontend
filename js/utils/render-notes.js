@@ -1,17 +1,22 @@
-export function renderNotes(list, notes) {
+export function renderNotes(notesList, notes) {
   notes.forEach((note) => {
-    const listItem = document.createElement("li");
-    const description = document.createElement("strong");
-    const content = document.createElement("p");
-
-    listItem.classList.add("detail-list-item");
-    description.classList.add("detail-list-title");
-    content.classList.add("detail-list-content");
-
-    description.textContent = note.description;
-    content.textContent = note.content;
-
-    listItem.append(description, content);
-    list.append(listItem);
+    notesList.append(createNoteListItem(note));
   });
+}
+
+function createNoteListItem(note) {
+  const listItem = document.createElement("li");
+  const descriptionElement = document.createElement("strong");
+  const contentElement = document.createElement("p");
+
+  listItem.classList.add("detail-list-item");
+  descriptionElement.classList.add("detail-list-title");
+  contentElement.classList.add("detail-list-content");
+
+  descriptionElement.textContent = note.description;
+  contentElement.textContent = note.content;
+
+  listItem.append(descriptionElement, contentElement);
+
+  return listItem;
 }

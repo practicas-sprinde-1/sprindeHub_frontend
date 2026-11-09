@@ -7,15 +7,16 @@ export function showNotification({
   duration = DEFAULT_DURATION,
 }) {
   const container = getNotificationContainer();
-  const { notification, close } = createNotification({ type, title, message });
+  const { notificationElement, dismiss } = createNotification({
+    type,
+    title,
+    message,
+  });
 
-  container.append(notification);
+  container.append(notificationElement);
+  autoClose(dismiss, duration);
 
-  if (duration > 0) {
-    window.setTimeout(close, duration);
-  }
-
-  return close;
+  return dismiss;
 }
 
 function getNotificationContainer() {
@@ -34,11 +35,22 @@ function getNotificationContainer() {
 }
 
 function createNotification({ type, title, message }) {
-  const notification = document.createElement("div");
-  notification.classList.add("notification", `notification-${type}`);
+  const notificationElement = document.createElement("div");
+  notificationElement.classList.add("notification", `notification-${type}`);
 
-  const content = document.createElement("div");
-  content.classList.add("notification-content");
+  const contentElement = createNotificationContent({ title, message });
+  const dismissButton = createDismissButton();
+  const dismiss = () => notificationElement.remove();
+
+  dismissButton.addEventListener("click", dismiss);
+  notificationElement.append(contentElement, dismissButton);
+
+  return { notificationElement, dismiss };
+}
+
+function createNotificationContent({ title, message }) {
+  const contentElement = document.createElement("div");
+  contentElement.classList.add("notification-content");
 
   const titleElement = document.createElement("strong");
   titleElement.textContent = title;
@@ -46,17 +58,24 @@ function createNotification({ type, title, message }) {
   const messageElement = document.createElement("p");
   messageElement.textContent = message;
 
-  const closeButton = document.createElement("button");
-  closeButton.type = "button";
-  closeButton.classList.add("notification-close");
-  closeButton.textContent = "Cerrar";
+  contentElement.append(titleElement, messageElement);
 
-  const close = () => notification.remove();
+  return contentElement;
+}
 
-  closeButton.addEventListener("click", close);
+function createDismissButton() {
+  const dismissButton = document.createElement("button");
+  dismissButton.type = "button";
+  dismissButton.classList.add("notification-close");
+  dismissButton.textContent = "Cerrar";
 
-  content.append(titleElement, messageElement);
-  notification.append(content, closeButton);
+  return dismissButton;
+}
 
-  return { notification, close };
+function autoClose(dismiss, duration) {
+  if (!(duration > 0)) {
+    return;
+  }
+
+  window.setTimeout(dismiss, duration);
 }

@@ -7,6 +7,25 @@ export function createConfirmModal(title, description, onConfirm) {
   const modal = document.createElement("section");
   modal.classList.add("confirm-modal");
 
+  const { titleElement, descriptionElement } = createModalContent(
+    title,
+    description,
+  );
+  const { actionsContainer, confirmButton, cancelButton } =
+    createModalActions();
+
+  confirmButton.addEventListener("click", () =>
+    handleConfirmation(modalOverlay, confirmButton, onConfirm),
+  );
+  cancelButton.addEventListener("click", () => modalOverlay.remove());
+
+  modal.append(titleElement, descriptionElement, actionsContainer);
+  modalOverlay.append(modal);
+
+  return modalOverlay;
+}
+
+function createModalContent(title, description) {
   const titleElement = document.createElement("h1");
   titleElement.classList.add("modal-title");
   titleElement.textContent = title;
@@ -14,38 +33,31 @@ export function createConfirmModal(title, description, onConfirm) {
   const descriptionElement = document.createElement("p");
   descriptionElement.textContent = description;
 
-  const actions = createModalActions(modalOverlay, onConfirm);
-
-  modal.append(titleElement, descriptionElement, actions);
-  modalOverlay.append(modal);
-  return modalOverlay;
+  return { titleElement, descriptionElement };
 }
 
-function createModalActions(modalOverlay, onConfirm) {
+function createModalActions() {
   const confirmButton = document.createElement("button");
   confirmButton.type = "button";
   confirmButton.classList.add("modal-delete-button");
   confirmButton.textContent = "Borrar";
-  confirmButton.addEventListener("click", () =>
-    confirmDeletion(modalOverlay, confirmButton, onConfirm),
-  );
 
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
   cancelButton.classList.add("modal-cancel-button");
   cancelButton.textContent = "Cancelar";
-  cancelButton.addEventListener("click", () => modalOverlay.remove());
 
-  const actions = document.createElement("div");
-  actions.classList.add("modal-actions");
-  actions.append(confirmButton, cancelButton);
+  const actionsContainer = document.createElement("div");
+  actionsContainer.classList.add("modal-actions");
+  actionsContainer.append(confirmButton, cancelButton);
 
-  return actions;
+  return { actionsContainer, confirmButton, cancelButton };
 }
 
-async function confirmDeletion(modalOverlay, confirmButton, onConfirm) {
+async function handleConfirmation(modalOverlay, confirmButton, onConfirm) {
+  confirmButton.disabled = true;
+
   try {
-    confirmButton.disabled = true;
     await onConfirm();
     showNotification({
       type: "success",

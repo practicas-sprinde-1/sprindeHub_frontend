@@ -1,74 +1,122 @@
-import { createHeader } from "../components/header.js";
-import { createEditProfileModal } from "../components/profile-edit-modal.js";
-import { getProfile, modifyPassword } from "../api/profile.api.js";
 import { getClientById } from "../api/client.api.js";
+import { getProfile, modifyPassword } from "../api/profile.api.js";
 import { getRelationshipByUser } from "../api/user_client.api.js";
+import { createHeader } from "../components/header.js";
 import { showNotification } from "../components/notifications.js";
+import { createEditProfileModal } from "../components/profile-edit-modal.js";
 
-const user = await getProfile();
+const currentUser = await getProfile();
 
-const headerContainer = document.querySelector("#header-container");
-headerContainer.append(createHeader(user.username, "./profile.html"));
+renderHeader(currentUser);
+renderUser(currentUser);
+registerProfileActions(currentUser);
+
+function renderHeader(user) {
+  const headerContainer = document.querySelector("#header-container");
+  headerContainer.append(createHeader(user.username, "./profile.html"));
+
+  document.title = `${user.username} - Sprinde`;
+  document.querySelector("#user-title").textContent = user.email;
+}
 
 async function renderUser(user) {
-  document.title = `${user.username} - Sprinde`;
-
-  document.querySelector("#user-title").textContent = user.email;
-
   const clientsList = document.querySelector("#user-list-clients");
   clientsList.replaceChildren();
-  let clients = [];
-  const relationships = await getRelationshipByUser(user.id);
 
-  for (const r of relationships) {
-    const client = await getClientById(r.client_id);
+  const clients = await getClientsForUser(user.id);
+  renderClients(clientsList, clients);
+  renderUserDetails(user);
+}
+
+async function getClientsForUser(userId) {
+  const relationships = await getRelationshipByUser(userId);
+  const clients = [];
+
+  for (const relationship of relationships) {
+    const client = await getClientById(relationship.client_id);
     clients.push(client);
   }
 
-  clients.forEach((client) => {
+  return clients;
+}
+
+function renderClients(clientsList, clients) {
+  for (const client of clients) {
     const listItem = document.createElement("li");
     const link = document.createElement("a");
 
     link.href = `./client.html?id=${client.id}`;
     link.textContent = client.name;
-
     listItem.append(link);
-
     clientsList.append(listItem);
-  });
+  }
+}
 
+function renderUserDetails(user) {
   document.querySelector("#user-email").textContent = user.email;
   document.querySelector("#user-name").textContent = user.username;
   document.querySelector("#user-role").textContent = user.role;
 }
 
-renderUser(user);
+function registerProfileActions(user) {
+  const editProfileButton = document.querySelector(".button-edit-user");
+  const editPasswordButton = document.querySelector(".button-edit-password");
 
-const editProfileButton = document.querySelector(".button-edit-user");
+  editProfileButton.addEventListener("click", () => {
+    openModal(() => createEditProfileModal(user, renderUser));
+  });
 
-editProfileButton.addEventListener("click", () => {
+  editPasswordButton.addEventListener("click", () => {
+    openModal(createEditPasswordModal);
+  });
+}
+
+function openModal(createModal) {
   if (document.querySelector(".modal-overlay")) {
     return;
   }
 
-  const modal = createEditProfileModal(user, renderUser);
-  document.body.append(modal);
-});
-
-const editPasswordButton = document.querySelector(".button-edit-password");
-
-editPasswordButton.onclick = () => {
-  if (document.querySelector(".modal-overlay")) {
-    return;
-  }
-  const modal = createEditPasswordModal();
-  document.body.append(modal);
-};
+  document.body.append(createModal());
+}
 
 function createEditPasswordModal() {
   const overlay = document.createElement("div");
   overlay.classList.add("modal-overlay");
 
+  const passwordInputs = createPasswordInputs();
+  const closeModal = () => overlay.remove();
+  const savePassword = () => changePassword(passwordInputs, closeModal);
+  const modal = createPasswordModalContent(
+    passwordInputs,
+    closeModal,
+    savePassword,
+  );
+
+  overlay.append(modal);
+  return overlay;
+}
+
+function createPasswordInputs() {
+  return {
+    currentPassword: createPasswordInput("oldpassword", "old-password"),
+    newPassword: createPasswordInput("newpassword", "new-password"),
+    passwordConfirmation: createPasswordInput(
+      "confirmpassword",
+      "confirm-password",
+    ),
+  };
+}
+
+function createPasswordInput(name, id) {
+  const input = document.createElement("input");
+  input.type = "password";
+  input.name = name;
+  input.id = id;
+  input.required = true;
+  return input;
+}
+
+function createPasswordModalContent(inputs, closeModal, savePassword) {
   const modal = document.createElement("section");
   modal.classList.add("edit-password-modal");
 
@@ -76,101 +124,97 @@ function createEditPasswordModal() {
   title.classList.add("modal-title");
   title.textContent = "Modificar contraseña";
 
-  const oldPasswordInput = document.createElement("input");
-  oldPasswordInput.type = "password";
-  oldPasswordInput.name = "oldpassword";
-  oldPasswordInput.id = "old-password";
-  oldPasswordInput.required = true;
+  modal.append(
+    createCloseButton(closeModal),
+    title,
+    createField("Contraseña actual", inputs.currentPassword),
+    createField("Contraseña nueva", inputs.newPassword),
+    createField("Confirmar contraseña", inputs.passwordConfirmation),
+    createModalActions(closeModal, savePassword),
+  );
 
-  const newPasswordInput = document.createElement("input");
-  newPasswordInput.type = "password";
-  newPasswordInput.name = "newpassword";
-  newPasswordInput.id = "new-password";
-  newPasswordInput.required = true;
+  return modal;
+}
 
-  const confirmPasswordInput = document.createElement("input");
-  confirmPasswordInput.type = "password";
-  confirmPasswordInput.name = "confirmpassword";
-  confirmPasswordInput.id = "confirm-password";
-  confirmPasswordInput.required = true;
+async function changePassword(inputs, closeModal) {
+  const passwordChange = readPasswordChange(inputs);
 
+  if (!isValidPasswordChange(passwordChange)) {
+    return;
+  }
+
+  const passwordData = {
+    current_password: passwordChange.currentPassword,
+    new_password: passwordChange.newPassword,
+  };
+
+  try {
+    await modifyPassword(passwordData);
+    closeModal();
+    showNotification({
+      type: "success",
+      title: "Contraseña modificada",
+      message: "La contraseña se ha actualizado correctamente.",
+    });
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: "No se ha podido modificar la contraseña",
+      message: error.message,
+      duration: 7000,
+    });
+  }
+}
+
+function readPasswordChange(inputs) {
+  return {
+    currentPassword: inputs.currentPassword.value.trim(),
+    newPassword: inputs.newPassword.value.trim(),
+    passwordConfirmation: inputs.passwordConfirmation.value.trim(),
+  };
+}
+
+function isValidPasswordChange(passwordChange) {
+  if (
+    passwordChange.currentPassword === "" ||
+    passwordChange.newPassword === "" ||
+    passwordChange.passwordConfirmation === ""
+  ) {
+    return false;
+  }
+
+  if (passwordChange.currentPassword === passwordChange.newPassword) {
+    return false;
+  }
+
+  return passwordChange.newPassword === passwordChange.passwordConfirmation;
+}
+
+function createModalActions(closeModal, savePassword) {
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.classList.add("modal-save-button");
   saveButton.textContent = "Cambiar contraseña";
-  saveButton.onclick = async () => {
-    const oldPassword = oldPasswordInput.value.trim();
-    const newPassword = newPasswordInput.value.trim();
-    const confirmPassword = confirmPasswordInput.value.trim();
-
-    if (oldPassword === "" || newPassword === "" || confirmPassword === "") {
-      return;
-    }
-
-    if (oldPassword === newPassword) {
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      return;
-    }
-
-    const data = {
-      current_password: oldPassword,
-      new_password: newPassword,
-    };
-
-    try {
-      await modifyPassword(data);
-      overlay.remove();
-      showNotification({
-        type: "success",
-        title: "Contraseña modificada",
-        message: "La contraseña se ha actualizado correctamente.",
-      });
-    } catch (error) {
-      showNotification({
-        type: "error",
-        title: "No se ha podido modificar la contraseña",
-        message: error.message,
-        duration: 7000,
-      });
-    }
-  };
+  saveButton.addEventListener("click", savePassword);
 
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
   cancelButton.classList.add("modal-cancel-button");
   cancelButton.textContent = "Cancelar";
-  cancelButton.addEventListener("click", () => {
-    overlay.remove();
-  });
+  cancelButton.addEventListener("click", closeModal);
 
   const actions = document.createElement("div");
   actions.classList.add("modal-actions");
   actions.append(saveButton, cancelButton);
-
-  const closeButton = createCloseButton(overlay);
-
-  modal.append(closeButton);
-  modal.append(title);
-  modal.append(createField("Contraseña actual", oldPasswordInput));
-  modal.append(createField("Contraseña nueva", newPasswordInput));
-  modal.append(createField("Confirmar contraseña", confirmPasswordInput));
-
-  modal.append(actions);
-
-  overlay.append(modal);
-  return overlay;
+  return actions;
 }
 
-function createCloseButton(overlay) {
+function createCloseButton(closeModal) {
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.classList.add("modal-close-button");
   closeButton.textContent = "×";
-  closeButton.addEventListener("click", () => {
-    overlay.remove();
-  });
+  closeButton.addEventListener("click", closeModal);
   return closeButton;
 }
 

@@ -10,60 +10,265 @@ import { getLinksByProjectId } from "../api/link.api.js";
 import { getNotesByProjectId } from "../api/note.api.js";
 import { getProfile } from "../api/profile.api.js";
 
-const user = await getProfile();
-
-sessionStorage.setItem("userInfo", JSON.stringify(user));
-
-//Devuelve el primer elemento que tenga ese #id o .clase
 const headerContainer = document.querySelector("#header-container");
-
-const header = createHeader(user.username, "./pages/profile.html");
-
-headerContainer.append(header);
-
 const recordsPerPageSelect = document.querySelector("#records-per-page");
 const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
 const searchInput = document.querySelector("#input-index");
 const showArchivedButton = document.querySelector("#archived-projects");
-const showActivedButton = document.querySelector("#actived-projects");
+const showActiveButton = document.querySelector("#actived-projects");
 const showFavoritesButton = document.querySelector("#favorite-projects");
+const tableBody = document.querySelector("#projects-table-body");
+const projectsTable = document.querySelector(".projects-table");
+const tableTitles = document.querySelector(".table-titles");
+const createNewProjectButton = document.querySelector("#button-new-project");
+const createNewClientButton = document.querySelector("#button-new-client");
 
-let projects = [];
-let tableState = {
+const tableState = {
   search: "",
   page: 1,
   limit: Number(recordsPerPageSelect.value),
   view: "active",
 };
 
-async function loadProjects() {
-  const offset = (tableState.page - 1) * tableState.limit;
-  let response;
+const DETAIL_CARD_SETTINGS = {
+  commands: {
+    title: "Comandos",
+    countKey: "commands_count",
+    countLabel: "comandos",
+    loadItems: getCommandsByProjectId,
+    formatItem: ({ name, instruction }) => ({ name, instruction }),
+  },
+  links: {
+    title: "Documentación",
+    countKey: "links_count",
+    countLabel: "enlaces",
+    loadItems: getLinksByProjectId,
+    // Extrae usando desestructuración solo los datos necesarios del objeto de la API
+    // y devuelve un nuevo objeto con esos datos para el componente visual.
+    formatItem: ({ title, url }) => ({ title, url }),
+  },
+  notes: {
+    title: "Notas",
+    countKey: "notes_count",
+    countLabel: "notas",
+    loadItems: getNotesByProjectId,
+    formatItem: ({ description, content }) => ({ description, content }),
+  },
+};
 
-  if (tableState.view === "favorites") {
-    response = await getFavoriteProjects(tableState.limit, offset);
-  } else if (tableState.view === "archived") {
-    response = await getArchivedProjects(
-      tableState.limit,
-      offset,
-      tableState.search,
-    );
-  } else {
-    response = await getProjects(
-      "projects",
-      tableState.limit,
-      offset,
-      tableState.search,
-    );
-  }
-  projects = response.items;
-  renderTable(projects);
-  pageInformation.textContent = "Página " + tableState.page;
-  previousPageButton.disabled = tableState.page === 1;
-  nextPageButton.disabled = projects.length < tableState.limit;
+let openedDetailCard;
+let searchTimeout;
+
+async function renderProfileHeader() {
+  const user = await getProfile();
+
+  sessionStorage.setItem("userInfo", JSON.stringify(user));
+  headerContainer.append(createHeader(user.username, "./pages/profile.html"));
 }
+
+async function loadProjects() {
+  const response = await getProjectsByTableState();
+  const loadedProjects = response.items;
+
+  renderProjects(loadedProjects);
+  updatePagination(loadedProjects.length);
+}
+
+function getProjectsByTableState() {
+  const offset = (tableState.page - 1) * tableState.limit;
+
+  switch (tableState.view) {
+    case "favorites":
+      return getFavoriteProjects(tableState.limit, offset, tableState.search);
+    case "archived":
+      return getArchivedProjects(tableState.limit, offset, tableState.search);
+    default:
+      return getProjects(
+        "projects",
+        tableState.limit,
+        offset,
+        tableState.search,
+      );
+  }
+}
+
+function updatePagination(loadedProjectCount) {
+  pageInformation.textContent = `Página ${tableState.page}`;
+  previousPageButton.disabled = tableState.page === 1;
+  nextPageButton.disabled = loadedProjectCount < tableState.limit;
+}
+
+function renderProjects(loadedProjects) {
+  tableBody.replaceChildren();
+
+  loadedProjects.forEach((project) => {
+    tableBody.append(createProjectRow(project));
+  });
+}
+
+function createProjectRow(project) {
+  const row = document.createElement("tr");
+
+  row.append(
+    createClientCell(project.client),
+    createProjectCell(project),
+    createEnvironmentsCell(project.environments),
+    createRepositoriesCell(project.repositories),
+    createServicesCell(project.services),
+    createDomainsCell(project.domains),
+    createDetailButtonCell(project, row, "commands"),
+    createDetailButtonCell(project, row, "links"),
+    createDetailButtonCell(project, row, "notes"),
+  );
+
+  return row;
+}
+
+function createClientCell(client) {
+  const cell = document.createElement("td");
+  const clientName = document.createElement("strong");
+
+  clientName.textContent = client?.name ?? "No asignado";
+  cell.append(clientName);
+
+  return cell;
+}
+
+function createProjectCell(project) {
+  const cell = document.createElement("td");
+  const link = document.createElement("a");
+
+  link.classList.add("project-link");
+  link.href = `./pages/project.html?id=${project.id}`;
+  link.textContent = project.name;
+  cell.append(link);
+
+  return cell;
+}
+
+function createEnvironmentsCell(environments) {
+  const cell = createCenteredCell();
+
+  environments.forEach((environment) => {
+    const label = document.createElement("span");
+    const link = document.createElement("a");
+
+    label.classList.add("environment", `environment--${environment.type}`);
+    link.textContent = environment.type;
+    link.href = environment.url;
+    label.append(link);
+    cell.append(label);
+  });
+
+  return cell;
+}
+
+function createRepositoriesCell(repositories) {
+  const cell = createCenteredCell("repositories-cell");
+
+  repositories.forEach((repository) => {
+    const link = document.createElement("a");
+
+    link.classList.add("repository-link");
+    link.href = repository.url;
+    link.textContent = repository.type;
+    cell.append(link);
+  });
+
+  return cell;
+}
+
+function createServicesCell(services) {
+  const cell = createCenteredCell();
+
+  services.forEach((service) => {
+    const tag = document.createElement("span");
+
+    tag.classList.add("tag");
+    tag.textContent = service.name;
+    cell.append(tag);
+  });
+
+  return cell;
+}
+
+function createDomainsCell(domains) {
+  const cell = createCenteredCell();
+
+  domains.forEach((domain) => {
+    const link = document.createElement("a");
+
+    link.classList.add("domain-link");
+    link.href = `https://${domain.url}`;
+    link.target = "_blank";
+    link.textContent = domain.url;
+    cell.append(link);
+  });
+
+  return cell;
+}
+
+function createDetailButtonCell(project, row, contentType) {
+  const cell = createCenteredCell();
+  const button = document.createElement("button");
+  const configuration = DETAIL_CARD_SETTINGS[contentType];
+
+  button.classList.add("table-count-button");
+  button.type = "button";
+  button.textContent = `${project[configuration.countProperty]} ${configuration.countLabel}`;
+  button.addEventListener("click", async () => {
+    const items = await configuration.loadItems(project.id);
+
+    const formattedItems = items.map((item) => {
+      return configuration.formatItem(item);
+    });
+
+    showDetailCard(
+      row,
+      configuration.title,
+      formattedItems,
+      project.id,
+      contentType,
+    );
+  });
+
+  cell.append(button);
+
+  return cell;
+}
+
+function createCenteredCell(additionalClass) {
+  const cell = document.createElement("td");
+
+  cell.classList.add("cell-centered");
+  if (additionalClass) {
+    cell.classList.add(additionalClass);
+  }
+
+  return cell;
+}
+
+function showDetailCard(row, title, items, projectId, contentType) {
+  openedDetailCard?.remove();
+
+  const projectUrl = `./pages/project.html?id=${projectId}`;
+  const detailCard = createDetailCard(title, items, projectUrl, contentType);
+  const cardTop = tableTitles.offsetTop + row.offsetTop;
+
+  projectsTable.append(detailCard);
+  detailCard.style.top = `${cardTop}px`;
+  openedDetailCard = detailCard;
+}
+
+function changeProjectView(view) {
+  tableState.view = view;
+  tableState.page = 1;
+  loadProjects();
+}
+
+await renderProfileHeader();
 
 recordsPerPageSelect.addEventListener("change", () => {
   tableState.limit = Number(recordsPerPageSelect.value);
@@ -72,11 +277,13 @@ recordsPerPageSelect.addEventListener("change", () => {
 });
 
 previousPageButton.addEventListener("click", async () => {
-  if (tableState.page > 1) {
-    tableState.page--;
-    await loadProjects();
-    window.scrollTo(0, 0);
+  if (tableState.page === 1) {
+    return;
   }
+
+  tableState.page--;
+  await loadProjects();
+  window.scrollTo(0, 0);
 });
 
 nextPageButton.addEventListener("click", async () => {
@@ -85,254 +292,34 @@ nextPageButton.addEventListener("click", async () => {
   window.scrollTo(0, 0);
 });
 
-const tableBody = document.querySelector("#projects-table-body");
-const projectsTable = document.querySelector(".projects-table");
-const tableTitles = document.querySelector(".table-titles");
-
-function renderTable(projects) {
-  tableBody.replaceChildren();
-
-  projects.forEach(async (project) => {
-    // Creamos la fila
-    const row = document.createElement("tr");
-
-    // Cliente
-    const clientCell = document.createElement("td");
-    const clientName = document.createElement("strong");
-    clientName.textContent = project.client?.name ?? "No asignado";
-    clientCell.append(clientName);
-
-    // Proyecto
-    const projectCell = document.createElement("td");
-    const projectLink = document.createElement("a");
-    projectLink.classList.add("project-link");
-    projectLink.href = `./pages/project.html?id=${project.id}`;
-    projectLink.textContent = project.name;
-    projectCell.append(projectLink);
-
-    // Entornos
-    const environmentsCell = document.createElement("td");
-    environmentsCell.classList.add("cell-centered");
-
-    const environments = project.environments;
-
-    environments.forEach((environment) => {
-      const environmentLabel = document.createElement("span");
-      const environmentLink = document.createElement("a");
-
-      environmentLabel.classList.add("environment");
-      environmentLabel.classList.add(`environment--${environment.type}`);
-      environmentLink.textContent = environment.type;
-      environmentLink.href = environment.url;
-      environmentLabel.append(environmentLink);
-      console.log(environmentLink);
-
-      environmentsCell.append(environmentLabel);
-    });
-
-    // Repositorios
-    const repositoriesCell = document.createElement("td");
-    repositoriesCell.classList.add("cell-centered");
-    repositoriesCell.classList.add("repositories-cell");
-
-    const repositories = project.repositories;
-
-    repositories.forEach((repository) => {
-      const repositoryLink = document.createElement("a");
-
-      repositoryLink.classList.add("repository-link");
-      repositoryLink.href = repository.url;
-      repositoryLink.textContent = repository.type;
-
-      repositoriesCell.append(repositoryLink);
-    });
-
-    // Servicios
-    const servicesCell = document.createElement("td");
-    servicesCell.classList.add("cell-centered");
-
-    const services = project.services;
-
-    services.forEach((service) => {
-      const serviceTag = document.createElement("span");
-
-      serviceTag.classList.add("tag");
-      serviceTag.textContent = service.name;
-
-      servicesCell.append(serviceTag);
-    });
-
-    // Dominios
-    const domainsCell = document.createElement("td");
-    domainsCell.classList.add("cell-centered");
-
-    const domains = project.domains;
-
-    domains.forEach((domain) => {
-      const domainLink = document.createElement("a");
-
-      domainLink.classList.add("domain-link");
-      domainLink.href = `https://${domain.url}`;
-      //El enlace se abre en una pestaña nueva
-      domainLink.target = "_blank";
-      domainLink.textContent = domain.url;
-
-      domainsCell.append(domainLink);
-    });
-
-    //Comandos
-
-    const commandsCell = document.createElement("td");
-    commandsCell.classList.add("cell-centered");
-
-    const commandsButton = document.createElement("button");
-    commandsButton.classList.add("table-count-button");
-    commandsButton.type = "button";
-    commandsButton.textContent = `${project.commands_count} comandos`;
-
-    commandsButton.addEventListener("click", async () => {
-      const commands = await getCommandsByProjectId(project.id);
-
-      const commandTexts = commands.map((command) => {
-        return {
-          name: command.name,
-          instruction: command.instruction,
-        };
-      });
-
-      showDetailCard(row, "Comandos", commandTexts, project.id, "commands");
-    });
-
-    commandsCell.append(commandsButton);
-
-    //Links
-
-    const linksCell = document.createElement("td");
-    linksCell.classList.add("cell-centered");
-
-    const linksButton = document.createElement("button");
-    linksButton.classList.add("table-count-button");
-    linksButton.type = "button";
-    linksButton.textContent = `${project.links_count} enlaces`;
-
-    linksButton.addEventListener("click", async () => {
-      const links = await getLinksByProjectId(project.id);
-
-      const linksText = links.map((link) => {
-        return {
-          title: link.title,
-          url: link.url,
-        };
-      });
-
-      showDetailCard(row, "Documentación", linksText, project.id, "links");
-    });
-
-    linksCell.append(linksButton);
-
-    //Notas
-
-    const notesCell = document.createElement("td");
-    notesCell.classList.add("cell-centered");
-
-    const notesButton = document.createElement("button");
-    notesButton.classList.add("table-count-button");
-    notesButton.type = "button";
-    notesButton.textContent = `${project.notes_count} notas`;
-
-    notesButton.addEventListener("click", async () => {
-      const notes = await getNotesByProjectId(project.id);
-
-      const notesText = notes.map((note) => {
-        return {
-          description: note.description,
-          content: note.content,
-        };
-      });
-
-      showDetailCard(row, "Notas", notesText, project.id, "notes");
-    });
-
-    notesCell.append(notesButton);
-
-    // Introducimos todas las celdas en la fila
-    row.append(
-      clientCell,
-      projectCell,
-      environmentsCell,
-      repositoriesCell,
-      servicesCell,
-      domainsCell,
-      commandsCell,
-      linksCell,
-      notesCell,
-    );
-
-    // Introducimos la fila en la tabla
-    tableBody.append(row);
-  });
-}
 loadProjects();
 
-let timeOut;
 searchInput.addEventListener("input", () => {
-  clearTimeout(timeOut);
+  clearTimeout(searchTimeout);
 
-  timeOut = setTimeout(() => {
+  searchTimeout = setTimeout(() => {
     tableState.search = searchInput.value.trim().toLowerCase();
     tableState.page = 1;
     loadProjects();
   }, 500);
 });
 
-const createNewProjectButton = document.querySelector("#button-new-project");
-
 createNewProjectButton.addEventListener("click", () => {
   window.location.href = "./pages/new-project.html";
 });
-
-const createNewClientButton = document.querySelector("#button-new-client");
 
 createNewClientButton.addEventListener("click", () => {
   window.location.href = "./pages/new-client.html";
 });
 
-let openedDetailCard;
+showArchivedButton.addEventListener("click", () => {
+  changeProjectView("archived");
+});
 
-function showDetailCard(row, title, items, projectId, contentType) {
-  if (openedDetailCard) {
-    openedDetailCard.remove();
-  }
+showActiveButton.addEventListener("click", () => {
+  changeProjectView("active");
+});
 
-  const projectUrl = `./pages/project.html?id=${projectId}`;
-
-  const detailCard = createDetailCard(title, items, projectUrl, contentType);
-
-  projectsTable.append(detailCard);
-  // Sitúa la tarjeta a la misma altura que la fila que abrió el detalle.
-  const tableTop = tableTitles.offsetTop;
-  const rowTop = row.offsetTop;
-  const cardTop = tableTop + rowTop;
-
-  detailCard.style.top = `${cardTop}px`;
-
-  openedDetailCard = detailCard;
-}
-
-showArchivedButton.onclick = () => {
-  tableState.view = "archived";
-  tableState.page = 1;
-  loadProjects();
-};
-
-showActivedButton.onclick = () => {
-  tableState.view = "active";
-  tableState.page = 1;
-  loadProjects();
-};
-
-showFavoritesButton.onclick = () => {
-  tableState.view = "favorites";
-  tableState.page = 1;
-  loadProjects();
-};
+showFavoritesButton.addEventListener("click", () => {
+  changeProjectView("favorites");
+});

@@ -1,6 +1,5 @@
-import { sendData, modifyData, getAdminData } from "./methods.js";
-
-const API_URL = "http://127.0.0.1:8000/api/v1";
+import { sendData, modifyData, deleteData, getAdminData } from "./methods.js";
+import { API_BASE_URL } from "./config.js";
 
 export async function getUsers(entity, limit, offset, search) {
   return getAdminData(
@@ -14,7 +13,7 @@ export async function getUsers(entity, limit, offset, search) {
 
 export async function setUser(user) {
   return sendData(
-    `${API_URL}/admin/users`,
+    `${API_BASE_URL}/admin/users`,
     user,
     "No se ha podido crear el usuario",
   );
@@ -22,7 +21,7 @@ export async function setUser(user) {
 
 export async function modifyUser(user, id) {
   return modifyData(
-    `${API_URL}/admin/users/${id}`,
+    `${API_BASE_URL}/admin/users/${id}`,
     user,
     "No se ha podido modificar el usuario",
   );
@@ -30,7 +29,7 @@ export async function modifyUser(user, id) {
 
 export async function deleteUser(id) {
   return deleteData(
-    `${API_URL}/admin/users/${id}`,
+    `${API_BASE_URL}/admin/users/${id}`,
     "No se ha podido eliminar el usuario",
   );
 }
