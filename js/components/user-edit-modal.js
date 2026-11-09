@@ -39,7 +39,7 @@ export async function createEditUserModal(user, refreshUsers) {
     createField("Email", formInputs.emailInput),
     createField("Nombre de usuario", formInputs.usernameInput),
     createField("Rol", formInputs.roleSelect),
-    formInputs.statusSelect,
+    formInputs.statusField,
     clientAccessList.element,
     createModalActions(overlay, saveChanges),
   );
@@ -50,13 +50,16 @@ export async function createEditUserModal(user, refreshUsers) {
 
 function createUserFormInputs(user) {
   const roleSelect = createRoleSelect();
-  const statusSelect = createUserStatusField(user.is_active);
+  const { field: statusField, select: statusSelect } = createUserStatusField(
+    user.is_active,
+  );
   roleSelect.value = user.role;
 
   return {
     emailInput: createUserInput("email", "email", user.email),
     usernameInput: createUserInput("text", "username", user.username),
     roleSelect,
+    statusField,
     statusSelect,
   };
 }
@@ -116,6 +119,7 @@ async function saveUserChanges({
     user.email = userChanges.email;
     user.username = userChanges.username;
     user.role = userChanges.role;
+    user.is_active = userChanges.isActive;
 
     await saveUserAndClients({
       user,
@@ -141,7 +145,12 @@ async function saveUserChanges({
   }
 }
 
-function getUserChanges({ emailInput, usernameInput, roleSelect }) {
+function getUserChanges({
+  emailInput,
+  usernameInput,
+  roleSelect,
+  statusSelect,
+}) {
   const email = emailInput.value.trim();
   const username = usernameInput.value.trim();
 
@@ -149,7 +158,12 @@ function getUserChanges({ emailInput, usernameInput, roleSelect }) {
     return null;
   }
 
-  return { email, username, role: roleSelect.value };
+  return {
+    email,
+    username,
+    role: roleSelect.value,
+    isActive: statusSelect.value === "true",
+  };
 }
 
 async function saveUserAndClients({
@@ -268,7 +282,7 @@ function createUserStatusField(isActive = true) {
   statusContainer.append(indicator, select);
   field.append(label, statusContainer);
 
-  return field;
+  return { field, select };
 }
 
 function createField(labelText, input) {

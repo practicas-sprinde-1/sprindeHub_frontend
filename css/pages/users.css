@@ -205,3 +205,30 @@ main {
   color: var(--muted);
   cursor: not-allowed;
 }
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.status--active {
+  background: var(--success-background);
+  color: var(--success-text);
+}
+.status--inactive {
+  background: var(--inactive-background);
+  color: var(--test);
+}
