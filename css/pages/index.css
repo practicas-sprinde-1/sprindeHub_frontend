@@ -65,19 +65,19 @@ main {
 }
 
 /* Buscador. */
-.table-controls {
+.table-actions {
   display: flex;
   align-items: center;
   gap: 16px;
   margin: 22px 28px;
 }
 
-.table-controls .search {
+.table-actions .search {
   flex: 1;
   margin: 0;
 }
 
-.table-controls .status-filter {
+.table-actions .status-filter {
   gap: 10px;
   margin: 0;
   padding: 0;

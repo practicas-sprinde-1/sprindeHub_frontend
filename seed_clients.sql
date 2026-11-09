@@ -1,5 +1,4 @@
 -- Seed de 50 clientes.
--- Si el modelo del backend usa el nombre singular, sustituye `clients` por `client`.
 INSERT INTO clients (id, name, cif, phone, is_active) VALUES
   (1, 'ACME', 'A12345678', '+34 910 123 456', TRUE),
   (2, 'Norte Digital', 'B23456789', '+34 911 234 567', TRUE),

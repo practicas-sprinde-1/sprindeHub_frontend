@@ -6,6 +6,17 @@ export function createDetailCard(title, items, projectUrl, contentType) {
   const card = document.createElement("section");
   card.classList.add("info-card");
 
+  const { header, closeButton } = createCardHeader(title);
+  const itemList = createItemList(items, contentType);
+  const projectLink = createProjectLink(projectUrl);
+
+  card.append(header, itemList, projectLink);
+  closeButton.addEventListener("click", () => card.remove());
+
+  return card;
+}
+
+function createCardHeader(title) {
   const header = document.createElement("header");
   header.classList.add("info-card-header");
 
@@ -18,33 +29,46 @@ export function createDetailCard(title, items, projectUrl, contentType) {
 
   header.append(titleElement, closeButton);
 
-  const list = document.createElement("ul");
-  list.classList.add("info-card-list");
+  return { header, closeButton };
+}
 
-  // Cada tipo de detalle se pinta con su formato propio.
-  if (contentType === "commands") {
-    renderCommands(list, items);
-  } else if (contentType === "links") {
-    renderDocumentationLinks(list, items);
-  } else if (contentType === "notes") {
-    renderNotes(list, items);
-  } else {
-    items.forEach((itemData) => {
-      const item = document.createElement("li");
-      item.textContent = itemData;
-      list.append(item);
-    });
+function createItemList(items, contentType) {
+  const itemList = document.createElement("ul");
+  itemList.classList.add("info-card-list");
+
+  renderItemsByType(itemList, items, contentType);
+
+  return itemList;
+}
+
+function renderItemsByType(itemList, items, contentType) {
+  switch (contentType) {
+    case "commands":
+      renderCommands(itemList, items);
+      return;
+    case "links":
+      renderDocumentationLinks(itemList, items);
+      return;
+    case "notes":
+      renderNotes(itemList, items);
+      return;
+    default:
+      renderTextItems(itemList, items);
   }
+}
 
-  const detailLink = document.createElement("a");
-  detailLink.href = projectUrl;
-  detailLink.textContent = "Ver proyecto completo";
-
-  card.append(header, list, detailLink);
-
-  closeButton.addEventListener("click", () => {
-    card.remove();
+function renderTextItems(itemList, items) {
+  items.forEach((itemText) => {
+    const listItem = document.createElement("li");
+    listItem.textContent = itemText;
+    itemList.append(listItem);
   });
+}
 
-  return card;
+function createProjectLink(projectUrl) {
+  const projectLink = document.createElement("a");
+  projectLink.href = projectUrl;
+  projectLink.textContent = "Ver proyecto completo";
+
+  return projectLink;
 }

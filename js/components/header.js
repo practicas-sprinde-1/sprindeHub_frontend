@@ -1,111 +1,122 @@
-import { logout } from "../api/session.js";
+import { expireSession } from "../api/methods.js";
 
-// Comprueba la preferencia guardada antes de renderizar el encabezado.
-if (localStorage.getItem("theme") === "dark") {
-  document.body.classList.add("dark-mode");
-}
+const DARK_MODE_CLASS = "dark-mode";
+const THEME_STORAGE_KEY = "theme";
+const DARK_THEME = "dark";
+const LIGHT_THEME = "light";
+
+const NAVIGATION_ITEMS = [
+  {
+    className: "main-header-projects",
+    label: "Proyectos",
+    pageName: "index.html",
+  },
+  {
+    className: "main-header-clients",
+    label: "Clientes",
+    pageName: "clients.html",
+  },
+  { className: "main-header-users", label: "Usuarios", pageName: "users.html" },
+  { className: "main-header-logs", label: "Registros", pageName: "logs.html" },
+];
+
+loadTheme();
 
 export function createHeader(userName, profileUrl) {
   const header = document.createElement("header");
   header.classList.add("main-header");
+  header.append(
+    createProfileLink(userName, profileUrl),
+    createHeaderActions(profileUrl),
+  );
 
+  return header;
+}
+
+function loadTheme() {
+  if (localStorage.getItem(THEME_STORAGE_KEY) !== DARK_THEME) {
+    return;
+  }
+
+  document.body.classList.add(DARK_MODE_CLASS);
+}
+
+function createProfileLink(userName, profileUrl) {
   const profileLink = document.createElement("a");
   profileLink.classList.add("main-header-profile");
   profileLink.href = profileUrl;
   profileLink.textContent = userName;
 
-  const logoutButton = document.createElement("button");
-  logoutButton.classList.add("main-header-logout");
-  logoutButton.type = "button";
-  logoutButton.textContent = "Salir";
+  return profileLink;
+}
 
-  logoutButton.addEventListener("click", () => {
-    logout();
+function createHeaderActions(profileUrl) {
+  const actionContainer = document.createElement("div");
+  actionContainer.classList.add("main-header-actions");
+  actionContainer.append(
+    ...createNavigationButtons(profileUrl),
+    createLogoutButton(),
+    createThemeButton(),
+  );
+
+  return actionContainer;
+}
+
+function createNavigationButtons(profileUrl) {
+  return NAVIGATION_ITEMS.map(({ className, label, pageName }) => {
+    const navigationButton = createButton(className, label);
+    navigationButton.addEventListener("click", () => {
+      window.location.href = getPageUrl(profileUrl, pageName);
+    });
+
+    return navigationButton;
   });
+}
 
-  const themeButton = document.createElement("button");
-  themeButton.classList.add("main-header-theme");
+function createLogoutButton() {
+  const logoutButton = createButton("main-header-logout", "Salir");
+  logoutButton.addEventListener("click", expireSession);
+
+  return logoutButton;
+}
+
+function createThemeButton() {
+  const themeButton = createButton("main-header-theme", getThemeButtonLabel());
   themeButton.id = "theme-toggle";
-  themeButton.type = "button";
-  themeButton.textContent = "Modo oscuro";
+  themeButton.addEventListener("click", () => changeTheme(themeButton));
 
-  const projectButton = document.createElement("button");
-  projectButton.classList.add("main-header-projects");
-  projectButton.type = "button";
-  projectButton.textContent = "Proyectos";
+  return themeButton;
+}
 
-  projectButton.addEventListener("click", () => {
-    window.location.href = getPageUrl(profileUrl, "index.html");
-  });
+function createButton(className, label) {
+  const button = document.createElement("button");
+  button.classList.add(className);
+  button.type = "button";
+  button.textContent = label;
 
-  const clientButton = document.createElement("button");
-  clientButton.classList.add("main-header-clients");
-  clientButton.type = "button";
-  clientButton.textContent = "Clientes";
+  return button;
+}
 
-  clientButton.addEventListener("click", () => {
-    window.location.href = getPageUrl(profileUrl, "clients.html");
-  });
+function changeTheme(themeButton) {
+  const isDarkModeEnabled = document.body.classList.toggle(DARK_MODE_CLASS);
+  const selectedTheme = isDarkModeEnabled ? DARK_THEME : LIGHT_THEME;
 
-  const usersButton = document.createElement("button");
-  usersButton.classList.add("main-header-users");
-  usersButton.type = "button";
-  usersButton.textContent = "Usuarios";
+  localStorage.setItem(THEME_STORAGE_KEY, selectedTheme);
+  themeButton.textContent = getThemeButtonLabel();
+}
 
-  usersButton.addEventListener("click", () => {
-    window.location.href = getPageUrl(profileUrl, "users.html");
-  });
-
-  const logsButton = document.createElement("button");
-  logsButton.classList.add("main-header-logs");
-  logsButton.type = "button";
-  logsButton.textContent = "Registros";
-
-  logsButton.addEventListener("click", () => {
-    window.location.href = getPageUrl(profileUrl, "logs.html");
-  });
-
-  const actionButtons = document.createElement("div");
-  actionButtons.classList.add("main-header-actions");
-
-  actionButtons.append(projectButton, clientButton);
-
-  actionButtons.append(usersButton, logsButton, logoutButton, themeButton);
-
-  if (document.body.classList.contains("dark-mode")) {
-    themeButton.textContent = "Modo claro";
-  }
-
-  themeButton.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-
-    if (document.body.classList.contains("dark-mode")) {
-      localStorage.setItem("theme", "dark");
-      themeButton.textContent = "Modo claro";
-    } else {
-      localStorage.setItem("theme", "light");
-      themeButton.textContent = "Modo oscuro";
-    }
-  });
-
-  header.appendChild(profileLink);
-  header.appendChild(actionButtons);
-  return header;
+function getThemeButtonLabel() {
+  return document.body.classList.contains(DARK_MODE_CLASS)
+    ? "Modo claro"
+    : "Modo oscuro";
 }
 
 function getPageUrl(profileUrl, pageName) {
-  // Las rutas cambian según si la página actual está en la raíz o en /pages.
-  if (profileUrl.startsWith("./pages/")) {
-    if (pageName === "index.html") {
-      return "./index.html";
-    }
-
-    return `./pages/${pageName}`;
-  }
+  const isPagesRoute = profileUrl.startsWith("./pages/");
 
   if (pageName === "index.html") {
-    return "../index.html";
+    return isPagesRoute ? "./index.html" : "../index.html";
   }
 
-  return `./${pageName}`;
+  return isPagesRoute ? `./pages/${pageName}` : `./${pageName}`;
 }

@@ -3,12 +3,11 @@ import {
   sendData,
   modifyData,
   deleteData,
-  archiveOrRestoreData,
+  changeStatus,
   getLightData,
   getPaginatedData,
 } from "./methods.js";
-
-const API_URL = "http://127.0.0.1:8000/api/v1";
+import { API_BASE_URL } from "./config.js";
 
 export async function getClients(entity, limit, offset, search) {
   return getPaginatedData(
@@ -37,40 +36,40 @@ export async function getArchivedClients(limit, offset, search) {
   );
 }
 
-export async function getFavoriteClients(limit = 20, offset = 0) {
+export async function getFavoriteClients(limit = 20, offset = 0, search = "") {
   return getPaginatedData(
     "clients/favorites",
     limit,
     offset,
-    "",
+    search,
     "No se han podido obtener los clientes favoritos.",
   );
 }
 
 export async function favoriteClient(clientId) {
-  return archiveOrRestoreData(
-    `${API_URL}/clients/${clientId}/favorite?client_id=${clientId}`,
+  return changeStatus(
+    `${API_BASE_URL}/clients/${clientId}/favorite?client_id=${clientId}`,
     "No se ha podido añadir el cliente a favoritos.",
   );
 }
 
 export async function unfavoriteClient(clientId) {
-  return archiveOrRestoreData(
-    `${API_URL}/clients/${clientId}/unfavorite?client_id=${clientId}`,
+  return changeStatus(
+    `${API_BASE_URL}/clients/${clientId}/unfavorite?client_id=${clientId}`,
     "No se ha podido eliminar el cliente de favoritos.",
   );
 }
 
 export async function getClientById(id) {
   return getData(
-    `${API_URL}/clients/${id}`,
+    `${API_BASE_URL}/clients/${id}`,
     "No se ha podido obtener el cliente con ese id",
   );
 }
 
 export async function setClient(client) {
   return sendData(
-    `${API_URL}/clients`,
+    `${API_BASE_URL}/clients`,
     client,
     "No se ha podido guardar el cliente. Inténtelo de nuevo.",
   );
@@ -78,7 +77,7 @@ export async function setClient(client) {
 
 export async function modifyClient(client, id) {
   return modifyData(
-    `${API_URL}/clients/${id}`,
+    `${API_BASE_URL}/clients/${id}`,
     client,
     "No se ha podido modificar el cliente.",
   );
@@ -86,22 +85,22 @@ export async function modifyClient(client, id) {
 
 export async function deleteClientById(id) {
   return deleteData(
-    `${API_URL}/clients/${id}`,
+    `${API_BASE_URL}/clients/${id}`,
     "No se ha podido borrar el cliente",
   );
 }
 
 export async function archiveClient(id) {
-  return archiveOrRestoreData(
-    `${API_URL}/clients/${id}/archive`,
+  return changeStatus(
+    `${API_BASE_URL}/clients/${id}/archive`,
 
     "No se ha podido archivar el cliente.",
   );
 }
 
 export async function restoreClient(id) {
-  return archiveOrRestoreData(
-    `${API_URL}/clients/${id}/restore`,
+  return changeStatus(
+    `${API_BASE_URL}/clients/${id}/restore`,
     "No se ha podido restaurar el cliente.",
   );
 }

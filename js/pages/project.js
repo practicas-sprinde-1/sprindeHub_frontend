@@ -15,89 +15,110 @@ import { showNotification } from "../components/notifications.js";
 start();
 
 async function start() {
-  const user = sessionStorage.getItem("userInfo");
-  let cachedUser;
-  if (user) {
-    cachedUser = JSON.parse(user);
-  }
-  document
-    .querySelector("#header-container")
-    .append(createHeader(cachedUser.username, "./profile.html"));
+  renderHeader();
 
-  const projectDetail = document.querySelector("#project-detail");
-  const projectError = document.querySelector("#project-error");
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const projectId = Number(searchParams.get("id"));
-
+  const projectId = getProjectIdFromUrl();
   const project = await getProjectById(projectId);
 
-  if (!Number.isInteger(projectId) || projectId < 1 || !project) {
-    projectError.hidden = false;
-    projectError.textContent =
-      "Ha ocurrido algún error con este proyecto. Inténtelo de nuevo más tarde";
-  } else {
-    renderProject(project);
-    projectDetail.hidden = false;
+  if (!isValidProject(projectId, project)) {
+    showProjectError();
+    return;
   }
+
+  renderProject(project);
+  document.querySelector("#project-detail").hidden = false;
+}
+
+function renderHeader() {
+  const storedUser = sessionStorage.getItem("userInfo");
+  const user = storedUser ? JSON.parse(storedUser) : undefined;
+
+  document
+    .querySelector("#header-container")
+    .append(createHeader(user.username, "./profile.html"));
+}
+
+function getProjectIdFromUrl() {
+  const searchParams = new URLSearchParams(window.location.search);
+  return Number(searchParams.get("id"));
+}
+
+function isValidProject(projectId, project) {
+  return Number.isInteger(projectId) && projectId >= 1 && Boolean(project);
+}
+
+function showProjectError() {
+  const errorMessage = document.querySelector("#project-error");
+  errorMessage.hidden = false;
+  errorMessage.textContent =
+    "Ha ocurrido algún error con este proyecto. Inténtelo de nuevo más tarde";
 }
 
 function renderProject(project) {
+  renderProjectData(project);
+  renderProjectData(project);
+  configureProjectActions(project);
+}
+
+function renderProjectData(project) {
   document.title = `${project.name} - Sprinde`;
-  const clientLink = document.querySelector("#project-client");
-  if (project.client !== null) {
-    const title = `Cliente: ${project.client?.name}`;
-    clientLink.textContent = title ?? "No asignado";
-    clientLink.href = `./client.html?id=${project.client?.id}`;
-  }
+  renderClient(project.client);
 
   document.querySelector("#project-name").textContent = project.name;
   document.querySelector("#project-description").textContent =
     project.description;
 
-  const status = document.querySelector("#project-status");
-  status.textContent = project.is_active ? "Activo" : "Inactivo";
+  const statusElement = document.querySelector("#project-status");
+  statusElement.textContent = project.is_active ? "Activo" : "Inactivo";
+  statusElement.classList.toggle("project-status--active", project.is_active);
+  statusElement.classList.toggle(
+    "project-status--inactive",
+    !project.is_active,
+  );
+}
 
-  // Muestra el estilo correspondiente al estado actual del proyecto.
-  status.classList.toggle("project-status--active", project.is_active);
-  status.classList.toggle("project-status--inactive", !project.is_active);
+function renderClient(client) {
+  if (client === null) return;
 
-  const environmentsInfo = project.environments.map((environment) => ({
-    label: environment.type,
-    url: environment.url,
-  }));
+  const clientLink = document.querySelector("#project-client");
+  clientLink.textContent = `Cliente: ${client?.name}`;
+  clientLink.href = `./client.html?id=${client?.id}`;
+}
 
-  const repositoriesInfo = project.repositories.map((repository) => ({
-    label: repository.type,
-    url: repository.url,
-  }));
+function renderProjectData(project) {
+  renderLinkList(
+    "#project-environments",
+    project.environments.map((environment) => ({
+      label: environment.type,
+      url: environment.url,
+    })),
+  );
 
-  const servicesInfo = project.services.map((service) => service.name);
+  renderLinkList(
+    "#project-repositories",
+    project.repositories.map((repository) => ({
+      label: repository.type,
+      url: repository.url,
+    })),
+  );
 
-  const domainsInfo = project.domains.map((domain) => ({
-    label: domain.url,
-    url: domain.url,
-  }));
+  renderList(
+    "#project-services",
+    project.services.map((service) => service.name),
+  );
 
-  const commandsInfo = project.commands.map((command) => ({
-    name: command.name,
-    instruction: command.instruction,
-  }));
+  renderLinkList(
+    "#project-domains",
+    project.domains.map((domain) => ({
+      label: domain.url,
+      url: domain.url,
+    })),
+  );
 
-  const linksInfo = project.links.map((link) => ({
-    title: link.title,
-    url: link.url,
-  }));
+  renderCommandsDocsAndNotes(project);
+}
 
-  const notesInfo = project.notes.map((note) => ({
-    description: note.description,
-    content: note.content,
-  }));
-
-  renderLinkList("#project-environments", environmentsInfo);
-  renderLinkList("#project-repositories", repositoriesInfo);
-  renderList("#project-services", servicesInfo);
-  renderLinkList("#project-domains", domainsInfo);
+function renderCommandsDocsAndNotes(project) {
   const commandsList = document.querySelector("#project-commands");
   const documentationList = document.querySelector("#project-links");
   const notesList = document.querySelector("#project-notes");
@@ -105,63 +126,112 @@ function renderProject(project) {
   commandsList.replaceChildren();
   documentationList.replaceChildren();
   notesList.replaceChildren();
-  renderCommands(commandsList, commandsInfo);
-  renderDocumentationLinks(documentationList, linksInfo);
-  renderNotes(notesList, notesInfo);
 
-  const modifyProject = document.querySelector("#button-edit-project");
-  modifyProject.onclick = async () => {
+  renderCommands(
+    commandsList,
+    project.commands.map((command) => ({
+      name: command.name,
+      instruction: command.instruction,
+    })),
+  );
+
+  renderDocumentationLinks(
+    documentationList,
+    project.links.map((link) => ({
+      title: link.title,
+      url: link.url,
+    })),
+  );
+
+  renderNotes(
+    notesList,
+    project.notes.map((note) => ({
+      description: note.description,
+      content: note.content,
+    })),
+  );
+}
+
+function configureProjectActions(project) {
+  configureEditAction(project);
+  configureFavoriteAction(project);
+  configureDeleteAction(project);
+}
+
+function configureEditAction(project) {
+  const editButton = document.querySelector("#button-edit-project");
+
+  editButton.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
+
     const modal = await createEditModalProject(project, renderProject);
     document.body.append(modal);
   };
+}
 
+function configureFavoriteAction(project) {
   const favoriteButton = document.querySelector("#button-favorite-project");
-
-  function updateFavoriteButtonUI() {
-    favoriteButton.textContent = project.is_favorite
-      ? "Quitar de favoritos"
-      : "Añadir a favoritos";
-  }
-  updateFavoriteButtonUI();
+  updateFavoriteButton(favoriteButton, project.is_favorite);
 
   favoriteButton.onclick = async () => {
     favoriteButton.disabled = true;
-    const isAlreadyFavorite = project.is_favorite;
+    const wasFavorite = project.is_favorite;
+
     try {
-      if (isAlreadyFavorite) {
-        await unfavoriteProject(project.id);
-        project.is_favorite = false;
-        showNotification({
-          type: "success",
-          title: "Proyecto eliminado de favoritos",
-          message: "Se ha eliminado de favoritos correctamente",
-        });
-      } else {
-        await favoriteProject(project.id);
-        project.is_favorite = true;
-        showNotification({
-          type: "success",
-          title: "Proyecto añadido a favoritos",
-          message: "Se ha añadido a favoritos correctamente",
-        });
-      }
-      updateFavoriteButtonUI();
+      await updateFavoriteStatus(project, wasFavorite);
+      showFavoriteSuccessNotification(wasFavorite);
+      updateFavoriteButton(favoriteButton, project.is_favorite);
     } catch (error) {
-      showNotification({
-        type: "error",
-        title: isAlreadyFavorite
-          ? "Error al eliminar de favoritos"
-          : "Error al añadirlo a favoritos",
-        message: error.message,
-      });
+      showFavoriteErrorNotification(wasFavorite, error);
     } finally {
       favoriteButton.disabled = false;
     }
   };
+}
 
-  const deleteProject = document.querySelector(".button-delete-project");
-  deleteProject.onclick = () => {
+async function updateFavoriteStatus(project, wasFavorite) {
+  if (wasFavorite) {
+    await unfavoriteProject(project.id);
+    project.is_favorite = false;
+    return;
+  }
+
+  await favoriteProject(project.id);
+  project.is_favorite = true;
+}
+
+function updateFavoriteButton(favoriteButton, isFavorite) {
+  favoriteButton.textContent = isFavorite
+    ? "Quitar de favoritos"
+    : "Añadir a favoritos";
+}
+
+function showFavoriteSuccessNotification(wasFavorite) {
+  showNotification({
+    type: "success",
+    title: wasFavorite
+      ? "Proyecto eliminado de favoritos"
+      : "Proyecto añadido a favoritos",
+    message: wasFavorite
+      ? "Se ha eliminado de favoritos correctamente"
+      : "Se ha añadido a favoritos correctamente",
+  });
+}
+
+function showFavoriteErrorNotification(wasFavorite, error) {
+  showNotification({
+    type: "error",
+    title: wasFavorite
+      ? "Error al eliminar de favoritos"
+      : "Error al añadirlo a favoritos",
+    message: error.message,
+  });
+}
+
+function configureDeleteAction(project) {
+  const deleteButton = document.querySelector(".button-delete-project");
+
+  deleteButton.onclick = () => {
     if (document.querySelector(".confirm-overlay")) return;
 
     const confirmModal = createConfirmModal(
@@ -179,13 +249,13 @@ function renderProject(project) {
   };
 }
 
-function renderList(selector, texts) {
+function renderList(selector, items) {
   const list = document.querySelector(selector);
   list.replaceChildren();
 
-  texts.forEach((text) => {
+  items.forEach((item) => {
     const listItem = document.createElement("li");
-    listItem.textContent = text;
+    listItem.textContent = item;
     list.append(listItem);
   });
 }

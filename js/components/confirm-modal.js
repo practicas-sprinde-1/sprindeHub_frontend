@@ -1,12 +1,31 @@
 import { showNotification } from "./notifications.js";
 
 export function createConfirmModal(title, description, onConfirm) {
-  const overlay = document.createElement("div");
-  overlay.classList.add("confirm-overlay");
+  const modalOverlay = document.createElement("div");
+  modalOverlay.classList.add("confirm-overlay");
 
   const modal = document.createElement("section");
   modal.classList.add("confirm-modal");
 
+  const { titleElement, descriptionElement } = createModalContent(
+    title,
+    description,
+  );
+  const { actionsContainer, confirmButton, cancelButton } =
+    createModalActions();
+
+  confirmButton.addEventListener("click", () =>
+    handleConfirmation(modalOverlay, confirmButton, onConfirm),
+  );
+  cancelButton.addEventListener("click", () => modalOverlay.remove());
+
+  modal.append(titleElement, descriptionElement, actionsContainer);
+  modalOverlay.append(modal);
+
+  return modalOverlay;
+}
+
+function createModalContent(title, description) {
   const titleElement = document.createElement("h1");
   titleElement.classList.add("modal-title");
   titleElement.textContent = title;
@@ -14,42 +33,45 @@ export function createConfirmModal(title, description, onConfirm) {
   const descriptionElement = document.createElement("p");
   descriptionElement.textContent = description;
 
+  return { titleElement, descriptionElement };
+}
+
+function createModalActions() {
   const confirmButton = document.createElement("button");
   confirmButton.type = "button";
   confirmButton.classList.add("modal-delete-button");
   confirmButton.textContent = "Borrar";
-  confirmButton.addEventListener("click", async () => {
-    try {
-      confirmButton.disabled = true;
-      await onConfirm();
-      showNotification({
-        type: "success",
-        title: "Eliminado",
-        message: "Los datos se han eliminado correctamente.",
-      });
-      overlay.remove();
-    } catch (error) {
-      confirmButton.disabled = false;
-      showNotification({
-        type: "error",
-        title: "No se ha podido borrar",
-        message: error.message,
-        duration: 7000,
-      });
-    }
-  });
 
   const cancelButton = document.createElement("button");
   cancelButton.type = "button";
   cancelButton.classList.add("modal-cancel-button");
   cancelButton.textContent = "Cancelar";
-  cancelButton.addEventListener("click", () => overlay.remove());
 
-  const actions = document.createElement("div");
-  actions.classList.add("modal-actions");
-  actions.append(confirmButton, cancelButton);
+  const actionsContainer = document.createElement("div");
+  actionsContainer.classList.add("modal-actions");
+  actionsContainer.append(confirmButton, cancelButton);
 
-  modal.append(titleElement, descriptionElement, actions);
-  overlay.append(modal);
-  return overlay;
+  return { actionsContainer, confirmButton, cancelButton };
+}
+
+async function handleConfirmation(modalOverlay, confirmButton, onConfirm) {
+  confirmButton.disabled = true;
+
+  try {
+    await onConfirm();
+    showNotification({
+      type: "success",
+      title: "Eliminado",
+      message: "Los datos se han eliminado correctamente.",
+    });
+    modalOverlay.remove();
+  } catch (error) {
+    confirmButton.disabled = false;
+    showNotification({
+      type: "error",
+      title: "No se ha podido borrar",
+      message: error.message,
+      duration: 7000,
+    });
+  }
 }
