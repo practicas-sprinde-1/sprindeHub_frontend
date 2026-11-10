@@ -5,6 +5,7 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
+import { createCheckboxListManager } from "./checkbox-list-manager.js";
 import { showNotification } from "./notifications.js";
 
 export async function createEditUserModal(user, refreshUsers) {
@@ -39,6 +40,7 @@ export async function createEditUserModal(user, refreshUsers) {
     createField("Email", formInputs.emailInput),
     createField("Nombre de usuario", formInputs.usernameInput),
     createField("Rol", formInputs.roleSelect),
+    formInputs.statusField,
     clientAccessList.element,
     createModalActions(overlay, saveChanges),
   );
@@ -49,12 +51,17 @@ export async function createEditUserModal(user, refreshUsers) {
 
 function createUserFormInputs(user) {
   const roleSelect = createRoleSelect();
+  const { field: statusField, select: statusSelect } = createUserStatusField(
+    user.is_active,
+  );
   roleSelect.value = user.role;
 
   return {
     emailInput: createUserInput("email", "email", user.email),
     usernameInput: createUserInput("text", "username", user.username),
     roleSelect,
+    statusField,
+    statusSelect,
   };
 }
 
@@ -113,8 +120,9 @@ async function saveUserChanges({
     user.email = userChanges.email;
     user.username = userChanges.username;
     user.role = userChanges.role;
+    user.is_active = userChanges.isActive;
 
-    await persistUserChanges({
+    await saveUserAndClients({
       user,
       clients,
       initialClientIds,
@@ -138,7 +146,12 @@ async function saveUserChanges({
   }
 }
 
-function getUserChanges({ emailInput, usernameInput, roleSelect }) {
+function getUserChanges({
+  emailInput,
+  usernameInput,
+  roleSelect,
+  statusSelect,
+}) {
   const email = emailInput.value.trim();
   const username = usernameInput.value.trim();
 
@@ -146,10 +159,15 @@ function getUserChanges({ emailInput, usernameInput, roleSelect }) {
     return null;
   }
 
-  return { email, username, role: roleSelect.value };
+  return {
+    email,
+    username,
+    role: roleSelect.value,
+    isActive: statusSelect.value === "true",
+  };
 }
 
-async function persistUserChanges({
+async function saveUserAndClients({
   user,
   clients,
   initialClientIds,
@@ -220,6 +238,54 @@ function createRoleSelect() {
   return select;
 }
 
+function createUserStatusField(isActive = true) {
+  const field = document.createElement("div");
+  field.classList.add("edit-user-field");
+
+  const label = document.createElement("label");
+  label.textContent = "Estado";
+  label.htmlFor = "edit-user-status";
+
+  const select = document.createElement("select");
+  select.name = "status";
+  select.id = "edit-user-status";
+
+  const options = [
+    { value: "true", text: "Activo" },
+    { value: "false", text: "Inactivo" },
+  ];
+
+  options.forEach(({ value, text }) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    select.append(option);
+  });
+
+  const statusContainer = document.createElement("div");
+  statusContainer.classList.add("user-status-container");
+
+  const indicator = document.createElement("span");
+  indicator.classList.add("user-status-indicator");
+
+  select.value = String(isActive);
+
+  const updateStatusIndicator = () => {
+    const isActive = select.value === "true";
+
+    indicator.classList.toggle("user-status-indicator--active", isActive);
+    indicator.classList.toggle("user-status-indicator--inactive", !isActive);
+  };
+
+  select.addEventListener("change", updateStatusIndicator);
+  updateStatusIndicator();
+
+  statusContainer.append(indicator, select);
+  field.append(label, statusContainer);
+
+  return { field, select };
+}
+
 function createField(labelText, input) {
   const field = document.createElement("div");
   field.classList.add("user-modal-field");
@@ -261,55 +327,92 @@ function createClientAccessList(clients, initialClientIds) {
   const title = document.createElement("h2");
   title.textContent = "Clientes";
 
+  const clientAccessToolbar = createClientAccessToolbar();
+
   const list = document.createElement("ul");
   list.classList.add("user-client-access-list");
+  list.setAttribute("data-checkbox-list", "");
 
-  let selectedClientIds = [...initialClientIds];
   const orderedClients = orderClientsByAccess(clients, initialClientIds);
 
   orderedClients.forEach((client) => {
-    const { element, checkbox } = createClientAccessOption(
+    const clientAccessOption = createClientAccessOption(
       client,
       initialClientIds,
     );
 
-    checkbox.addEventListener("change", () => {
-      selectedClientIds = updateSelectedClientIds(
-        selectedClientIds,
-        client.id,
-        checkbox.checked,
-      );
-    });
-
-    list.append(element);
+    list.append(clientAccessOption);
   });
 
-  section.append(title, list);
+  section.append(title, clientAccessToolbar, list);
+
+  const checkboxListManager = createCheckboxListManager(section);
 
   return {
     element: section,
-    getSelectedClientIds: () => selectedClientIds,
+    getSelectedClientIds: () => {
+      const selectedClientValues = checkboxListManager.getSelectedValues();
+
+      // Los valores del DOM son texto, pero las relaciones usan IDs numéricos.
+      return selectedClientValues.map((clientValue) => {
+        return Number(clientValue);
+      });
+    },
   };
 }
 
+function createClientAccessToolbar() {
+  const toolbar = document.createElement("div");
+  toolbar.classList.add("user-client-access-toolbar");
+
+  const counterText = document.createElement("span");
+  counterText.classList.add("user-client-access-counter");
+  counterText.textContent = "Seleccionados: ";
+
+  const counterValue = document.createElement("span");
+  counterValue.setAttribute("data-checkbox-counter", "");
+  counterValue.setAttribute("aria-live", "polite");
+
+  const searchLabel = document.createElement("label");
+  searchLabel.classList.add("user-client-access-search");
+
+  const searchLabelText = document.createElement("span");
+  searchLabelText.textContent = "Buscar clientes";
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "search";
+  searchInput.placeholder = "Escribe el nombre de un cliente";
+  searchInput.setAttribute("data-checkbox-search", "");
+
+  counterText.append(counterValue);
+  searchLabel.append(searchLabelText, searchInput);
+  toolbar.append(counterText, searchLabel);
+
+  return toolbar;
+}
+
 function orderClientsByAccess(clients, initialClientIds) {
-  const assignedClients = clients.filter((client) =>
-    initialClientIds.includes(client.id),
-  );
-  const unassignedClients = clients.filter(
-    (client) => !initialClientIds.includes(client.id),
-  );
+  const assignedClients = clients.filter((client) => {
+    return initialClientIds.includes(client.id);
+  });
+
+  const unassignedClients = clients.filter((client) => {
+    return !initialClientIds.includes(client.id);
+  });
 
   return [...assignedClients, ...unassignedClients];
 }
 
 function createClientAccessOption(client, initialClientIds) {
   const listItem = document.createElement("li");
+  listItem.setAttribute("data-checkbox-item", "");
+
   const label = document.createElement("label");
   label.classList.add("user-client-access-option");
 
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
+  checkbox.value = String(client.id);
   checkbox.checked = initialClientIds.includes(client.id);
 
   const clientName = document.createElement("span");
@@ -318,20 +421,5 @@ function createClientAccessOption(client, initialClientIds) {
   label.append(checkbox, clientName);
   listItem.append(label);
 
-  return { element: listItem, checkbox };
-}
-
-function updateSelectedClientIds(selectedClientIds, clientId, isSelected) {
-  if (!isSelected) {
-    return selectedClientIds.filter(
-      (selectedClientId) => selectedClientId !== clientId,
-    );
-  }
-
-  if (selectedClientIds.includes(clientId)) {
-    return selectedClientIds;
-  }
-
-  selectedClientIds.push(clientId);
-  return selectedClientIds;
+  return listItem;
 }

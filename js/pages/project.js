@@ -15,10 +15,9 @@ import { showNotification } from "../components/notifications.js";
 start();
 
 async function start() {
-  renderHeader();
-
   const projectId = getProjectIdFromUrl();
   const project = await getProjectById(projectId);
+  renderHeader(project);
 
   if (!isValidProject(projectId, project)) {
     showProjectError();
@@ -29,13 +28,28 @@ async function start() {
   document.querySelector("#project-detail").hidden = false;
 }
 
-function renderHeader() {
+function renderHeader(project) {
   const storedUser = sessionStorage.getItem("userInfo");
   const user = storedUser ? JSON.parse(storedUser) : undefined;
 
   document
     .querySelector("#header-container")
     .append(createHeader(user.username, "./profile.html"));
+
+  document.title = `${project.name} - Sprinde`;
+  renderClient(project.client);
+
+  document.querySelector("#project-name").textContent = project.name;
+  document.querySelector("#project-description").textContent =
+    project.description;
+
+  const statusElement = document.querySelector("#project-status");
+  statusElement.textContent = project.is_active ? "Activo" : "Inactivo";
+  statusElement.classList.toggle("project-status--active", project.is_active);
+  statusElement.classList.toggle(
+    "project-status--inactive",
+    !project.is_active,
+  );
 }
 
 function getProjectIdFromUrl() {
@@ -58,23 +72,6 @@ function renderProject(project) {
   renderProjectData(project);
   renderProjectData(project);
   configureProjectActions(project);
-}
-
-function renderProjectData(project) {
-  document.title = `${project.name} - Sprinde`;
-  renderClient(project.client);
-
-  document.querySelector("#project-name").textContent = project.name;
-  document.querySelector("#project-description").textContent =
-    project.description;
-
-  const statusElement = document.querySelector("#project-status");
-  statusElement.textContent = project.is_active ? "Activo" : "Inactivo";
-  statusElement.classList.toggle("project-status--active", project.is_active);
-  statusElement.classList.toggle(
-    "project-status--inactive",
-    !project.is_active,
-  );
 }
 
 function renderClient(client) {
@@ -236,7 +233,8 @@ function configureDeleteAction(project) {
 
     const confirmModal = createConfirmModal(
       "Borrar proyecto",
-      `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?`,
+      `¿Estás seguro de que deseas borrar el proyecto "${project.name}"?
+      Se borrarán todos los registros relacionados con este proyecto`,
       async () => {
         await deleteProjectById(project.id);
         setTimeout(() => {

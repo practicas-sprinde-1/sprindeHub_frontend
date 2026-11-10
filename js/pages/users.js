@@ -81,6 +81,18 @@ function createRoleCell(roleName) {
   return cell;
 }
 
+function createStatusCell(isActive) {
+  const cell = document.createElement("td");
+  cell.className = "cell-centered";
+
+  const status = document.createElement("span");
+  status.className = `status status--${isActive ? "active" : "inactive"}`;
+  status.textContent = isActive ? "Activo" : "Inactivo";
+  cell.append(status);
+
+  return cell;
+}
+
 function createUserRow(userRecord) {
   const row = document.createElement("tr");
 
@@ -94,6 +106,7 @@ function createUserRow(userRecord) {
     createTableCell(userRecord.email),
     createTableCell(userRecord.username),
     createRoleCell(userRecord.role),
+    createStatusCell(userRecord.is_active),
   );
 
   return row;

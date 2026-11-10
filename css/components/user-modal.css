@@ -35,19 +35,22 @@
   line-height: 1.5;
 }
 
-.user-modal-field {
+.user-modal-field,
+.edit-user-field {
   display: grid;
   gap: 8px;
 }
 
-.user-modal-field label {
+.user-modal-field label,
+.edit-user-field label {
   color: var(--text);
   font-size: 14px;
   font-weight: 600;
 }
 
 .user-modal-field input,
-.user-modal-field select {
+.user-modal-field select,
+.edit-user-field select {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 12px;
@@ -60,6 +63,7 @@
 
 .user-modal-field input:focus-visible,
 .user-modal-field select:focus-visible,
+.edit-user-field select:focus-visible,
 .user-modal button:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
@@ -128,12 +132,55 @@
   font-size: 17px;
 }
 
+.user-client-access-toolbar {
+  display: grid;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-client-access-counter {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-client-access-search {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-client-access-search input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.user-client-access-search input:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .user-client-access-list {
   display: grid;
   gap: 8px;
+  max-height: 240px;
   margin: 0;
   padding: 16px 20px 20px;
+  overflow-y: auto;
   list-style: none;
+}
+
+.user-client-access-list .hidden {
+  display: none;
 }
 
 .user-client-access-list li {
@@ -149,4 +196,25 @@
   color: var(--text);
   cursor: pointer;
   font-size: 14px;
+}
+
+.user-status-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-status-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.user-status-indicator--active {
+  background-color: var(--production);
+}
+
+.user-status-indicator--inactive {
+  background-color: var(--test);
 }

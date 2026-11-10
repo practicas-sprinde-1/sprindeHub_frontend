@@ -5,6 +5,8 @@ import { createHeader } from "../components/header.js";
 import { showNotification } from "../components/notifications.js";
 import { createEditProfileModal } from "../components/profile-edit-modal.js";
 
+const MIN_PASSWORD_LENGTH = 10;
+
 const currentUser = await getProfile();
 
 renderHeader(currentUser);
@@ -139,7 +141,7 @@ function createPasswordModalContent(inputs, closeModal, savePassword) {
 async function changePassword(inputs, closeModal) {
   const passwordChange = readPasswordChange(inputs);
 
-  if (!isValidPasswordChange(passwordChange)) {
+  if (!isValidPasswordChange(passwordChange, inputs)) {
     return;
   }
 
@@ -174,20 +176,59 @@ function readPasswordChange(inputs) {
   };
 }
 
-function isValidPasswordChange(passwordChange) {
+function isValidPasswordChange(passwordChange, inputs) {
   if (
     passwordChange.currentPassword === "" ||
     passwordChange.newPassword === "" ||
     passwordChange.passwordConfirmation === ""
   ) {
+    showNotification({
+      type: "warning",
+      title: "Campos obligatorios",
+      message: "Completa todos los campos de contraseña.",
+    });
+
+    for (const inputName in passwordChange) {
+      const inputValue = passwordChange[inputName];
+
+      if (inputValue === "") {
+        inputs[inputName].focus();
+        return false;
+      }
+    }
+  }
+
+  if (passwordChange.newPassword.length < MIN_PASSWORD_LENGTH) {
+    showNotification({
+      type: "error",
+      title: "Contraseña demasiado corta",
+      message: `La nueva contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+    });
+    inputs.newPassword.focus();
     return false;
   }
 
   if (passwordChange.currentPassword === passwordChange.newPassword) {
+    showNotification({
+      type: "error",
+      title: "Contraseña no válida",
+      message: "La nueva contraseña debe ser distinta de la contraseña actual.",
+    });
+    inputs.newPassword.focus();
     return false;
   }
 
-  return passwordChange.newPassword === passwordChange.passwordConfirmation;
+  if (passwordChange.newPassword !== passwordChange.passwordConfirmation) {
+    showNotification({
+      type: "error",
+      title: "Las contraseñas no coinciden",
+      message: "La confirmación debe coincidir con la nueva contraseña.",
+    });
+    inputs.passwordConfirmation.focus();
+    return false;
+  }
+
+  return true;
 }
 
 function createModalActions(closeModal, savePassword) {
