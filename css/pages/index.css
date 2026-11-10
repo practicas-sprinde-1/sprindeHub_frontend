@@ -1,7 +1,7 @@
 main {
-  max-width: 1720px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0 390px 0 24px;
+  padding: 0 24px;
 }
 
 /* Tarjeta principal que contiene el listado de proyectos. */

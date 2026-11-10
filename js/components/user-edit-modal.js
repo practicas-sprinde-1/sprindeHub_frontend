@@ -5,6 +5,7 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
+import { createCheckboxListManager } from "./checkbox-list-manager.js";
 import { showNotification } from "./notifications.js";
 
 export async function createEditUserModal(user, refreshUsers) {
@@ -326,55 +327,92 @@ function createClientAccessList(clients, initialClientIds) {
   const title = document.createElement("h2");
   title.textContent = "Clientes";
 
+  const clientAccessToolbar = createClientAccessToolbar();
+
   const list = document.createElement("ul");
   list.classList.add("user-client-access-list");
+  list.setAttribute("data-checkbox-list", "");
 
-  let selectedClientIds = [...initialClientIds];
   const orderedClients = orderClientsByAccess(clients, initialClientIds);
 
   orderedClients.forEach((client) => {
-    const { element, checkbox } = createClientAccessOption(
+    const clientAccessOption = createClientAccessOption(
       client,
       initialClientIds,
     );
 
-    checkbox.addEventListener("change", () => {
-      selectedClientIds = updateSelectedClientIds(
-        selectedClientIds,
-        client.id,
-        checkbox.checked,
-      );
-    });
-
-    list.append(element);
+    list.append(clientAccessOption);
   });
 
-  section.append(title, list);
+  section.append(title, clientAccessToolbar, list);
+
+  const checkboxListManager = createCheckboxListManager(section);
 
   return {
     element: section,
-    getSelectedClientIds: () => selectedClientIds,
+    getSelectedClientIds: () => {
+      const selectedClientValues = checkboxListManager.getSelectedValues();
+
+      // Los valores del DOM son texto, pero las relaciones usan IDs numéricos.
+      return selectedClientValues.map((clientValue) => {
+        return Number(clientValue);
+      });
+    },
   };
 }
 
+function createClientAccessToolbar() {
+  const toolbar = document.createElement("div");
+  toolbar.classList.add("user-client-access-toolbar");
+
+  const counterText = document.createElement("span");
+  counterText.classList.add("user-client-access-counter");
+  counterText.textContent = "Seleccionados: ";
+
+  const counterValue = document.createElement("span");
+  counterValue.setAttribute("data-checkbox-counter", "");
+  counterValue.setAttribute("aria-live", "polite");
+
+  const searchLabel = document.createElement("label");
+  searchLabel.classList.add("user-client-access-search");
+
+  const searchLabelText = document.createElement("span");
+  searchLabelText.textContent = "Buscar clientes";
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "search";
+  searchInput.placeholder = "Escribe el nombre de un cliente";
+  searchInput.setAttribute("data-checkbox-search", "");
+
+  counterText.append(counterValue);
+  searchLabel.append(searchLabelText, searchInput);
+  toolbar.append(counterText, searchLabel);
+
+  return toolbar;
+}
+
 function orderClientsByAccess(clients, initialClientIds) {
-  const assignedClients = clients.filter((client) =>
-    initialClientIds.includes(client.id),
-  );
-  const unassignedClients = clients.filter(
-    (client) => !initialClientIds.includes(client.id),
-  );
+  const assignedClients = clients.filter((client) => {
+    return initialClientIds.includes(client.id);
+  });
+
+  const unassignedClients = clients.filter((client) => {
+    return !initialClientIds.includes(client.id);
+  });
 
   return [...assignedClients, ...unassignedClients];
 }
 
 function createClientAccessOption(client, initialClientIds) {
   const listItem = document.createElement("li");
+  listItem.setAttribute("data-checkbox-item", "");
+
   const label = document.createElement("label");
   label.classList.add("user-client-access-option");
 
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
+  checkbox.value = String(client.id);
   checkbox.checked = initialClientIds.includes(client.id);
 
   const clientName = document.createElement("span");
@@ -383,20 +421,5 @@ function createClientAccessOption(client, initialClientIds) {
   label.append(checkbox, clientName);
   listItem.append(label);
 
-  return { element: listItem, checkbox };
-}
-
-function updateSelectedClientIds(selectedClientIds, clientId, isSelected) {
-  if (!isSelected) {
-    return selectedClientIds.filter(
-      (selectedClientId) => selectedClientId !== clientId,
-    );
-  }
-
-  if (selectedClientIds.includes(clientId)) {
-    return selectedClientIds;
-  }
-
-  selectedClientIds.push(clientId);
-  return selectedClientIds;
+  return listItem;
 }

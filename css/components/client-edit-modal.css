@@ -144,12 +144,58 @@
   font-size: 17px;
 }
 
+.project-selection-toolbar {
+  display: grid;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.project-selection-counter {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-selection-search {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-selection-search input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.project-selection-search input:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .client-edit-modal section ul {
   display: grid;
   gap: 8px;
   margin: 0;
   padding: 16px 20px 20px;
   list-style: none;
+}
+
+.client-edit-modal .project-selection-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.client-edit-modal .project-selection-list .hidden {
+  display: none;
 }
 
 .client-edit-modal section li {

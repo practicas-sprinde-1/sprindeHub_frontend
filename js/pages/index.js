@@ -217,7 +217,7 @@ function createDetailButtonCell(project, row, contentType) {
 
   button.classList.add("table-count-button");
   button.type = "button";
-  button.textContent = `${project[configuration.countProperty]} ${configuration.countLabel}`;
+  button.textContent = `${project[configuration.countKey]} ${configuration.countLabel}`;
   button.addEventListener("click", async () => {
     const items = await configuration.loadItems(project.id);
 

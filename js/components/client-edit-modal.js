@@ -5,6 +5,7 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
+import { createCheckboxListManager } from "./checkbox-list-manager.js";
 import { showNotification } from "./notifications.js";
 
 export async function createEditModalClient(
@@ -281,61 +282,108 @@ function createClientStatusField(statusInput) {
 
 function createProjectSelection(projects, initialProjectIds) {
   const section = document.createElement("section");
+  section.classList.add("project-selection");
+
   const title = document.createElement("h2");
   title.textContent = "Proyectos";
 
+  const selectionToolbar = createProjectSelectionToolbar();
+
   const list = document.createElement("ul");
+  list.classList.add("project-selection-list");
+  list.setAttribute("data-checkbox-list", "");
 
-  let selectedProjectIds = [...initialProjectIds];
-
-  const assignedProjects = projects.filter((project) =>
-    initialProjectIds.includes(project.id),
+  const orderedProjects = orderProjectsByAssignment(
+    projects,
+    initialProjectIds,
   );
-
-  const unassignedProjects = projects.filter(
-    (project) => !initialProjectIds.includes(project.id),
-  );
-
-  const orderedProjects = [...assignedProjects, ...unassignedProjects];
 
   orderedProjects.forEach((project) => {
-    const listItem = document.createElement("li");
-    const label = document.createElement("label");
+    const projectOption = createProjectSelectionOption(
+      project,
+      initialProjectIds,
+    );
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-
-    const projectName = document.createElement("span");
-    projectName.textContent = project.name;
-
-    checkbox.checked = initialProjectIds.includes(project.id);
-
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        const isAlreadySelected = selectedProjectIds.includes(project.id);
-
-        if (!isAlreadySelected) {
-          selectedProjectIds.push(project.id);
-        }
-        return;
-      }
-
-      selectedProjectIds = selectedProjectIds.filter(
-        (projectId) => projectId !== project.id,
-      );
-    });
-
-    label.append(checkbox, projectName);
-    listItem.append(label);
-    list.append(listItem);
+    list.append(projectOption);
   });
 
-  section.append(title, list);
+  section.append(title, selectionToolbar, list);
+
+  const checkboxListManager = createCheckboxListManager(section);
 
   return {
     element: section,
-    getSelectedProjectIds: () => selectedProjectIds,
+    getSelectedProjectIds: () => {
+      const selectedProjectValues = checkboxListManager.getSelectedValues();
+
+      // Los valores de los inputs son texto, pero la API trabaja con IDs numéricos.
+      return selectedProjectValues.map((projectValue) => {
+        return Number(projectValue);
+      });
+    },
   };
+}
+
+function createProjectSelectionToolbar() {
+  const toolbar = document.createElement("div");
+  toolbar.classList.add("project-selection-toolbar");
+
+  const counterText = document.createElement("span");
+  counterText.classList.add("project-selection-counter");
+  counterText.textContent = "Seleccionados: ";
+
+  const counterValue = document.createElement("span");
+  counterValue.setAttribute("data-checkbox-counter", "");
+  counterValue.setAttribute("aria-live", "polite");
+
+  const searchLabel = document.createElement("label");
+  searchLabel.classList.add("project-selection-search");
+
+  const searchLabelText = document.createElement("span");
+  searchLabelText.textContent = "Buscar proyectos";
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "search";
+  searchInput.placeholder = "Escribe el nombre de un proyecto";
+  searchInput.setAttribute("data-checkbox-search", "");
+
+  counterText.append(counterValue);
+  searchLabel.append(searchLabelText, searchInput);
+  toolbar.append(counterText, searchLabel);
+
+  return toolbar;
+}
+
+function orderProjectsByAssignment(projects, initialProjectIds) {
+  const assignedProjects = projects.filter((project) => {
+    return initialProjectIds.includes(project.id);
+  });
+
+  const unassignedProjects = projects.filter((project) => {
+    return !initialProjectIds.includes(project.id);
+  });
+
+  return [...assignedProjects, ...unassignedProjects];
+}
+
+function createProjectSelectionOption(project, initialProjectIds) {
+  const listItem = document.createElement("li");
+  listItem.setAttribute("data-checkbox-item", "");
+
+  const label = document.createElement("label");
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.value = String(project.id);
+  checkbox.checked = initialProjectIds.includes(project.id);
+
+  const projectName = document.createElement("span");
+  projectName.textContent = project.name;
+
+  label.append(checkbox, projectName);
+  listItem.append(label);
+
+  return listItem;
 }
 
 function createUserAccessSection(username, startsWithAccess) {
