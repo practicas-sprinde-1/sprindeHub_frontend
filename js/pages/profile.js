@@ -3,7 +3,7 @@ import { getProfile, modifyPassword } from "../api/profile.api.js";
 import { getRelationshipByUser } from "../api/user_client.api.js";
 import { createHeader } from "../components/header.js";
 import { showNotification } from "../components/notifications.js";
-import { createEditProfileModal } from "../components/profile-edit-modal.js";
+import { createEditProfileModal } from "../features/profile-edit-modal.js";
 
 const MIN_PASSWORD_LENGTH = 10;
 

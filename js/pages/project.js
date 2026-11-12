@@ -1,9 +1,9 @@
 import { createHeader } from "../components/header.js";
-import { createConfirmModal } from "../components/confirm-modal.js";
+import { createConfirmModal } from "../features/confirm-modal.js";
 import { renderCommands } from "../utils/render-commands.js";
 import { renderDocumentationLinks } from "../utils/render-documentation-links.js";
 import { renderNotes } from "../utils/render-notes.js";
-import { createEditModalProject } from "../components/project-edit-modal.js";
+import { createEditModalProject } from "../features/project-edit-modal.js";
 import {
   deleteProjectById,
   favoriteProject,

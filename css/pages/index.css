@@ -143,6 +143,10 @@ main {
   text-transform: uppercase;
 }
 
+.projects-table th.environments-cell {
+  width: 150px;
+}
+
 .projects-table td {
   padding: 18px 12px;
   border-bottom: 1px solid var(--border);
@@ -209,6 +213,7 @@ main {
 .environment {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
   margin: 3px 8px 3px 0;
   padding: 3px 8px;
   border-radius: 999px;
@@ -219,6 +224,7 @@ main {
 }
 
 .environment::before {
+  flex-shrink: 0;
   width: 7px;
   height: 7px;
   margin-right: 5px;

@@ -1,5 +1,5 @@
 import { setUser } from "../api/user.api.js";
-import { showNotification } from "./notifications.js";
+import { showNotification } from "../components/notifications.js";
 
 export function createNewUserModal(refreshUsers) {
   const overlay = document.createElement("div");

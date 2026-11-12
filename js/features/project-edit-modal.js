@@ -27,7 +27,7 @@ import {
   modifyService,
   setService,
 } from "../api/service.api.js";
-import { showNotification } from "./notifications.js";
+import { showNotification } from "../components/notifications.js";
 
 const SAVE_ERROR_DURATION = 7000;
 

@@ -1,5 +1,7 @@
+import { createPaginatedTable } from "../components/paginated-table.js";
 import { createHeader } from "../components/header.js";
 import { createDetailCard } from "../components/detail-card.js";
+import { showNotification } from "../components/notifications.js";
 import {
   getArchivedProjects,
   getFavoriteProjects,
@@ -24,13 +26,6 @@ const projectsTable = document.querySelector(".projects-table");
 const tableTitles = document.querySelector(".table-titles");
 const createNewProjectButton = document.querySelector("#button-new-project");
 const createNewClientButton = document.querySelector("#button-new-client");
-
-const tableState = {
-  search: "",
-  page: 1,
-  limit: Number(recordsPerPageSelect.value),
-  view: "active",
-};
 
 const DETAIL_CARD_SETTINGS = {
   commands: {
@@ -59,7 +54,7 @@ const DETAIL_CARD_SETTINGS = {
 };
 
 let openedDetailCard;
-let searchTimeout;
+let latestDetailLoadId = 0;
 
 async function renderProfileHeader() {
   const user = await getProfile();
@@ -68,44 +63,21 @@ async function renderProfileHeader() {
   headerContainer.append(createHeader(user.username, "./pages/profile.html"));
 }
 
-async function loadProjects() {
-  const response = await getProjectsByTableState();
-  const loadedProjects = response.items;
+function loadProjectsPage(request) {
+  const limit = request.limit;
+  const offset = request.offset;
+  const search = request.search;
+  const view = request.filters.view;
 
-  renderProjects(loadedProjects);
-  updatePagination(loadedProjects.length);
-}
-
-function getProjectsByTableState() {
-  const offset = (tableState.page - 1) * tableState.limit;
-
-  switch (tableState.view) {
-    case "favorites":
-      return getFavoriteProjects(tableState.limit, offset, tableState.search);
-    case "archived":
-      return getArchivedProjects(tableState.limit, offset, tableState.search);
-    default:
-      return getProjects(
-        "projects",
-        tableState.limit,
-        offset,
-        tableState.search,
-      );
+  if (view === "favorites") {
+    return getFavoriteProjects(limit, offset, search);
   }
-}
 
-function updatePagination(loadedProjectCount) {
-  pageInformation.textContent = `Página ${tableState.page}`;
-  previousPageButton.disabled = tableState.page === 1;
-  nextPageButton.disabled = loadedProjectCount < tableState.limit;
-}
+  if (view === "archived") {
+    return getArchivedProjects(limit, offset, search);
+  }
 
-function renderProjects(loadedProjects) {
-  tableBody.replaceChildren();
-
-  loadedProjects.forEach((project) => {
-    tableBody.append(createProjectRow(project));
-  });
+  return getProjects("projects", limit, offset, search);
 }
 
 function createProjectRow(project) {
@@ -137,7 +109,7 @@ function createClientCell(client) {
 }
 
 function createProjectCell(project) {
-  const cell = document.createElement("td");
+  const cell = createCenteredCell();
   const link = document.createElement("a");
 
   link.classList.add("project-link");
@@ -219,19 +191,43 @@ function createDetailButtonCell(project, row, contentType) {
   button.type = "button";
   button.textContent = `${project[configuration.countKey]} ${configuration.countLabel}`;
   button.addEventListener("click", async () => {
-    const items = await configuration.loadItems(project.id);
+    latestDetailLoadId += 1;
+    const loadId = latestDetailLoadId;
+    button.disabled = true;
 
-    const formattedItems = items.map((item) => {
-      return configuration.formatItem(item);
-    });
+    try {
+      const items = await configuration.loadItems(project.id);
+      // El detalle solo se abre si sigue siendo la última petición y la fila sigue visible.
+      if (loadId !== latestDetailLoadId || !row.isConnected) {
+        return;
+      }
 
-    showDetailCard(
-      row,
-      configuration.title,
-      formattedItems,
-      project.id,
-      contentType,
-    );
+      const formattedItems = [];
+      for (const item of items) {
+        const formattedItem = configuration.formatItem(item);
+        formattedItems.push(formattedItem);
+      }
+
+      showDetailCard(
+        row,
+        configuration.title,
+        formattedItems,
+        project.id,
+        contentType,
+      );
+    } catch (error) {
+      if (loadId !== latestDetailLoadId || !row.isConnected) {
+        return;
+      }
+
+      showNotification({
+        type: "error",
+        title: "Error al cargar el detalle del proyecto",
+        message: error.message,
+      });
+    } finally {
+      button.disabled = false;
+    }
   });
 
   cell.append(button);
@@ -251,7 +247,9 @@ function createCenteredCell(additionalClass) {
 }
 
 function showDetailCard(row, title, items, projectId, contentType) {
-  openedDetailCard?.remove();
+  if (openedDetailCard) {
+    openedDetailCard.remove();
+  }
 
   const projectUrl = `./pages/project.html?id=${projectId}`;
   const detailCard = createDetailCard(title, items, projectUrl, contentType);
@@ -262,46 +260,38 @@ function showDetailCard(row, title, items, projectId, contentType) {
   openedDetailCard = detailCard;
 }
 
-function changeProjectView(view) {
-  tableState.view = view;
-  tableState.page = 1;
-  loadProjects();
+function closeProjectDetail() {
+  // Descarta también los detalles que todavía se están cargando.
+  latestDetailLoadId += 1;
+  if (openedDetailCard) {
+    openedDetailCard.remove();
+  }
 }
 
-await renderProfileHeader();
-
-recordsPerPageSelect.addEventListener("change", () => {
-  tableState.limit = Number(recordsPerPageSelect.value);
-  tableState.page = 1;
-  loadProjects();
+const projectTable = createPaginatedTable({
+  tableBody,
+  searchInput,
+  recordsPerPageSelect,
+  previousPageButton,
+  nextPageButton,
+  pageInformation,
+  loadPage: loadProjectsPage,
+  createRow: createProjectRow,
+  errorTitle: "Error al cargar los proyectos",
+  initialFilters: { view: "active" },
+  onLoad: closeProjectDetail,
 });
 
-previousPageButton.addEventListener("click", async () => {
-  if (tableState.page === 1) {
-    return;
-  }
-
-  tableState.page--;
-  await loadProjects();
-  window.scrollTo(0, 0);
+showArchivedButton.addEventListener("click", () => {
+  projectTable.setFilters({ view: "archived" });
 });
 
-nextPageButton.addEventListener("click", async () => {
-  tableState.page++;
-  await loadProjects();
-  window.scrollTo(0, 0);
+showActiveButton.addEventListener("click", () => {
+  projectTable.setFilters({ view: "active" });
 });
 
-loadProjects();
-
-searchInput.addEventListener("input", () => {
-  clearTimeout(searchTimeout);
-
-  searchTimeout = setTimeout(() => {
-    tableState.search = searchInput.value.trim().toLowerCase();
-    tableState.page = 1;
-    loadProjects();
-  }, 500);
+showFavoritesButton.addEventListener("click", () => {
+  projectTable.setFilters({ view: "favorites" });
 });
 
 createNewProjectButton.addEventListener("click", () => {
@@ -312,14 +302,5 @@ createNewClientButton.addEventListener("click", () => {
   window.location.href = "./pages/new-client.html";
 });
 
-showArchivedButton.addEventListener("click", () => {
-  changeProjectView("archived");
-});
-
-showActiveButton.addEventListener("click", () => {
-  changeProjectView("active");
-});
-
-showFavoritesButton.addEventListener("click", () => {
-  changeProjectView("favorites");
-});
+await renderProfileHeader();
+await projectTable.load();

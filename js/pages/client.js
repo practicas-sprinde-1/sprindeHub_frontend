@@ -1,6 +1,6 @@
 import { createHeader } from "../components/header.js";
-import { createConfirmModal } from "../components/confirm-modal.js";
-import { createEditModalClient } from "../components/client-edit-modal.js";
+import { createConfirmModal } from "../features/confirm-modal.js";
+import { createEditModalClient } from "../features/client-edit-modal.js";
 import {
   getClientById,
   deleteClientById,

@@ -1,4 +1,4 @@
-import { showNotification } from "./notifications.js";
+import { showNotification } from "../components/notifications.js";
 
 export function createConfirmModal(title, description, onConfirm) {
   const modalOverlay = document.createElement("div");
