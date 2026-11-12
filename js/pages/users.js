@@ -1,13 +1,13 @@
 import { createHeader } from "../components/header.js";
-import { createNewUserModal } from "../components/user-create-modal.js";
-import { createEditUserModal } from "../components/user-edit-modal.js";
-import { createConfirmModal } from "../components/confirm-modal.js";
+import { createPaginatedTable } from "../components/paginated-table.js";
+import { createNewUserModal } from "../features/user-create-modal.js";
+import { createEditUserModal } from "../features/user-edit-modal.js";
+import { createConfirmModal } from "../features/confirm-modal.js";
 import { deleteUser, getUsers } from "../api/user.api.js";
 import { showNotification } from "../components/notifications.js";
 import { getProfile } from "../api/profile.api.js";
 
 const ADMIN_ROLE = "ADMIN";
-const SEARCH_DELAY_MS = 500;
 
 const currentUser = await getProfile();
 
@@ -23,14 +23,6 @@ const editUserButton = document.querySelector("#button-edit-user");
 const deleteUserButton = document.querySelector("#button-delete-user");
 
 let selectedUser = null;
-let displayedUsers = [];
-let searchTimeoutId;
-
-const tableState = {
-  search: "",
-  page: 1,
-  limit: Number(recordsPerPageSelect.value),
-};
 
 function configureHeader() {
   const header = createHeader(currentUser.username, "./profile.html");
@@ -112,10 +104,6 @@ function createUserRow(userRecord) {
   return row;
 }
 
-function renderUsersTable(userRecords) {
-  tableBody.replaceChildren(...userRecords.map(createUserRow));
-}
-
 function selectUser(userRecord, row) {
   const previouslySelectedRow = tableBody.querySelector(".user-row-selected");
   previouslySelectedRow?.classList.remove("user-row-selected");
@@ -124,68 +112,26 @@ function selectUser(userRecord, row) {
   row.classList.add("user-row-selected");
 }
 
-function updatePagination() {
-  pageInformation.textContent = `Página ${tableState.page}`;
-  previousPageButton.disabled = tableState.page === 1;
-  nextPageButton.disabled = displayedUsers.length < tableState.limit;
+async function loadUsersPage(request) {
+  const users = await getUsers(
+    "users",
+    request.limit,
+    request.offset,
+    request.search,
+  );
+
+  // GET /admin/users devuelve una lista, sin total de registros.
+  return { items: users };
 }
 
-async function loadUsers() {
-  try {
-    const offset = (tableState.page - 1) * tableState.limit;
-    displayedUsers = await getUsers(
-      "users",
-      tableState.limit,
-      offset,
-      tableState.search,
-    );
-
-    selectedUser = null;
-    renderUsersTable(displayedUsers);
-    updatePagination();
-  } catch (error) {
-    if (currentUser.role !== ADMIN_ROLE) {
-      return;
-    }
-
-    showNotification({
-      type: "error",
-      title: "No se han podido cargar los usuarios",
-      message: error.message,
-      duration: 7000,
-    });
-  }
+function clearUserSelection() {
+  selectedUser = null;
+  const selectedRow = tableBody.querySelector(".user-row-selected");
+  selectedRow?.classList.remove("user-row-selected");
 }
 
-function handleSearch() {
-  clearTimeout(searchTimeoutId);
-  searchTimeoutId = setTimeout(() => {
-    tableState.search = searchInput.value.trim().toLowerCase();
-    tableState.page = 1;
-    loadUsers();
-  }, SEARCH_DELAY_MS);
-}
-
-function handlePageSizeChange() {
-  tableState.limit = Number(recordsPerPageSelect.value);
-  tableState.page = 1;
-  loadUsers();
-}
-
-async function goToPreviousPage() {
-  if (tableState.page <= 1) {
-    return;
-  }
-
-  tableState.page--;
-  await loadUsers();
-  window.scrollTo(0, 0);
-}
-
-async function goToNextPage() {
-  tableState.page++;
-  await loadUsers();
-  window.scrollTo(0, 0);
+function loadUsers() {
+  return usersTable.load();
 }
 
 function hasOpenModal() {
@@ -254,16 +200,30 @@ function openDeleteUserConfirmation() {
 }
 
 function registerEventListeners() {
-  searchInput.addEventListener("input", handleSearch);
-  recordsPerPageSelect.addEventListener("change", handlePageSizeChange);
-  previousPageButton.addEventListener("click", goToPreviousPage);
-  nextPageButton.addEventListener("click", goToNextPage);
   createUserButton.addEventListener("click", openCreateUserModal);
   editUserButton.addEventListener("click", openEditUserModal);
   deleteUserButton.addEventListener("click", openDeleteUserConfirmation);
 }
 
+const usersTable = currentUser.role === ADMIN_ROLE
+  ? createPaginatedTable({
+      tableBody,
+      searchInput,
+      recordsPerPageSelect,
+      previousPageButton,
+      nextPageButton,
+      pageInformation,
+      loadPage: loadUsersPage,
+      createRow: createUserRow,
+      errorTitle: "No se han podido cargar los usuarios",
+      onLoad: clearUserSelection,
+    })
+  : null;
+
 configureHeader();
 enforceAdministratorAccess();
-registerEventListeners();
-await loadUsers();
+
+if (currentUser.role === ADMIN_ROLE) {
+  registerEventListeners();
+  await loadUsers();
+}

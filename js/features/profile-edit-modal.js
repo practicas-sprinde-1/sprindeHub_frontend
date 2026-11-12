@@ -1,5 +1,5 @@
 import { modifyProfile } from "../api/profile.api.js";
-import { showNotification } from "./notifications.js";
+import { showNotification } from "../components/notifications.js";
 
 export function createEditProfileModal(user, renderUser) {
   const overlay = document.createElement("div");

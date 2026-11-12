@@ -5,8 +5,8 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
-import { createCheckboxListManager } from "./checkbox-list-manager.js";
-import { showNotification } from "./notifications.js";
+import { createCheckboxListManager } from "../components/checkbox-list-manager.js";
+import { showNotification } from "../components/notifications.js";
 
 export async function createEditUserModal(user, refreshUsers) {
   const overlay = document.createElement("div");
@@ -331,7 +331,6 @@ function createClientAccessList(clients, initialClientIds) {
 
   const list = document.createElement("ul");
   list.classList.add("user-client-access-list");
-  list.setAttribute("data-checkbox-list", "");
 
   const orderedClients = orderClientsByAccess(clients, initialClientIds);
 
@@ -370,8 +369,6 @@ function createClientAccessToolbar() {
   counterText.textContent = "Seleccionados: ";
 
   const counterValue = document.createElement("span");
-  counterValue.setAttribute("data-checkbox-counter", "");
-  counterValue.setAttribute("aria-live", "polite");
 
   const searchLabel = document.createElement("label");
   searchLabel.classList.add("user-client-access-search");
@@ -382,7 +379,6 @@ function createClientAccessToolbar() {
   const searchInput = document.createElement("input");
   searchInput.type = "search";
   searchInput.placeholder = "Escribe el nombre de un cliente";
-  searchInput.setAttribute("data-checkbox-search", "");
 
   counterText.append(counterValue);
   searchLabel.append(searchLabelText, searchInput);
@@ -405,7 +401,6 @@ function orderClientsByAccess(clients, initialClientIds) {
 
 function createClientAccessOption(client, initialClientIds) {
   const listItem = document.createElement("li");
-  listItem.setAttribute("data-checkbox-item", "");
 
   const label = document.createElement("label");
   label.classList.add("user-client-access-option");

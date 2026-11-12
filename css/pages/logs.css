@@ -69,6 +69,10 @@ main {
   margin: 0;
 }
 
+#filters-container {
+  margin: 0 28px 22px;
+}
+
 .table-actions .status-filter {
   gap: 10px;
   margin: 0;

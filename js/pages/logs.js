@@ -1,17 +1,20 @@
+import { createPaginatedTable } from "../components/paginated-table.js";
 import { getClientById } from "../api/client.api.js";
 import { getCommandById } from "../api/command.api.js";
 import { getDomainById } from "../api/domain.api.js";
 import { getEnvironmentById } from "../api/environment.api.js";
 import { getLinkById } from "../api/link.api.js";
-import { getLogs } from "../api/log.api.js";
+import { getLogsPage } from "../api/log.api.js";
 import { getNoteById } from "../api/note.api.js";
 import { getProjectById } from "../api/project.api.js";
 import { getRepositoryById } from "../api/repository.api.js";
 import { getServiceById } from "../api/service.api.js";
 import { getUsers } from "../api/user.api.js";
 import { createHeader } from "../components/header.js";
+import { createLogsFilterBar } from "../components/logs-filter-bar.js";
 import { showNotification } from "../components/notifications.js";
 
+const USERS_PAGE_SIZE = 100;
 const ENTITY_LOADERS = {
   CLIENT: getClientById,
   PROJECT: getProjectById,
@@ -28,18 +31,25 @@ checkUserAccess();
 
 const tableBody = document.querySelector("#logs-table-body");
 const searchInput = document.querySelector("#input-logs");
+const filtersContainer = document.querySelector("#filters-container");
 const recordsPerPageSelect = document.querySelector("#records-per-page");
 const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInformation = document.querySelector("#page-information");
 
-const users = await getUsers("users", 100, 0);
-let currentLogs = [];
-const tableState = {
-  search: "",
-  page: 1,
-  limit: Number(recordsPerPageSelect.value),
-};
+const users = await loadUsers();
+
+async function loadUsers() {
+  const allUsers = [];
+  let usersPage;
+
+  do {
+    usersPage = await getUsers("users", USERS_PAGE_SIZE, allUsers.length);
+    allUsers.push(...usersPage);
+  } while (usersPage.length === USERS_PAGE_SIZE);
+
+  return allUsers;
+}
 
 function checkUserAccess() {
   const storedUser = sessionStorage.getItem("userInfo");
@@ -99,7 +109,7 @@ async function getLinksCell(log, entity) {
     }
   }
 
-  if (log.affected_entity === "CLIENT" && entity !== null) {
+  if (log.affected_entity === "CLIENT" && entity != null) {
     linksCell.append(
       createEntityLink({
         href: `./client.html?id=${entity.id}`,
@@ -108,7 +118,7 @@ async function getLinksCell(log, entity) {
     );
   }
 
-  if (log.affected_entity === "PROJECT" && entity !== null) {
+  if (log.affected_entity === "PROJECT" && entity != null) {
     linksCell.append(
       createEntityLink({
         href: `./project.html?id=${entity.id}`,
@@ -120,11 +130,11 @@ async function getLinksCell(log, entity) {
   return linksCell;
 }
 
-async function getLogRow(log) {
+async function createLogRow(log) {
   const logUser = users.find((user) => user.id === log.user_id);
   const entity = await findEntity(log.affected_entity, log.affected_entity_id);
 
-  const userCell = createCell(logUser.username);
+  const userCell = createCell(logUser?.username ?? "Usuario no disponible");
   const actionCell = createCell(log.action);
   const entityTypeCell = createCell(log.affected_entity);
   const entityCell = createCell(
@@ -147,67 +157,38 @@ async function getLogRow(log) {
   return row;
 }
 
-async function renderTable(logsToRender) {
-  const rows = [];
-
-  for (const log of logsToRender) {
-    rows.push(await getLogRow(log));
-  }
-
-  tableBody.replaceChildren(...rows);
-}
-
-function updatePagination() {
-  pageInformation.textContent = `Página ${tableState.page}`;
-  previousPageButton.disabled = tableState.page === 1;
-  nextPageButton.disabled = currentLogs.length < tableState.limit;
-}
-
-async function loadLogs() {
-  const offset = (tableState.page - 1) * tableState.limit;
-  currentLogs = await getLogs(
-    "logs",
-    tableState.limit,
-    offset,
-    tableState.search,
+function loadLogsPage(request) {
+  return getLogsPage(
+    request.limit,
+    request.offset,
+    request.search,
+    request.filters,
   );
-
-  await renderTable(currentLogs);
-  updatePagination();
 }
 
-await loadLogs();
+function handleFiltersChanged(filters) {
+  return logsTable.setFilters(filters);
+}
 
-let searchTimeout;
-
-searchInput.addEventListener("input", () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    tableState.search = searchInput.value.trim().toLowerCase();
-    tableState.page = 1;
-    loadLogs();
-  }, 500);
+const logsTable = createPaginatedTable({
+  tableBody,
+  searchInput,
+  recordsPerPageSelect,
+  previousPageButton,
+  nextPageButton,
+  pageInformation,
+  loadPage: loadLogsPage,
+  createRow: createLogRow,
+  errorTitle: "Error al cargar los registros",
 });
 
-recordsPerPageSelect.addEventListener("change", () => {
-  tableState.limit = Number(recordsPerPageSelect.value);
-  tableState.page = 1;
-  loadLogs();
-});
+const logsFilterBar = createLogsFilterBar(
+  handleFiltersChanged,
+  users,
+);
+filtersContainer.appendChild(logsFilterBar);
 
-previousPageButton.addEventListener("click", async () => {
-  if (tableState.page === 1) return;
-
-  tableState.page--;
-  await loadLogs();
-  window.scrollTo(0, 0);
-});
-
-nextPageButton.addEventListener("click", async () => {
-  tableState.page++;
-  await loadLogs();
-  window.scrollTo(0, 0);
-});
+await logsTable.load();
 
 export async function findEntity(entityType, entityId) {
   const loadEntity = ENTITY_LOADERS[entityType];

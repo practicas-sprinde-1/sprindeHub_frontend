@@ -5,8 +5,8 @@ import {
   getRelationshipByUser,
   revokeClientAccess,
 } from "../api/user_client.api.js";
-import { createCheckboxListManager } from "./checkbox-list-manager.js";
-import { showNotification } from "./notifications.js";
+import { createCheckboxListManager } from "../components/checkbox-list-manager.js";
+import { showNotification } from "../components/notifications.js";
 
 export async function createEditModalClient(
   client,
@@ -291,7 +291,6 @@ function createProjectSelection(projects, initialProjectIds) {
 
   const list = document.createElement("ul");
   list.classList.add("project-selection-list");
-  list.setAttribute("data-checkbox-list", "");
 
   const orderedProjects = orderProjectsByAssignment(
     projects,
@@ -333,8 +332,6 @@ function createProjectSelectionToolbar() {
   counterText.textContent = "Seleccionados: ";
 
   const counterValue = document.createElement("span");
-  counterValue.setAttribute("data-checkbox-counter", "");
-  counterValue.setAttribute("aria-live", "polite");
 
   const searchLabel = document.createElement("label");
   searchLabel.classList.add("project-selection-search");
@@ -345,7 +342,6 @@ function createProjectSelectionToolbar() {
   const searchInput = document.createElement("input");
   searchInput.type = "search";
   searchInput.placeholder = "Escribe el nombre de un proyecto";
-  searchInput.setAttribute("data-checkbox-search", "");
 
   counterText.append(counterValue);
   searchLabel.append(searchLabelText, searchInput);
@@ -368,7 +364,6 @@ function orderProjectsByAssignment(projects, initialProjectIds) {
 
 function createProjectSelectionOption(project, initialProjectIds) {
   const listItem = document.createElement("li");
-  listItem.setAttribute("data-checkbox-item", "");
 
   const label = document.createElement("label");
 

@@ -1,3 +1,4 @@
+import { createPaginatedTable } from "../components/paginated-table.js";
 import {
   getArchivedClients,
   getClients,
@@ -26,13 +27,6 @@ const archivedClientsButton = document.querySelector("#archived-clients");
 const activeClientsButton = document.querySelector("#actived-clients");
 const favoriteClientsButton = document.querySelector("#favorite-clients");
 
-const tableState = {
-  search: "",
-  page: 1,
-  limit: Number(recordsPerPageSelect.value),
-  view: "active",
-};
-
 function createLink({ className, href, text }) {
   const link = document.createElement("a");
   link.className = className;
@@ -43,6 +37,7 @@ function createLink({ className, href, text }) {
 
 function createTextCell(text) {
   const cell = document.createElement("td");
+  cell.className = "cell-centered";
   cell.textContent = text;
   return cell;
 }
@@ -104,86 +99,50 @@ async function createClientRow(client) {
   return row;
 }
 
-async function renderClients(clientList) {
-  const rows = [];
+function loadClientsPage(request) {
+  const limit = request.limit;
+  const offset = request.offset;
+  const search = request.search;
+  const view = request.filters.view;
 
-  for (const client of clientList) {
-    rows.push(await createClientRow(client));
+  if (view === "favorites") {
+    return getFavoriteClients(limit, offset, search);
   }
 
-  tableBody.replaceChildren(...rows);
-}
-
-async function getClientsByTableState() {
-  const offset = (tableState.page - 1) * tableState.limit;
-
-  if (tableState.view === "favorites") {
-    return getFavoriteClients(tableState.limit, offset, tableState.search);
+  if (view === "archived") {
+    return getArchivedClients(limit, offset, search);
   }
 
-  if (tableState.view === "archived") {
-    return getArchivedClients(tableState.limit, offset, tableState.search);
-  }
-
-  return getClients("clients", tableState.limit, offset, tableState.search);
+  return getClients("clients", limit, offset, search);
 }
 
-function updatePagination(clientCount) {
-  pageInformation.textContent = `Página ${tableState.page}`;
-  previousPageButton.disabled = tableState.page === 1;
-  nextPageButton.disabled = clientCount < tableState.limit;
-}
-
-async function loadClients() {
-  const response = await getClientsByTableState();
-  const loadedClients = response.items;
-
-  await renderClients(loadedClients);
-  updatePagination(loadedClients.length);
-}
-await loadClients();
-
-let searchDebounceTimeout;
-
-searchInput.addEventListener("input", () => {
-  clearTimeout(searchDebounceTimeout);
-
-  searchDebounceTimeout = setTimeout(() => {
-    tableState.search = searchInput.value.trim().toLowerCase();
-    tableState.page = 1;
-    loadClients();
-  }, 500);
+const clientsTable = createPaginatedTable({
+  tableBody,
+  searchInput,
+  recordsPerPageSelect,
+  previousPageButton,
+  nextPageButton,
+  pageInformation,
+  loadPage: loadClientsPage,
+  createRow: createClientRow,
+  errorTitle: "Error al cargar los clientes",
+  initialFilters: { view: "active" },
 });
 
-recordsPerPageSelect.addEventListener("change", () => {
-  tableState.limit = Number(recordsPerPageSelect.value);
-  tableState.page = 1;
-  loadClients();
+archivedClientsButton.addEventListener("click", () => {
+  clientsTable.setFilters({ view: "archived" });
 });
-previousPageButton.addEventListener("click", async () => {
-  if (tableState.page === 1) return;
 
-  tableState.page--;
-  await loadClients();
-  window.scrollTo(0, 0);
+activeClientsButton.addEventListener("click", () => {
+  clientsTable.setFilters({ view: "active" });
 });
-nextPageButton.addEventListener("click", async () => {
-  tableState.page++;
-  await loadClients();
-  window.scrollTo(0, 0);
+
+favoriteClientsButton.addEventListener("click", () => {
+  clientsTable.setFilters({ view: "favorites" });
 });
+
 document.querySelector("#button-new-client").addEventListener("click", () => {
   window.location.href = "./new-client.html";
 });
 
-function showClientView(view) {
-  tableState.view = view;
-  tableState.page = 1;
-  loadClients();
-}
-
-archivedClientsButton.onclick = () => showClientView("archived");
-
-activeClientsButton.onclick = () => showClientView("active");
-
-favoriteClientsButton.onclick = () => showClientView("favorites");
+await clientsTable.load();

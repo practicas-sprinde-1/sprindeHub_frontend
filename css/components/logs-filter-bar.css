@@ -1,0 +1,39 @@
+.logs-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--text, #1f2937);
+}
+
+.logs-filter-bar-field {
+  display: flex;
+  flex: 1 1 136px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.logs-filter-bar-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.logs-filter-bar-field > input,
+.logs-filter-bar-field > select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border, #dbe4ef);
+  border-radius: 6px;
+  background-color: var(--input-surface, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.logs-filter-bar-field > input:focus-visible,
+.logs-filter-bar-field > select:focus-visible {
+  outline: 2px solid var(--blue, #2563a8);
+  outline-offset: 2px;
+}

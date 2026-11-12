@@ -38,8 +38,9 @@ export async function getAdminData(
   offset,
   search,
   errorMessage,
+  filters,
 ) {
-  const query = buildPaginationQuery(limit, offset, search);
+  const query = buildPaginationQuery(limit, offset, search, filters);
   return getJson(`${API_BASE_URL}/admin/${entity}?${query}`, errorMessage);
 }
 
@@ -77,14 +78,24 @@ export async function changeStatus(url, errorMessage) {
   return response.json();
 }
 
-function buildPaginationQuery(limit, offset, search) {
-  const query = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
+function buildPaginationQuery(limit, offset, search, filters) {
+  const query = new URLSearchParams();
+
+  query.set("limit", String(limit));
+  query.set("offset", String(offset));
 
   if (search !== null && search !== undefined && search !== "") {
     query.set("search", search);
+  }
+
+  if (filters !== null && filters !== undefined) {
+    for (const key in filters) {
+      const value = filters[key];
+
+      if (value !== null && value !== undefined && value !== "") {
+        query.set(key, value);
+      }
+    }
   }
 
   return query;

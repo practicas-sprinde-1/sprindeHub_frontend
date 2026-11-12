@@ -1,13 +1,20 @@
 import { getData, getAdminData } from "./methods.js";
 import { API_BASE_URL } from "./config.js";
 
-export async function getLogs(entity, limit, offset, search) {
+export async function getLogsPage(limit, offset, search, filters = {}) {
   return getAdminData(
-    entity,
+    "logs/page",
     limit,
     offset,
     search,
     "No se han podido cargar los registros",
+    {
+      start_date: filters.startDate,
+      end_date: filters.endDate,
+      action: filters.actionType,
+      username: filters.user,
+      affected_entity: filters.entityType,
+    },
   );
 }
 
