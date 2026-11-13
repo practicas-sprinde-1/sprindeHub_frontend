@@ -17,7 +17,7 @@ export async function getTags(limit = 20, offset = 0, search = "") {
   );
 }
 
-export async function getTagsByClientId(clientId, limit = 20, offset = 0) {
+export async function getTagsByClientId(clientId, limit = 100, offset = 0) {
   return getPaginatedData(
     `tags/client/${clientId}`,
     limit,

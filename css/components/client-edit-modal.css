@@ -1,4 +1,5 @@
 .modal-overlay {
+  box-sizing: border-box;
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -11,12 +12,14 @@
 }
 
 .client-edit-modal {
+  box-sizing: border-box;
   position: relative;
 
   display: grid;
   gap: 20px;
-  width: min(520px, 100%);
-  max-height: 100%;
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
 
   padding: 28px;
@@ -24,6 +27,38 @@
   border-radius: 14px;
   background-color: var(--surface);
   box-shadow: 0 12px 30px var(--shadow-strong);
+}
+
+.client-edit-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "data projects"
+    "devices users";
+  gap: 20px;
+  min-width: 0;
+}
+
+.client-data-section {
+  grid-area: data;
+}
+
+.client-edit-layout > .project-selection {
+  grid-area: projects;
+}
+
+.client-edit-layout > .client-device-section {
+  grid-area: devices;
+}
+
+.client-edit-layout > .client-user-access {
+  grid-area: users;
+}
+
+.client-data-fields {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
 }
 
 .modal-title {
@@ -36,6 +71,7 @@
 .client-edit-field {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .client-edit-field label {
@@ -48,6 +84,7 @@
 .client-edit-field select {
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -118,6 +155,17 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.client-edit-modal .modal-save-button,
+.client-edit-modal .modal-cancel-button {
+  box-sizing: border-box;
+  flex: 0 0 110px;
+  align-self: center;
+  width: 110px;
+  height: 40px;
+  padding: 0;
+  white-space: nowrap;
 }
 
 .client-edit-modal .modal-save-button {
@@ -221,4 +269,96 @@
   color: var(--text);
   cursor: pointer;
   font-size: 14px;
+}
+
+.client-user-access-empty {
+  margin: 0;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.client-device-description {
+  margin: 14px 20px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.client-edit-modal .client-device-section li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.client-device-content {
+  flex: 1 1 180px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.client-device-content span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.client-device-editor {
+  width: 100%;
+  min-width: 0;
+}
+
+.client-device-editor fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.client-edit-modal .client-device-editor .client-edit-field {
+  flex: 1 1 160px;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.client-edit-modal .client-device-editor label {
+  display: block;
+  cursor: default;
+}
+
+.client-edit-modal .client-device-editor .modal-save-button,
+.client-edit-modal .client-device-editor .modal-cancel-button {
+  align-self: flex-end;
+}
+
+.client-device-editor input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.client-device-editor input:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.client-edit-modal .modal-add-button {
+  margin: 0 20px 20px;
+}
+
+.client-edit-modal button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }

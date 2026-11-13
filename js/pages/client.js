@@ -105,7 +105,7 @@ async function loadAndRenderTags(clientId) {
   tagsStatus.textContent = "Cargando dispositivos...";
 
   try {
-    const tags = await loadClientTags(clientId);
+    const tags = await getTagsByClientId(clientId, 100);
 
     tagsList.replaceChildren(...tags.map(createTagListItem));
     tagsStatus.textContent = tags.length
@@ -115,18 +115,6 @@ async function loadAndRenderTags(clientId) {
     tagsStatus.textContent =
       "No se han podido cargar los dispositivos del cliente.";
   }
-}
-
-async function loadClientTags(clientId, offset = 0) {
-  const limit = 100;
-  const tags = await getTagsByClientId(clientId, limit, offset);
-
-  if (tags.length === limit) {
-    const nextTags = await loadClientTags(clientId, offset + tags.length);
-    return [...tags, ...nextTags];
-  }
-
-  return tags;
 }
 
 function createTagListItem(tag) {
@@ -148,12 +136,24 @@ function configureEditAction(clientData, assignedProjects) {
   editButton.onclick = async () => {
     if (document.querySelector(".modal-overlay")) return;
 
-    const modal = await createEditModalClient(
-      clientData,
-      renderClient,
-      assignedProjects,
-    );
-    document.body.append(modal);
+    editButton.disabled = true;
+    try {
+      const modal = await createEditModalClient(
+        clientData,
+        renderClient,
+        assignedProjects,
+      );
+      document.body.append(modal);
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido abrir la edición del cliente",
+        message: error.message,
+        duration: 7000,
+      });
+    } finally {
+      editButton.disabled = false;
+    }
   };
 }
 
