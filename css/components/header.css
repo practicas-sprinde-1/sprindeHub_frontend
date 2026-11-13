@@ -42,7 +42,8 @@
     color 0.2s ease;
 }
 
-.main-header-clients {
+.main-header-clients,
+.main-header-tags {
   padding: 8px 13px;
   border: 1px solid var(--header-border);
   border-radius: 6px;
@@ -106,6 +107,7 @@
 .main-header-projects:hover,
 .main-header-users:hover,
 .main-header-clients:hover,
+.main-header-tags:hover,
 .main-header-logs:hover {
   background-color: var(--header-hover-background);
   color: var(--text);

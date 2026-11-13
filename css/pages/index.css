@@ -331,3 +331,9 @@ main {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+#projects-status {
+  margin: 20px 28px;
+  color: var(--muted);
+  font-size: 14px;
+}

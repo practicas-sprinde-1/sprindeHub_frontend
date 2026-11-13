@@ -243,3 +243,9 @@ main {
   color: var(--muted);
   cursor: not-allowed;
 }
+
+#clients-status {
+  margin: 20px 28px;
+  color: var(--muted);
+  font-size: 14px;
+}

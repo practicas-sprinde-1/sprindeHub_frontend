@@ -291,6 +291,7 @@ function createProjectSelection(projects, initialProjectIds) {
 
   const list = document.createElement("ul");
   list.classList.add("project-selection-list");
+  list.dataset.checkboxList = "";
 
   const orderedProjects = orderProjectsByAssignment(
     projects,
@@ -332,6 +333,7 @@ function createProjectSelectionToolbar() {
   counterText.textContent = "Seleccionados: ";
 
   const counterValue = document.createElement("span");
+  counterValue.dataset.checkboxCounter = "";
 
   const searchLabel = document.createElement("label");
   searchLabel.classList.add("project-selection-search");
@@ -340,6 +342,7 @@ function createProjectSelectionToolbar() {
   searchLabelText.textContent = "Buscar proyectos";
 
   const searchInput = document.createElement("input");
+  searchInput.dataset.checkboxSearch = "";
   searchInput.type = "search";
   searchInput.placeholder = "Escribe el nombre de un proyecto";
 
@@ -364,6 +367,7 @@ function orderProjectsByAssignment(projects, initialProjectIds) {
 
 function createProjectSelectionOption(project, initialProjectIds) {
   const listItem = document.createElement("li");
+  listItem.dataset.checkboxItem = "";
 
   const label = document.createElement("label");
 

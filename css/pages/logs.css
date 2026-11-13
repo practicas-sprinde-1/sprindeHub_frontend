@@ -191,3 +191,9 @@ main {
   color: var(--navy);
   text-decoration: underline;
 }
+
+#logs-status {
+  margin: 20px 28px;
+  color: var(--muted);
+  font-size: 14px;
+}

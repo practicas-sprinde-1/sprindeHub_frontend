@@ -331,6 +331,7 @@ function createClientAccessList(clients, initialClientIds) {
 
   const list = document.createElement("ul");
   list.classList.add("user-client-access-list");
+  list.dataset.checkboxList = "";
 
   const orderedClients = orderClientsByAccess(clients, initialClientIds);
 
@@ -369,6 +370,7 @@ function createClientAccessToolbar() {
   counterText.textContent = "Seleccionados: ";
 
   const counterValue = document.createElement("span");
+  counterValue.dataset.checkboxCounter = "";
 
   const searchLabel = document.createElement("label");
   searchLabel.classList.add("user-client-access-search");
@@ -377,6 +379,7 @@ function createClientAccessToolbar() {
   searchLabelText.textContent = "Buscar clientes";
 
   const searchInput = document.createElement("input");
+  searchInput.dataset.checkboxSearch = "";
   searchInput.type = "search";
   searchInput.placeholder = "Escribe el nombre de un cliente";
 
@@ -401,6 +404,7 @@ function orderClientsByAccess(clients, initialClientIds) {
 
 function createClientAccessOption(client, initialClientIds) {
   const listItem = document.createElement("li");
+  listItem.dataset.checkboxItem = "";
 
   const label = document.createElement("label");
   label.classList.add("user-client-access-option");

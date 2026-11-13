@@ -16,6 +16,11 @@ const NAVIGATION_ITEMS = [
     label: "Clientes",
     pageName: "clients.html",
   },
+  {
+    className: "main-header-tags",
+    label: "Dispositivos",
+    pageName: "tags.html",
+  },
   { className: "main-header-users", label: "Usuarios", pageName: "users.html" },
   { className: "main-header-logs", label: "Registros", pageName: "logs.html" },
 ];

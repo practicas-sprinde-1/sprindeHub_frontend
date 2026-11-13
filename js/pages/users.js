@@ -13,6 +13,7 @@ const currentUser = await getProfile();
 
 const headerContainer = document.querySelector("#header-container");
 const tableBody = document.querySelector("#users-table-body");
+const tableStatusMessage = document.querySelector("#users-status");
 const searchInput = document.querySelector("#input-users");
 const recordsPerPageSelect = document.querySelector("#records-per-page");
 const previousPageButton = document.querySelector("#previous-page");
@@ -29,7 +30,7 @@ function configureHeader() {
   headerContainer.append(header);
 }
 
-function enforceAdministratorAccess() {
+function checkAdministratorAccess() {
   if (currentUser.role === ADMIN_ROLE) {
     return;
   }
@@ -205,25 +206,35 @@ function registerEventListeners() {
   deleteUserButton.addEventListener("click", openDeleteUserConfirmation);
 }
 
-const usersTable = currentUser.role === ADMIN_ROLE
-  ? createPaginatedTable({
-      tableBody,
-      searchInput,
-      recordsPerPageSelect,
-      previousPageButton,
-      nextPageButton,
-      pageInformation,
-      loadPage: loadUsersPage,
-      createRow: createUserRow,
-      errorTitle: "No se han podido cargar los usuarios",
-      onLoad: clearUserSelection,
-    })
-  : null;
+const usersTable =
+  currentUser.role === ADMIN_ROLE
+    ? createPaginatedTable({
+        tableBody,
+        searchInput,
+        recordsPerPageSelect,
+        previousPageButton,
+        nextPageButton,
+        pageInformation,
+        loadPage: loadUsersPage,
+        createRow: createUserRow,
+        errorTitle: "No se han podido cargar los usuarios",
+        onLoad: () => {
+          clearUserSelection();
+          showTableStatus("Cargando usuarios...");
+        },
+        onLoadEnd: () => showTableStatus(""),
+      })
+    : null;
 
 configureHeader();
-enforceAdministratorAccess();
+checkAdministratorAccess();
 
 if (currentUser.role === ADMIN_ROLE) {
   registerEventListeners();
   await loadUsers();
+}
+
+function showTableStatus(message) {
+  tableStatusMessage.textContent = message;
+  tableStatusMessage.hidden = !message;
 }
