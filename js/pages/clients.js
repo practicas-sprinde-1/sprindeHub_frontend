@@ -6,6 +6,7 @@ import {
 } from "../api/client.api.js";
 import { getProjectByClientId } from "../api/project.api.js";
 import { createHeader } from "../components/header.js";
+import { openNewClientModal } from "../features/client-create-modal.js";
 
 const storedUser = sessionStorage.getItem("userInfo");
 let currentUser;
@@ -17,6 +18,7 @@ document
   .append(createHeader(currentUser.username, "./profile.html"));
 
 const tableBody = document.querySelector("#clients-table-body");
+const tableStatusMessage = document.querySelector("#clients-status");
 const searchInput = document.querySelector("#input-clients");
 const recordsPerPageSelect = document.querySelector("#records-per-page");
 const previousPageButton = document.querySelector("#previous-page");
@@ -127,6 +129,8 @@ const clientsTable = createPaginatedTable({
   createRow: createClientRow,
   errorTitle: "Error al cargar los clientes",
   initialFilters: { view: "active" },
+  onLoad: () => showTableStatus("Cargando clientes..."),
+  onLoadEnd: () => showTableStatus(""),
 });
 
 archivedClientsButton.addEventListener("click", () => {
@@ -142,7 +146,12 @@ favoriteClientsButton.addEventListener("click", () => {
 });
 
 document.querySelector("#button-new-client").addEventListener("click", () => {
-  window.location.href = "./new-client.html";
+  openNewClientModal(() => clientsTable.load());
 });
 
 await clientsTable.load();
+
+function showTableStatus(message) {
+  tableStatusMessage.textContent = message;
+  tableStatusMessage.hidden = !message;
+}

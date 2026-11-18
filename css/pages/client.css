@@ -33,8 +33,16 @@
 
 #client-detail {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
   gap: 20px;
+}
+
+.client-relations {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  min-width: 0;
 }
 
 .client-header {
@@ -179,6 +187,25 @@
 .client-page li a:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+#client-list-tags:empty {
+  display: none;
+}
+
+.client-tag-details {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+#client-tags-status,
+#client-projects-status,
+#client-users-status {
+  margin: 16px 20px 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .client-data {

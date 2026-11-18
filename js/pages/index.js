@@ -1,6 +1,7 @@
 import { createPaginatedTable } from "../components/paginated-table.js";
 import { createHeader } from "../components/header.js";
 import { createDetailCard } from "../components/detail-card.js";
+import { openNewClientModal } from "../features/client-create-modal.js";
 import { showNotification } from "../components/notifications.js";
 import {
   getArchivedProjects,
@@ -22,6 +23,7 @@ const showArchivedButton = document.querySelector("#archived-projects");
 const showActiveButton = document.querySelector("#actived-projects");
 const showFavoritesButton = document.querySelector("#favorite-projects");
 const tableBody = document.querySelector("#projects-table-body");
+const tableStatusMessage = document.querySelector("#projects-status");
 const projectsTable = document.querySelector(".projects-table");
 const tableTitles = document.querySelector(".table-titles");
 const createNewProjectButton = document.querySelector("#button-new-project");
@@ -279,7 +281,11 @@ const projectTable = createPaginatedTable({
   createRow: createProjectRow,
   errorTitle: "Error al cargar los proyectos",
   initialFilters: { view: "active" },
-  onLoad: closeProjectDetail,
+  onLoad: () => {
+    closeProjectDetail();
+    showTableStatus("Cargando proyectos...");
+  },
+  onLoadEnd: () => showTableStatus(""),
 });
 
 showArchivedButton.addEventListener("click", () => {
@@ -299,8 +305,13 @@ createNewProjectButton.addEventListener("click", () => {
 });
 
 createNewClientButton.addEventListener("click", () => {
-  window.location.href = "./pages/new-client.html";
+  openNewClientModal();
 });
 
 await renderProfileHeader();
 await projectTable.load();
+
+function showTableStatus(message) {
+  tableStatusMessage.textContent = message;
+  tableStatusMessage.hidden = !message;
+}

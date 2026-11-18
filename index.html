@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="./css/components/detail-card.css" />
     <link rel="stylesheet" href="./css/components/command-list.css" />
     <link rel="stylesheet" href="./css/components/detail-list.css" />
+    <link rel="stylesheet" href="./css/components/client-create-modal.css" />
 
     <script type="module" src="./js/pages/index.js"></script>
   </head>
@@ -92,6 +93,11 @@
             <tbody id="projects-table-body"></tbody>
           </table>
         </div>
+
+        <p id="projects-status" role="status" aria-live="polite">
+          Cargando proyectos...
+        </p>
+
         <div class="pagination">
           <label for="records-per-page">
             Mostrar

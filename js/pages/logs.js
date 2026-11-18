@@ -30,6 +30,7 @@ const ENTITY_LOADERS = {
 checkUserAccess();
 
 const tableBody = document.querySelector("#logs-table-body");
+const tableStatusMessage = document.querySelector("#logs-status");
 const searchInput = document.querySelector("#input-logs");
 const filtersContainer = document.querySelector("#filters-container");
 const recordsPerPageSelect = document.querySelector("#records-per-page");
@@ -41,12 +42,18 @@ const users = await loadUsers();
 
 async function loadUsers() {
   const allUsers = [];
-  let usersPage;
+  let hasMoreUsers = true;
 
-  do {
-    usersPage = await getUsers("users", USERS_PAGE_SIZE, allUsers.length);
+  while (hasMoreUsers) {
+    const currentOffset = allUsers.length;
+    const usersPage = await getUsers("users", USERS_PAGE_SIZE, currentOffset);
+
     allUsers.push(...usersPage);
-  } while (usersPage.length === USERS_PAGE_SIZE);
+
+    if (usersPage.length < USERS_PAGE_SIZE) {
+      hasMoreUsers = false;
+    }
+  }
 
   return allUsers;
 }
@@ -180,12 +187,11 @@ const logsTable = createPaginatedTable({
   loadPage: loadLogsPage,
   createRow: createLogRow,
   errorTitle: "Error al cargar los registros",
+  onLoad: () => showTableStatus("Cargando registros..."),
+  onLoadEnd: () => showTableStatus(""),
 });
 
-const logsFilterBar = createLogsFilterBar(
-  handleFiltersChanged,
-  users,
-);
+const logsFilterBar = createLogsFilterBar(handleFiltersChanged, users);
 filtersContainer.appendChild(logsFilterBar);
 
 await logsTable.load();
@@ -199,4 +205,9 @@ export async function findEntity(entityType, entityId) {
   } catch {
     return null;
   }
+}
+
+function showTableStatus(message) {
+  tableStatusMessage.textContent = message;
+  tableStatusMessage.hidden = !message;
 }

@@ -46,10 +46,19 @@
           <span id="client-status" class="client-status"></span>
         </header>
 
-        <section>
-          <h2>Proyectos</h2>
-          <ul id="client-list-projects"></ul>
-        </section>
+        <div class="client-relations">
+          <section>
+            <h2 id="client-projects-title">Proyectos</h2>
+            <p id="client-projects-status"></p>
+            <ul id="client-list-projects"></ul>
+          </section>
+
+          <section>
+            <h2 id="client-tags-title">Dispositivos</h2>
+            <ul id="client-list-tags"></ul>
+            <p id="client-tags-status">Cargando dispositivos...</p>
+          </section>
+        </div>
 
         <dl class="client-data">
           <div class="client-data-centered">
@@ -63,6 +72,7 @@
           <div>
             <dt>Usuarios asignados</dt>
             <dd id="assign-users"></dd>
+            <p id="client-users-status"></p>
           </div>
         </dl>
       </section>

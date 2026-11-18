@@ -1,6 +1,5 @@
 import { showNotification } from "./notifications.js";
 
-// Cada página indica cómo pedir sus datos y cómo construir una fila.
 export function createPaginatedTable(options) {
   const tableBody = options.tableBody;
   const searchInput = options.searchInput;
@@ -13,8 +12,8 @@ export function createPaginatedTable(options) {
     search: "",
     currentPage: 1,
     pageSize: Number(recordsPerPageSelect.value),
-    totalRecords: null,
-    loadedRecords: 0,
+    totalItems: null,
+    loadedItems: 0,
     filters: {},
   };
 
@@ -32,18 +31,18 @@ export function createPaginatedTable(options) {
 
   function updatePagination() {
     previousPageButton.disabled = tableState.currentPage === 1;
-    if (tableState.totalRecords === null) {
+    if (tableState.totalItems === null) {
       pageInformation.textContent = `Página ${tableState.currentPage}`;
-      nextPageButton.disabled = tableState.loadedRecords < tableState.pageSize;
+      nextPageButton.disabled = tableState.loadedItems < tableState.pageSize;
       return;
     }
 
-    let totalPages = Math.ceil(tableState.totalRecords / tableState.pageSize);
+    let totalPages = Math.ceil(tableState.totalItems / tableState.pageSize);
     if (totalPages === 0) {
       totalPages = 1;
     }
 
-    pageInformation.textContent = `Página ${tableState.currentPage} de ${totalPages} (${tableState.totalRecords} registros)`;
+    pageInformation.textContent = `Página ${tableState.currentPage} de ${totalPages} (${tableState.totalItems} registros)`;
     nextPageButton.disabled = tableState.currentPage >= totalPages;
   }
 
@@ -87,7 +86,7 @@ export function createPaginatedTable(options) {
         responseOffset = response.offset;
       }
 
-      // El total puede reducirse y dejar la página solicitada fuera de rango.
+      // Si el offset supera el total de registros, se recalcula la nueva última página válida.
       if (
         totalRecords !== null &&
         responseOffset > 0 &&
@@ -100,7 +99,7 @@ export function createPaginatedTable(options) {
         return load(lastPage);
       }
 
-      // Sin un total, una página vacía indica que hay que retroceder.
+      // Si no hay información de registros, te redirige a una página anterior
       if (totalRecords === null && responseOffset > 0 && items.length === 0) {
         return load(page - 1);
       }
@@ -109,7 +108,6 @@ export function createPaginatedTable(options) {
       for (const item of items) {
         const row = await options.createRow(item);
 
-        // Crear una fila también puede requerir una petición a la API.
         if (requestId !== latestRequestId) {
           return;
         }
@@ -121,8 +119,8 @@ export function createPaginatedTable(options) {
       tableState.currentPage =
         Math.floor(responseOffset / responsePageSize) + 1;
       tableState.pageSize = responsePageSize;
-      tableState.totalRecords = totalRecords;
-      tableState.loadedRecords = items.length;
+      tableState.totalItems = totalRecords;
+      tableState.loadedItems = items.length;
     } catch (error) {
       if (requestId !== latestRequestId) {
         return;
@@ -133,6 +131,10 @@ export function createPaginatedTable(options) {
         title: options.errorTitle,
         message: error.message,
       });
+    } finally {
+      if (requestId === latestRequestId && options.onLoadEnd !== undefined) {
+        options.onLoadEnd();
+      }
     }
 
     updatePagination();
@@ -142,19 +144,18 @@ export function createPaginatedTable(options) {
     clearTimeout(searchTimeout);
     tableState.search = searchInput.value.trim().toLowerCase();
     tableState.currentPage = 1;
-    tableState.totalRecords = null;
-    tableState.loadedRecords = 0;
+    tableState.totalItems = null;
+    tableState.loadedItems = 0;
     tableBody.replaceChildren();
     return load(1);
   }
 
   function setFilters(filters) {
-    // Conserva los filtros anteriores y actualiza los que han cambiado.
-    const updatedFilters = { ...tableState.filters };
-    for (const name of Object.keys(filters)) {
-      updatedFilters[name] = filters[name];
-    }
-    tableState.filters = updatedFilters;
+    tableState.filters = {
+      ...tableState.filters,
+      ...filters,
+    };
+
     return resetTable();
   }
 
