@@ -23,6 +23,16 @@
   background-color: var(--navy);
 }
 
+#button-delete-tag {
+  border-color: var(--test);
+  background-color: var(--surface);
+  color: var(--test);
+}
+
+#button-delete-tag:hover:not(:disabled) {
+  background-color: var(--danger-background);
+}
+
 .tags-table-actions button:focus-visible,
 .tag-modal button:focus-visible,
 .tag-modal input:focus-visible,

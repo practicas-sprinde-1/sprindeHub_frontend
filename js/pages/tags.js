@@ -1,10 +1,11 @@
-import { getTags } from "../api/tag.api.js";
+import { deleteTag, getTags } from "../api/tag.api.js";
 import { getClientById, getLightClients } from "../api/client.api.js";
 import { createHeader } from "../components/header.js";
 import { createPaginatedTable } from "../components/paginated-table.js";
 import { openNewClientModal } from "../features/client-create-modal.js";
 import { openNewTagModal } from "../features/tag-create-modal.js";
 import { createEditTagModal } from "../features/tag-edit-modal.js";
+import { createConfirmModal } from "../features/confirm-modal.js";
 import { showNotification } from "../components/notifications.js";
 
 const currentUser = JSON.parse(sessionStorage.getItem("userInfo") || "null");
@@ -20,6 +21,7 @@ const tableStatusMessage = document.querySelector("#tags-status");
 const searchInput = document.querySelector("#input-tags");
 const tableBody = document.querySelector("#tags-table-body");
 const editTagButton = document.querySelector("#button-edit-tag");
+const deleteTagButton = document.querySelector("#button-delete-tag");
 
 let selectedTag = null;
 let isLoadingTags = false;
@@ -37,12 +39,14 @@ const tagsTable = createPaginatedTable({
   onLoad: () => {
     isLoadingTags = true;
     editTagButton.disabled = true;
+    deleteTagButton.disabled = true;
     clearTagSelection();
     showTableStatus("Cargando dispositivos...");
   },
   onLoadEnd: () => {
     isLoadingTags = false;
     editTagButton.disabled = false;
+    deleteTagButton.disabled = false;
   },
 });
 
@@ -50,6 +54,7 @@ document.querySelector("#button-new-tag").addEventListener("click", () => {
   openNewTagModal(refreshTagsAfterCreate);
 });
 editTagButton.addEventListener("click", openEditTagModal);
+deleteTagButton.addEventListener("click", openDeleteTagConfirmation);
 
 await tagsTable.load();
 
@@ -76,6 +81,42 @@ function openEditTagModal() {
   const modal = createEditTagModal(selectedTag, tagsTable.load);
   document.body.append(modal);
   modal.showModal();
+}
+
+function openDeleteTagConfirmation() {
+  if (
+    isLoadingTags ||
+    document.querySelector(".modal-overlay, .confirm-overlay, dialog[open]")
+  ) {
+    return;
+  }
+
+  if (selectedTag === null) {
+    showNotification({
+      type: "info",
+      title: "Selecciona un dispositivo",
+      message: "Selecciona una fila de la tabla antes de borrar el dispositivo.",
+    });
+    return;
+  }
+
+  const tagToDelete = selectedTag;
+  const deviceType = tagToDelete.device_type || "Sin tipo";
+  const confirmModal = createConfirmModal(
+    "Borrar dispositivo",
+    `¿Estás seguro de que deseas borrar el dispositivo "${deviceType}" (ID ${tagToDelete.id})?`,
+    async () => {
+      await deleteTag(tagToDelete.id);
+      tagsTable.load();
+      showNotification({
+        type: "success",
+        title: "Dispositivo borrado",
+        message: "El dispositivo se ha borrado correctamente.",
+      });
+    },
+  );
+
+  document.body.append(confirmModal);
 }
 
 function selectTag(tag, row) {
