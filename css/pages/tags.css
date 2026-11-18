@@ -17,7 +17,7 @@
   transition: background-color 0.2s ease;
 }
 
-.tags-table-actions button:hover,
+.tags-table-actions button:hover:not(:disabled),
 .tag-modal button:hover:not(:disabled) {
   border-color: var(--blue);
   background-color: var(--navy);
@@ -41,6 +41,25 @@
 
 .tags-table td {
   overflow-wrap: anywhere;
+}
+
+.tags-table tbody tr {
+  cursor: pointer;
+}
+
+.tags-table tbody tr.tag-row-selected,
+.tags-table tbody tr.tag-row-selected:hover {
+  background-color: var(--blue-light);
+}
+
+.tags-table tbody tr:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: -3px;
+}
+
+.tags-table-actions button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 #tags-status {
@@ -79,13 +98,13 @@
   line-height: 1.5;
 }
 
-#tag-form {
+.tag-form {
   display: grid;
   gap: 20px;
   margin-top: 20px;
 }
 
-#tag-form-fields {
+.tag-form-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
@@ -95,7 +114,7 @@
   border: 0;
 }
 
-#tag-form-fields legend {
+.tag-form-fields legend {
   margin-bottom: 16px;
   padding: 0;
   color: var(--heading);
@@ -107,6 +126,22 @@
   display: grid;
   gap: 8px;
   font-size: 14px;
+  font-weight: 600;
+}
+
+.tag-modal .tag-form-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tag-modal .tag-form-field label {
+  display: block;
+}
+
+.tag-modal .tag-edit-client {
+  margin-bottom: 8px;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -154,4 +189,11 @@
 .tag-modal button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.tag-edit-modal .tag-modal-actions button {
+  flex: 0 0 110px;
+  width: 110px;
+  height: 40px;
+  padding: 0;
 }

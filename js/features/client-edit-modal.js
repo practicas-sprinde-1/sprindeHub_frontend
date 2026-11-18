@@ -12,6 +12,10 @@ import {
   revokeClientAccess,
 } from "../api/user_client.api.js";
 import { createCheckboxListManager } from "../components/checkbox-list-manager.js";
+import {
+  createDeviceEditorFields,
+  getDeviceChanges,
+} from "../components/device-form.js";
 import { showNotification } from "../components/notifications.js";
 
 const SAVE_ERROR_DURATION = 7000;
@@ -225,7 +229,10 @@ function renderDeviceEditor(listItem, device, deviceSection, isNew = false) {
   const form = document.createElement("form");
   form.classList.add("client-device-editor");
   const fields = document.createElement("fieldset");
-  const { inputs, inputElements } = createDeviceEditorFields(device);
+  const { inputs, inputElements } = createDeviceEditorFields(
+    device,
+    "client-edit-field",
+  );
   fields.append(...inputElements);
 
   const saveButton = createButton("Guardar", "modal-save-button");
@@ -247,48 +254,6 @@ function renderDeviceEditor(listItem, device, deviceSection, isNew = false) {
   fields.append(saveButton, cancelButton);
   form.append(fields);
   listItem.replaceChildren(form);
-}
-
-function createDeviceForm(device) {
-  const deviceType = createInput("text", device.device_type, "device_type");
-  const brand = createInput("text", device.brand, "brand");
-  const model = createInput("text", device.model, "model");
-  const mac = createInput("text", device.mac, "mac");
-  const ip = createInput("text", device.ip, "ip");
-
-  deviceType.maxLength = 50;
-  brand.maxLength = 50;
-  model.maxLength = 100;
-  mac.maxLength = 255;
-  ip.maxLength = 255;
-
-  deviceType.required = true;
-  brand.required = true;
-  model.required = true;
-
-  return { device_type: deviceType, brand, model, mac, ip };
-}
-
-function createDeviceEditorFields(device) {
-  const inputs = createDeviceForm(device);
-  const inputElements = [
-    createField("Dispositivo (tipo) *", inputs.device_type),
-    createField("Marca *", inputs.brand),
-    createField("Modelo *", inputs.model),
-    createField("Dirección MAC (opcional)", inputs.mac),
-    createField("Dirección IP (opcional)", inputs.ip),
-  ];
-  return { inputs, inputElements };
-}
-
-function getDeviceChanges(inputs) {
-  return {
-    device_type: inputs.device_type.value.trim(),
-    brand: inputs.brand.value.trim(),
-    model: inputs.model.value.trim(),
-    mac: inputs.mac.value.trim() || null,
-    ip: inputs.ip.value.trim() || null,
-  };
 }
 
 async function saveDevice(listItem, device, inputs, fields, deviceSection, isNew) {

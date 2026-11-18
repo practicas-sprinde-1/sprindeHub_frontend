@@ -1,6 +1,10 @@
 import { setTag } from "../api/tag.api.js";
 import { getLightClients } from "../api/client.api.js";
 import { showNotification } from "../components/notifications.js";
+import {
+  createDeviceEditorFields,
+  getDeviceChanges,
+} from "../components/device-form.js";
 
 export async function openNewTagModal(onSaveSuccess) {
   if (document.querySelector(".modal-overlay, dialog[open]")) return;
@@ -73,12 +77,8 @@ async function saveNewTag(modal, onSaveSuccess) {
 
   const formValues = modal.form.elements;
   const tagData = {
+    ...getDeviceChanges(modal.inputs),
     client_id: Number(formValues.client_id.value),
-    device_type: formValues.device_type.value,
-    brand: formValues.brand.value,
-    model: formValues.model.value,
-    mac: formValues.mac.value || null,
-    ip: formValues.ip.value || null,
   };
 
   setSavingState(modal, true);
@@ -146,9 +146,11 @@ function createNewTagModal() {
 function createTagForm() {
   const form = document.createElement("form");
   form.id = "tag-form";
+  form.classList.add("tag-form");
 
   const formFields = document.createElement("fieldset");
   formFields.id = "tag-form-fields";
+  formFields.classList.add("tag-form-fields");
   formFields.disabled = true;
 
   const legend = document.createElement("legend");
@@ -160,14 +162,11 @@ function createTagForm() {
   clientSelect.autofocus = true;
   clientSelect.append(new Option("Cargando clientes...", ""));
 
+  const { inputs, inputElements } = createDeviceEditorFields({}, "tag-form-field");
   formFields.append(
     legend,
     createField("Cliente *", clientSelect),
-    createTextField("Dispositivo (tipo) *", "device_type", 50, true),
-    createTextField("Marca *", "brand", 50, true),
-    createTextField("Modelo *", "model", 100, true),
-    createTextField("Dirección MAC (opcional)", "mac", 255),
-    createTextField("Dirección IP (opcional)", "ip", 255),
+    ...inputElements,
   );
 
   const statusMessage = document.createElement("p");
@@ -193,19 +192,11 @@ function createTagForm() {
     form,
     formFields,
     clientSelect,
+    inputs,
     statusMessage,
     cancelButton,
     saveButton,
   };
-}
-
-function createTextField(labelText, name, maxLength, required = false) {
-  const input = document.createElement("input");
-  input.type = "text";
-  input.name = name;
-  input.maxLength = maxLength;
-  input.required = required;
-  return createField(labelText, input);
 }
 
 function createField(labelText, input) {
