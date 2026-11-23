@@ -122,7 +122,7 @@ function createTagListItem(tag) {
   const name = document.createElement("strong");
   const details = document.createElement("span");
 
-  name.textContent = `${tag.device_type} · ${tag.brand} ${tag.model}`;
+  name.textContent = `${tag.tag_type} · ${tag.brand} ${tag.model}`;
   details.className = "client-tag-details";
   details.textContent = `MAC: ${tag.mac || "—"} · IP: ${tag.ip || "—"}`;
   listItem.append(name, details);

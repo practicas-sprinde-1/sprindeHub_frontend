@@ -1,12 +1,12 @@
 let inputId = 0;
 
-export function createDeviceEditorFields(
-  device = {},
-  fieldClassName = "device-form-field",
+export function createTagEditorFields(
+  tag = {},
+  fieldClassName = "tag-form-field",
 ) {
-  const inputs = createDeviceForm(device);
+  const inputs = createTagForm(tag);
   const inputElements = [
-    createField("Dispositivo (tipo) *", inputs.device_type, fieldClassName),
+    createField("Dispositivo (tipo) *", inputs.tag_type, fieldClassName),
     createField("Marca *", inputs.brand, fieldClassName),
     createField("Modelo *", inputs.model, fieldClassName),
     createField("Dirección MAC (opcional)", inputs.mac, fieldClassName),
@@ -15,29 +15,29 @@ export function createDeviceEditorFields(
   return { inputs, inputElements };
 }
 
-function createDeviceForm(device) {
-  const deviceType = createInput("text", device.device_type, "device_type");
-  const brand = createInput("text", device.brand, "brand");
-  const model = createInput("text", device.model, "model");
-  const mac = createInput("text", device.mac, "mac");
-  const ip = createInput("text", device.ip, "ip");
+function createTagForm(tag) {
+  const tagType = createInput("text", tag.tag_type, "tag_type");
+  const brand = createInput("text", tag.brand, "brand");
+  const model = createInput("text", tag.model, "model");
+  const mac = createInput("text", tag.mac, "mac");
+  const ip = createInput("text", tag.ip, "ip");
 
-  deviceType.maxLength = 50;
+  tagType.maxLength = 50;
   brand.maxLength = 50;
   model.maxLength = 100;
   mac.maxLength = 255;
   ip.maxLength = 255;
 
-  deviceType.required = true;
+  tagType.required = true;
   brand.required = true;
   model.required = true;
 
-  return { device_type: deviceType, brand, model, mac, ip };
+  return { tag_type: tagType, brand, model, mac, ip };
 }
 
-export function getDeviceChanges(inputs) {
+export function getTagChanges(inputs) {
   return {
-    device_type: inputs.device_type.value.trim(),
+    tag_type: inputs.tag_type.value.trim(),
     brand: inputs.brand.value.trim(),
     model: inputs.model.value.trim(),
     mac: inputs.mac.value.trim() || null,
@@ -51,7 +51,7 @@ function createInput(type, value, name) {
   input.name = name;
   input.value = value ?? "";
   inputId += 1;
-  input.id = `device-${name}-${inputId}`;
+  input.id = `tag-${name}-${inputId}`;
   return input;
 }
 

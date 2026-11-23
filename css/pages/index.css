@@ -20,6 +20,7 @@ main {
 /* Cabecera y botones. */
 .projects-table-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
@@ -53,15 +54,32 @@ main {
 }
 
 .button-new-project,
-.button-new-client {
+.button-new-client,
+.button-edit-project {
   background-color: var(--button-background);
   color: var(--on-primary);
 }
 
 .button-new-project:hover,
-.button-new-client:hover {
+.button-new-client:hover,
+.button-edit-project:hover:not(:disabled) {
   border-color: var(--blue);
   background-color: var(--navy);
+}
+
+.projects-table-actions .button-delete-project {
+  border-color: var(--test);
+  background-color: var(--surface);
+  color: var(--test);
+}
+
+.button-delete-project:hover:not(:disabled) {
+  background-color: var(--danger-background);
+}
+
+.projects-table-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Buscador. */
@@ -157,6 +175,7 @@ main {
 }
 
 .projects-table tbody tr {
+  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
@@ -166,6 +185,11 @@ main {
 
 .projects-table tbody tr:hover {
   background-color: var(--hover-surface);
+}
+
+.projects-table tbody tr.project-row-selected,
+.projects-table tbody tr.project-row-selected:hover {
+  background-color: var(--blue-light);
 }
 
 .projects-table td strong {

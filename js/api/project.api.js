@@ -67,10 +67,13 @@ export async function getProjectById(id) {
   );
 }
 
-export async function getProjectByClientId(id) {
-  return getData(
-    `${API_BASE_URL}/projects/client/${id}`,
-    "No se ha podido obtener el proyecto con ese id",
+export async function getProjectByClientId(clientId, limit = 20, offset = 0) {
+  return getPaginatedData(
+    `projects/client/${clientId}`,
+    limit,
+    offset,
+    "",
+    "No se han podido obtener los proyectos del cliente",
   );
 }
 
