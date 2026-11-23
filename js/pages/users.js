@@ -24,6 +24,42 @@ const editUserButton = document.querySelector("#button-edit-user");
 const deleteUserButton = document.querySelector("#button-delete-user");
 
 let selectedUser = null;
+let isLoadingUsers = false;
+let isUserActionInProgress = false;
+
+const usersTable =
+  currentUser.role === ADMIN_ROLE
+    ? createPaginatedTable({
+        tableBody,
+        searchInput,
+        recordsPerPageSelect,
+        previousPageButton,
+        nextPageButton,
+        pageInformation,
+        loadPage: loadUsersPage,
+        createRow: createUserRow,
+        errorTitle: "No se han podido cargar los usuarios",
+        onLoad: () => {
+          isLoadingUsers = true;
+          updateUserActionButtons();
+          clearUserSelection();
+          showTableStatus("Cargando usuarios...");
+        },
+        onLoadEnd: () => {
+          isLoadingUsers = false;
+          updateUserActionButtons();
+          showTableStatus("");
+        },
+      })
+    : null;
+
+configureHeader();
+checkAdministratorAccess();
+
+if (currentUser.role === ADMIN_ROLE) {
+  registerEventListeners();
+  await loadUsers();
+}
 
 function configureHeader() {
   const header = createHeader(currentUser.username, "./profile.html");
@@ -49,6 +85,43 @@ function checkAdministratorAccess() {
   setTimeout(() => {
     window.location.href = "../index.html";
   }, 1500);
+}
+
+function registerEventListeners() {
+  createUserButton.addEventListener("click", openCreateUserModal);
+  editUserButton.addEventListener("click", openEditUserModal);
+  deleteUserButton.addEventListener("click", openDeleteUserConfirmation);
+}
+
+function loadUsers() {
+  return usersTable.load();
+}
+
+async function loadUsersPage({ limit, offset, search }) {
+  const users = await getUsers("users", limit, offset, search);
+
+  // GET /admin/users devuelve una lista, sin total de registros.
+  return { items: users };
+}
+
+function showTableStatus(message) {
+  tableStatusMessage.textContent = message;
+  tableStatusMessage.hidden = !message;
+}
+
+function createUserRow(user) {
+  const row = document.createElement("tr");
+
+  row.addEventListener("click", () => selectUser(user, row));
+  row.append(
+    createTableCell(user.id, "cell-centered"),
+    createTableCell(user.email),
+    createTableCell(user.username),
+    createRoleCell(user.role),
+    createStatusCell(user.is_active),
+  );
+
+  return row;
 }
 
 function createTableCell(content, className) {
@@ -86,43 +159,14 @@ function createStatusCell(isActive) {
   return cell;
 }
 
-function createUserRow(userRecord) {
-  const row = document.createElement("tr");
-
-  if (userRecord === selectedUser) {
-    row.classList.add("user-row-selected");
+function selectUser(user, row) {
+  if (isLoadingUsers) {
+    return;
   }
 
-  row.addEventListener("click", () => selectUser(userRecord, row));
-  row.append(
-    createTableCell(userRecord.id, "cell-centered"),
-    createTableCell(userRecord.email),
-    createTableCell(userRecord.username),
-    createRoleCell(userRecord.role),
-    createStatusCell(userRecord.is_active),
-  );
-
-  return row;
-}
-
-function selectUser(userRecord, row) {
-  const previouslySelectedRow = tableBody.querySelector(".user-row-selected");
-  previouslySelectedRow?.classList.remove("user-row-selected");
-
-  selectedUser = userRecord;
+  clearUserSelection();
+  selectedUser = user;
   row.classList.add("user-row-selected");
-}
-
-async function loadUsersPage(request) {
-  const users = await getUsers(
-    "users",
-    request.limit,
-    request.offset,
-    request.search,
-  );
-
-  // GET /admin/users devuelve una lista, sin total de registros.
-  return { items: users };
 }
 
 function clearUserSelection() {
@@ -131,24 +175,29 @@ function clearUserSelection() {
   selectedRow?.classList.remove("user-row-selected");
 }
 
-function loadUsers() {
-  return usersTable.load();
+function updateUserActionButtons() {
+  const shouldDisableUserActions = isLoadingUsers || isUserActionInProgress;
+  editUserButton.disabled = shouldDisableUserActions;
+  deleteUserButton.disabled = shouldDisableUserActions;
 }
 
 function hasOpenModal() {
-  return document.querySelector(".modal-overlay") !== null;
+  const openModal = document.querySelector(
+    ".modal-overlay, .confirm-overlay, dialog[open]",
+  );
+  return openModal !== null;
 }
 
-function notifyMissingSelection(action) {
+function notifyMissingSelection(actionDescription) {
   showNotification({
     type: "info",
     title: "Selecciona un usuario",
-    message: `Selecciona un usuario de la tabla antes de ${action}.`,
+    message: `Selecciona un usuario de la tabla antes de ${actionDescription}.`,
   });
 }
 
 function openCreateUserModal() {
-  if (hasOpenModal()) {
+  if (isUserActionInProgress || hasOpenModal()) {
     return;
   }
 
@@ -157,7 +206,7 @@ function openCreateUserModal() {
 }
 
 async function openEditUserModal() {
-  if (hasOpenModal()) {
+  if (isLoadingUsers || isUserActionInProgress || hasOpenModal()) {
     return;
   }
 
@@ -166,15 +215,34 @@ async function openEditUserModal() {
     return;
   }
 
-  const modal = await createEditUserModal(selectedUser, loadUsers);
-  document.body.append(modal);
+  const userToEdit = selectedUser;
+  // Hasta que cargan los permisos, aún no hay un modal abierto que bloquee otro clic.
+  isUserActionInProgress = true;
+  updateUserActionButtons();
+
+  try {
+    const editModal = await createEditUserModal(userToEdit, loadUsers);
+
+    // Si la selección cambió durante la espera, el formulario ya no corresponde a la fila actual.
+    if (selectedUser !== userToEdit) {
+      return;
+    }
+
+    document.body.append(editModal);
+  } catch (error) {
+    showNotification({
+      type: "error",
+      title: "No se ha podido abrir la edición del usuario",
+      message: error.message,
+    });
+  } finally {
+    isUserActionInProgress = false;
+    updateUserActionButtons();
+  }
 }
 
 function openDeleteUserConfirmation() {
-  const hasOpenConfirmation =
-    document.querySelector(".confirm-overlay") !== null;
-
-  if (hasOpenModal() || hasOpenConfirmation) {
+  if (isLoadingUsers || isUserActionInProgress || hasOpenModal()) {
     return;
   }
 
@@ -183,58 +251,29 @@ function openDeleteUserConfirmation() {
     return;
   }
 
+  // El borrado conserva el ID que corresponde al nombre mostrado en el diálogo.
+  const userIdToDelete = selectedUser.id;
   const confirmModal = createConfirmModal(
     "Borrar usuario",
     `¿Estás seguro de que deseas borrar el usuario "${selectedUser.username}"?`,
     async () => {
-      await deleteUser(selectedUser.id);
-      loadUsers();
-      showNotification({
-        type: "success",
-        title: "Usuario borrado",
-        message: "El usuario se ha borrado correctamente.",
-      });
+      isUserActionInProgress = true;
+      updateUserActionButtons();
+
+      try {
+        await deleteUser(userIdToDelete);
+        await loadUsers();
+        showNotification({
+          type: "success",
+          title: "Usuario borrado",
+          message: "El usuario se ha borrado correctamente.",
+        });
+      } finally {
+        isUserActionInProgress = false;
+        updateUserActionButtons();
+      }
     },
   );
 
   document.body.append(confirmModal);
-}
-
-function registerEventListeners() {
-  createUserButton.addEventListener("click", openCreateUserModal);
-  editUserButton.addEventListener("click", openEditUserModal);
-  deleteUserButton.addEventListener("click", openDeleteUserConfirmation);
-}
-
-const usersTable =
-  currentUser.role === ADMIN_ROLE
-    ? createPaginatedTable({
-        tableBody,
-        searchInput,
-        recordsPerPageSelect,
-        previousPageButton,
-        nextPageButton,
-        pageInformation,
-        loadPage: loadUsersPage,
-        createRow: createUserRow,
-        errorTitle: "No se han podido cargar los usuarios",
-        onLoad: () => {
-          clearUserSelection();
-          showTableStatus("Cargando usuarios...");
-        },
-        onLoadEnd: () => showTableStatus(""),
-      })
-    : null;
-
-configureHeader();
-checkAdministratorAccess();
-
-if (currentUser.role === ADMIN_ROLE) {
-  registerEventListeners();
-  await loadUsers();
-}
-
-function showTableStatus(message) {
-  tableStatusMessage.textContent = message;
-  tableStatusMessage.hidden = !message;
 }

@@ -34,7 +34,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "data projects"
-    "devices users";
+    "tags users";
   gap: 20px;
   min-width: 0;
 }
@@ -47,8 +47,8 @@
   grid-area: projects;
 }
 
-.client-edit-layout > .client-device-section {
-  grid-area: devices;
+.client-edit-layout > .client-tag-section {
+  grid-area: tags;
 }
 
 .client-edit-layout > .client-user-access {
@@ -278,20 +278,20 @@
   font-size: 14px;
 }
 
-.client-device-description {
+.client-tag-description {
   margin: 14px 20px 0;
   color: var(--muted);
   font-size: 13px;
 }
 
-.client-edit-modal .client-device-section li {
+.client-edit-modal .client-tag-section li {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
 }
 
-.client-device-content {
+.client-tag-content {
   flex: 1 1 180px;
   display: grid;
   gap: 4px;
@@ -299,17 +299,17 @@
   overflow-wrap: anywhere;
 }
 
-.client-device-content span {
+.client-tag-content span {
   color: var(--muted);
   font-size: 13px;
 }
 
-.client-device-editor {
+.client-tag-editor {
   width: 100%;
   min-width: 0;
 }
 
-.client-device-editor fieldset {
+.client-tag-editor fieldset {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -319,24 +319,24 @@
   border: 0;
 }
 
-.client-edit-modal .client-device-editor .client-edit-field {
+.client-edit-modal .client-tag-editor .client-edit-field {
   flex: 1 1 160px;
   display: grid;
   gap: 6px;
   min-width: 0;
 }
 
-.client-edit-modal .client-device-editor label {
+.client-edit-modal .client-tag-editor label {
   display: block;
   cursor: default;
 }
 
-.client-edit-modal .client-device-editor .modal-save-button,
-.client-edit-modal .client-device-editor .modal-cancel-button {
+.client-edit-modal .client-tag-editor .modal-save-button,
+.client-edit-modal .client-tag-editor .modal-cancel-button {
   align-self: flex-end;
 }
 
-.client-device-editor input {
+.client-tag-editor input {
   box-sizing: border-box;
   width: 100%;
   height: 40px;
@@ -349,7 +349,7 @@
   font: inherit;
 }
 
-.client-device-editor input:focus-visible {
+.client-tag-editor input:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }

@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="../css/components/notifications.css" />
     <link rel="stylesheet" href="../css/pages/clients.css" />
     <link rel="stylesheet" href="../css/components/client-create-modal.css" />
+    <link rel="stylesheet" href="../css/components/client-edit-modal.css" />
+    <link rel="stylesheet" href="../css/components/confirm-modal.css" />
 
     <script type="module" src="../js/pages/clients.js"></script>
   </head>
@@ -27,13 +29,31 @@
             <h1 id="clients-title">Clientes</h1>
           </div>
 
-          <button
-            class="button-new-client"
-            id="button-new-client"
-            type="button"
-          >
-            + Nuevo cliente
-          </button>
+          <div class="clients-table-actions">
+            <button
+              class="button-new-client"
+              id="button-new-client"
+              type="button"
+            >
+              + Nuevo cliente
+            </button>
+            <button
+              class="button-edit-client"
+              id="button-edit-client"
+              type="button"
+              disabled
+            >
+              Modificar Cliente
+            </button>
+            <button
+              class="button-delete-client"
+              id="button-delete-client"
+              type="button"
+              disabled
+            >
+              Eliminar Cliente
+            </button>
+          </div>
         </header>
 
         <div class="table-actions">

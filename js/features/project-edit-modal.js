@@ -47,28 +47,48 @@ const REPOSITORY_TYPES = [
   ["qa", "QA"],
 ];
 
-export async function createEditModalProject(project, onSave) {
+export async function createEditModalProject(project, onSaveSuccess) {
   const overlay = createElement("div", "modal-overlay");
   const modal = createElement("section", "project-edit-modal");
   const clients = await getLightClients("clients");
-  const projectFields = createProjectForm(project, clients);
+  const projectForm = createProjectForm(project, clients);
+  const projectSections = buildProjectSections(project);
+
+  const closeModal = async () => {
+    overlay.remove();
+
+    const hasSavedChanges =
+      projectForm.hasSavedChanges ||
+      projectSections.some((section) => section.hasSavedChanges);
+    if (!hasSavedChanges) {
+      return;
+    }
+
+    try {
+      await onSaveSuccess(project);
+    } catch (error) {
+      showNotification({
+        type: "error",
+        title: "No se ha podido actualizar el proyecto",
+        message: error.message,
+        duration: SAVE_ERROR_DURATION,
+      });
+    }
+  };
 
   const title = createElement("h1", "modal-title");
   title.textContent = `Editando proyecto: ${project.name}`;
 
   const closeButton = createButton("×", "modal-close-button");
-  closeButton.addEventListener("click", () => {
-    onSave(project);
-    overlay.remove();
-  });
+  closeButton.addEventListener("click", closeModal);
 
   const saveButton = createButton("Guardar", "modal-save-button");
   saveButton.addEventListener("click", async () => {
-    await saveProject(project, projectFields, clients, onSave, overlay);
+    await saveProject(project, projectForm, clients, onSaveSuccess, overlay);
   });
 
   const cancelButton = createButton("Cancelar", "modal-cancel-button");
-  cancelButton.addEventListener("click", () => overlay.remove());
+  cancelButton.addEventListener("click", closeModal);
 
   const modalActions = createElement("div", "modal-actions");
   modalActions.append(saveButton, cancelButton);
@@ -76,11 +96,11 @@ export async function createEditModalProject(project, onSave) {
   modal.append(
     closeButton,
     title,
-    createProjectField("Nombre del proyecto", projectFields.name),
-    createProjectField("Descripción", projectFields.description),
-    createProjectField("Cliente", projectFields.client),
-    createStatusField(projectFields.status),
-    ...buildProjectSections(project),
+    createProjectField("Nombre del proyecto", projectForm.name),
+    createProjectField("Descripción", projectForm.description),
+    createProjectField("Cliente", projectForm.client),
+    createStatusField(projectForm.status),
+    ...projectSections.map((section) => section.element),
     modalActions,
   );
   overlay.append(modal);
@@ -88,10 +108,16 @@ export async function createEditModalProject(project, onSave) {
   return overlay;
 }
 
-async function saveProject(project, fields, clients, onSave, overlay) {
+async function saveProject(
+  project,
+  projectForm,
+  clients,
+  onSaveSuccess,
+  overlay,
+) {
   try {
-    await updateProjectChanges(project, fields, clients);
-    await onSave(project);
+    await updateProjectChanges(project, projectForm, clients);
+    await onSaveSuccess(project);
     overlay.remove();
     showNotification({
       type: "success",
@@ -108,19 +134,38 @@ async function saveProject(project, fields, clients, onSave, overlay) {
   }
 }
 
-async function updateProjectChanges(project, fields, clients) {
-  project.name = fields.name.value.trim();
-  project.description = fields.description.value.trim();
-  project.client_id = Number(fields.client.value);
+async function updateProjectChanges(project, projectForm, clients) {
+  const selectedClientValue = projectForm.client.value;
+  const selectedClientId =
+    selectedClientValue === "" ? null : Number(selectedClientValue);
+  const hasClientChanged = selectedClientId !== project.client_id;
+  const projectChanges = {
+    name: projectForm.name.value.trim(),
+    description: projectForm.description.value.trim(),
+  };
 
-  await updateProjectStatus(project, fields.status.value === "true");
+  // La API solo admite clientes activos al cambiar la asignación.
+  if (hasClientChanged) {
+    projectChanges.client_id = selectedClientId;
+  }
 
-  project.client = clients.find((client) => client.id === project.client_id);
-  await modifyProject(project, project.id);
+  await updateProjectStatus(project, projectForm);
+  await modifyProject(projectChanges, project.id);
+  Object.assign(project, projectChanges);
+  projectForm.hasSavedChanges = true;
+
+  if (!hasClientChanged) {
+    return;
+  }
+
+  project.client = clients.find((client) => client.id === selectedClientId) ?? null;
 }
 
-async function updateProjectStatus(project, isActive) {
-  if (project.is_active === isActive) return;
+async function updateProjectStatus(project, projectForm) {
+  const isActive = projectForm.status.value === "true";
+  if (project.is_active === isActive) {
+    return;
+  }
 
   if (isActive) {
     await restoreProject(project.id);
@@ -129,6 +174,8 @@ async function updateProjectStatus(project, isActive) {
   }
 
   project.is_active = isActive;
+  // El estado se guarda antes de enviar los demás campos del formulario.
+  projectForm.hasSavedChanges = true;
 }
 
 function createProjectForm(project, clients) {
@@ -139,11 +186,25 @@ function createProjectForm(project, clients) {
     "description",
     "Descripción del proyecto",
   );
-  const client = createSelect(
-    clients.map(({ id, name: clientName }) => [id, clientName]),
-    project.client_id,
-    "client_id",
-  );
+  const currentClientId = project.client_id;
+  const selectedClientValue = currentClientId ?? "";
+  const clientOptions = [];
+
+  const isCurrentClientListed = clients.some((client) => {
+    return client.id === currentClientId;
+  });
+
+  // Añade primero el cliente archivado o la opción «No asignado».
+  if (!isCurrentClientListed) {
+    const currentClientName = project.client?.name ?? "No asignado";
+    clientOptions.push([selectedClientValue, currentClientName]);
+  }
+
+  for (const client of clients) {
+    clientOptions.push([client.id, client.name]);
+  }
+
+  const client = createSelect(clientOptions, selectedClientValue, "client_id");
   const status = createSelect(
     [
       ["true", "Activo"],
@@ -153,7 +214,7 @@ function createProjectForm(project, clients) {
     "is_active",
   );
 
-  return { name, description, client, status };
+  return { name, description, client, status, hasSavedChanges: false };
 }
 
 function createProjectField(labelText, inputElement) {
@@ -402,7 +463,12 @@ function createNoteSection(notes, projectId) {
 }
 
 function createEditableListSection(sectionOptions) {
-  const section = document.createElement("section");
+  const element = document.createElement("section");
+  const editableSection = {
+    ...sectionOptions,
+    element,
+    hasSavedChanges: false,
+  };
   const title = createTextElement("h3", sectionOptions.title);
   const list = document.createElement("ul");
   const addButton = createButton(sectionOptions.addLabel, "modal-add-button");
@@ -412,25 +478,25 @@ function createEditableListSection(sectionOptions) {
     list.append(listItem);
     renderItemEditor(
       listItem,
-      sectionOptions.createEmptyItem(),
-      sectionOptions,
+      editableSection.createEmptyItem(),
+      editableSection,
       true,
     );
   });
 
-  sectionOptions.list.forEach((item) => {
+  editableSection.list.forEach((item) => {
     const listItem = document.createElement("li");
-    renderItemReadView(listItem, item, sectionOptions);
+    renderItemReadView(listItem, item, editableSection);
     list.append(listItem);
   });
 
-  section.append(title, list, addButton);
-  return section;
+  element.append(title, list, addButton);
+  return editableSection;
 }
 
-function renderItemEditor(listItem, item, sectionOptions, isNew = false) {
+function renderItemEditor(listItem, item, editableSection, isNew = false) {
   const { inputElements, getChanges } =
-    sectionOptions.createEditorSections(item);
+    editableSection.createEditorSections(item);
   const saveButton = createButton("Guardar", "modal-save-button");
   const cancelButton = createButton("Cancelar");
 
@@ -439,7 +505,7 @@ function renderItemEditor(listItem, item, sectionOptions, isNew = false) {
       listItem.remove();
       return;
     }
-    renderItemReadView(listItem, item, sectionOptions);
+    renderItemReadView(listItem, item, editableSection);
   });
 
   saveButton.addEventListener("click", async () => {
@@ -448,43 +514,39 @@ function renderItemEditor(listItem, item, sectionOptions, isNew = false) {
       const savedItem = await updateListItem(
         item,
         updatedItem,
-        sectionOptions,
+        editableSection,
         isNew,
       );
-      renderItemReadView(listItem, savedItem, sectionOptions);
-    }, sectionOptions.itemName);
+      editableSection.hasSavedChanges = true;
+      renderItemReadView(listItem, savedItem, editableSection);
+    }, editableSection.itemName);
   });
 
   listItem.replaceChildren(...inputElements, saveButton, cancelButton);
 }
 
-function renderItemReadView(listItem, item, sectionOptions) {
+function renderItemReadView(listItem, item, editableSection) {
   const editButton = createButton("Editar");
   editButton.addEventListener("click", () => {
-    renderItemEditor(listItem, item, sectionOptions);
+    renderItemEditor(listItem, item, editableSection);
   });
 
-  const deleteButton = createDeleteButton(
-    sectionOptions.list,
-    item,
-    listItem,
-    sectionOptions.deleteItem,
-  );
+  const deleteButton = createDeleteButton(listItem, item, editableSection);
   listItem.replaceChildren(
-    sectionOptions.createReadContent(item),
+    editableSection.createReadContent(item),
     editButton,
     deleteButton,
   );
 }
 
-async function updateListItem(item, updatedItem, sectionOptions, isNew) {
+async function updateListItem(item, updatedItem, editableSection, isNew) {
   if (isNew) {
-    const createdItem = await sectionOptions.createItem(updatedItem);
-    sectionOptions.list.push(createdItem);
+    const createdItem = await editableSection.createItem(updatedItem);
+    editableSection.list.push(createdItem);
     return createdItem;
   }
 
-  await sectionOptions.updateItem(updatedItem, updatedItem.id);
+  await editableSection.updateItem(updatedItem, updatedItem.id);
   Object.assign(item, updatedItem);
   return item;
 }
@@ -502,14 +564,17 @@ async function saveListItem(saveItem, itemName) {
   }
 }
 
-function createDeleteButton(list, item, listItem, deleteItem) {
+function createDeleteButton(listItem, item, editableSection) {
   const deleteButton = createButton("Eliminar");
   deleteButton.addEventListener("click", async () => {
-    await deleteItem(item.id);
+    await editableSection.deleteItem(item.id);
 
-    const itemIndex = list.indexOf(item);
-    if (itemIndex !== -1) list.splice(itemIndex, 1);
+    const itemIndex = editableSection.list.indexOf(item);
+    if (itemIndex !== -1) {
+      editableSection.list.splice(itemIndex, 1);
+    }
 
+    editableSection.hasSavedChanges = true;
     listItem.remove();
   });
   return deleteButton;

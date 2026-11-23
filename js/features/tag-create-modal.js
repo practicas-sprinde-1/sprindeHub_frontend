@@ -2,9 +2,9 @@ import { setTag } from "../api/tag.api.js";
 import { getLightClients } from "../api/client.api.js";
 import { showNotification } from "../components/notifications.js";
 import {
-  createDeviceEditorFields,
-  getDeviceChanges,
-} from "../components/device-form.js";
+  createTagEditorFields,
+  getTagChanges,
+} from "../components/tag-form.js";
 
 export async function openNewTagModal(onSaveSuccess) {
   if (document.querySelector(".modal-overlay, dialog[open]")) return;
@@ -77,7 +77,7 @@ async function saveNewTag(modal, onSaveSuccess) {
 
   const formValues = modal.form.elements;
   const tagData = {
-    ...getDeviceChanges(modal.inputs),
+    ...getTagChanges(modal.inputs),
     client_id: Number(formValues.client_id.value),
   };
 
@@ -162,7 +162,10 @@ function createTagForm() {
   clientSelect.autofocus = true;
   clientSelect.append(new Option("Cargando clientes...", ""));
 
-  const { inputs, inputElements } = createDeviceEditorFields({}, "tag-form-field");
+  const { inputs, inputElements } = createTagEditorFields(
+    {},
+    "tag-form-field",
+  );
   formFields.append(
     legend,
     createField("Cliente *", clientSelect),

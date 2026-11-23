@@ -1,8 +1,8 @@
 import { modifyTag } from "../api/tag.api.js";
 import {
-  createDeviceEditorFields,
-  getDeviceChanges,
-} from "../components/device-form.js";
+  createTagEditorFields,
+  getTagChanges,
+} from "../components/tag-form.js";
 import { showNotification } from "../components/notifications.js";
 
 export function createEditTagModal(tag, refreshTable) {
@@ -24,8 +24,11 @@ export function createEditTagModal(tag, refreshTable) {
   form.classList.add("tag-form");
   const formFields = document.createElement("fieldset");
   formFields.classList.add("tag-form-fields");
-  const { inputs, inputElements } = createDeviceEditorFields(tag, "tag-form-field");
-  inputs.device_type.autofocus = true;
+  const { inputs, inputElements } = createTagEditorFields(
+    tag,
+    "tag-form-field",
+  );
+  inputs.tag_type.autofocus = true;
   formFields.append(...inputElements);
 
   const statusMessage = document.createElement("p");
@@ -72,7 +75,7 @@ async function saveTagChanges(tag, modal, refreshTable) {
   modal.statusMessage.hidden = true;
   setSavingState(modal, true);
   try {
-    const changes = getDeviceChanges(modal.inputs);
+    const changes = getTagChanges(modal.inputs);
     const savedTag = await modifyTag(changes, tag.id);
     Object.assign(tag, savedTag);
   } catch (error) {

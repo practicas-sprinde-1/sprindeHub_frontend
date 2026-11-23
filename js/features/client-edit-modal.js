@@ -1,4 +1,8 @@
-import { modifyClient } from "../api/client.api.js";
+import {
+  archiveClient,
+  modifyClient,
+  restoreClient,
+} from "../api/client.api.js";
 import { getProfile } from "../api/profile.api.js";
 import { getLightProjects, modifyProject } from "../api/project.api.js";
 import {
@@ -13,9 +17,9 @@ import {
 } from "../api/user_client.api.js";
 import { createCheckboxListManager } from "../components/checkbox-list-manager.js";
 import {
-  createDeviceEditorFields,
-  getDeviceChanges,
-} from "../components/device-form.js";
+  createTagEditorFields,
+  getTagChanges,
+} from "../components/tag-form.js";
 import { showNotification } from "../components/notifications.js";
 
 const SAVE_ERROR_DURATION = 7000;
@@ -34,7 +38,7 @@ export async function createEditModalClient(
 
   const closeModal = async () => {
     overlay.remove();
-    if (deviceSection.hasChanges) {
+    if (tagsSection.hasSavedChanges) {
       try {
         await onSaveSuccess(client);
       } catch (error) {
@@ -53,9 +57,9 @@ export async function createEditModalClient(
   const clientForm = createClientForm(client);
 
   const availableProjects = await getLightProjects("projects");
-  const devices = await getTagsByClientId(client.id, 100, 0);
+  const tags = await getTagsByClientId(client.id, 100, 0);
 
-  const deviceSection = createDeviceSection(devices, client.id);
+  const tagsSection = createTagsSection(tags, client.id);
   const initialProjectIds = assignedProjects.map((project) => project.id);
   const projectSelection = createProjectSelection(
     availableProjects,
@@ -94,7 +98,7 @@ export async function createEditModalClient(
   const sections = buildClientSections(
     clientForm.fields,
     projectSelection,
-    deviceSection,
+    tagsSection,
     userAccessSection,
   );
   layout.append(...sections);
@@ -114,13 +118,13 @@ function createModalTitle(clientName) {
 function buildClientSections(
   clientFields,
   projectSelection,
-  deviceSection,
+  tagsSection,
   userAccessSection,
 ) {
   return [
     createClientDataSection(clientFields),
     projectSelection.element,
-    deviceSection.element,
+    tagsSection.element,
     userAccessSection.element,
   ];
 }
@@ -137,61 +141,63 @@ function createClientDataSection(clientFields) {
   return section;
 }
 
-function createDeviceSection(devices, clientId) {
+function createTagsSection(tags, clientId) {
   const section = document.createElement("section");
-  section.classList.add("client-device-section");
+  section.classList.add("client-tag-section");
   const title = document.createElement("h2");
   title.textContent = "Dispositivos";
   const description = document.createElement("p");
-  description.classList.add("client-device-description");
+  description.classList.add("client-tag-description");
   description.textContent = "Los dispositivos se guardan de forma individual.";
   const list = document.createElement("ul");
-  const addButton = createButton(
-    "Añadir dispositivo",
-    "modal-add-button",
-  );
+  const addButton = createButton("Añadir dispositivo", "modal-add-button");
 
-  const deviceSection = {
+  const tagsSection = {
     element: section,
-    devices,
+    tags,
     clientId,
-    hasChanges: false,
+    hasSavedChanges: false,
   };
 
   addButton.addEventListener("click", () => {
     const listItem = document.createElement("li");
     list.append(listItem);
-    renderDeviceEditor(listItem, {}, deviceSection, true);
+    renderTagEditor(listItem, {}, tagsSection, true);
   });
 
-  for (const device of devices) {
+  for (const tag of tags) {
     const listItem = document.createElement("li");
-    renderDeviceReadView(listItem, device, deviceSection);
+    renderTagReadView(listItem, tag, tagsSection);
     list.append(listItem);
   }
 
   section.append(title, description, list, addButton);
-  return deviceSection;
+  return tagsSection;
 }
 
-function renderDeviceReadView(listItem, device, deviceSection) {
+function renderTagReadView(listItem, tag, tagsSection) {
   const content = document.createElement("div");
-  content.classList.add("client-device-content");
+  content.classList.add("client-tag-content");
   const name = document.createElement("strong");
-  name.textContent = `${device.device_type} · ${device.brand} ${device.model}`;
+  name.textContent = `${tag.tag_type} · ${tag.brand} ${tag.model}`;
   const details = document.createElement("span");
-  details.textContent = `MAC: ${device.mac || "—"} · IP: ${device.ip || "—"}`;
+  details.textContent = `MAC: ${tag.mac || "—"} · IP: ${tag.ip || "—"}`;
   content.append(name, details);
 
   const editButton = createButton("Editar");
   editButton.addEventListener("click", () => {
-    renderDeviceEditor(listItem, device, deviceSection);
+    renderTagEditor(listItem, tag, tagsSection);
   });
-  const deleteButton = createDeviceDeleteButton(listItem, device, deviceSection, editButton);
+  const deleteButton = createTagDeleteButton(
+    listItem,
+    tag,
+    tagsSection,
+    editButton,
+  );
   listItem.replaceChildren(content, editButton, deleteButton);
 }
 
-function createDeviceDeleteButton(listItem, device, deviceSection, editButton) {
+function createTagDeleteButton(listItem, tag, tagsSection, editButton) {
   const deleteButton = createButton("Eliminar");
   deleteButton.addEventListener("click", async () => {
     if (deleteButton.disabled) return;
@@ -201,12 +207,12 @@ function createDeviceDeleteButton(listItem, device, deviceSection, editButton) {
     deleteButton.disabled = true;
     deleteButton.textContent = "Eliminando...";
     try {
-      await deleteTag(device.id);
-      const deviceIndex = deviceSection.devices.indexOf(device);
-      if (deviceIndex !== -1) {
-        deviceSection.devices.splice(deviceIndex, 1);
+      await deleteTag(tag.id);
+      const tagIndex = tagsSection.tags.indexOf(tag);
+      if (tagIndex !== -1) {
+        tagsSection.tags.splice(tagIndex, 1);
       }
-      deviceSection.hasChanges = true;
+      tagsSection.hasSavedChanges = true;
       listItem.remove();
     } catch (error) {
       showNotification({
@@ -225,12 +231,12 @@ function createDeviceDeleteButton(listItem, device, deviceSection, editButton) {
   return deleteButton;
 }
 
-function renderDeviceEditor(listItem, device, deviceSection, isNew = false) {
+function renderTagEditor(listItem, tag, tagsSection, isNew = false) {
   const form = document.createElement("form");
-  form.classList.add("client-device-editor");
+  form.classList.add("client-tag-editor");
   const fields = document.createElement("fieldset");
-  const { inputs, inputElements } = createDeviceEditorFields(
-    device,
+  const { inputs, inputElements } = createTagEditorFields(
+    tag,
     "client-edit-field",
   );
   fields.append(...inputElements);
@@ -242,13 +248,13 @@ function renderDeviceEditor(listItem, device, deviceSection, isNew = false) {
     if (isNew) {
       listItem.remove();
     } else {
-      renderDeviceReadView(listItem, device, deviceSection);
+      renderTagReadView(listItem, tag, tagsSection);
     }
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    await saveDevice(listItem, device, inputs, fields, deviceSection, isNew);
+    await saveTag(listItem, tag, inputs, fields, tagsSection, isNew);
   });
 
   fields.append(saveButton, cancelButton);
@@ -256,15 +262,27 @@ function renderDeviceEditor(listItem, device, deviceSection, isNew = false) {
   listItem.replaceChildren(form);
 }
 
-async function saveDevice(listItem, device, inputs, fields, deviceSection, isNew) {
+async function saveTag(
+  listItem,
+  tag,
+  inputs,
+  fields,
+  tagsSection,
+  isNew,
+) {
   if (fields.disabled) return;
 
   fields.disabled = true;
   try {
-    const changes = getDeviceChanges(inputs);
-    const savedDevice = await updateDevice(device, changes, deviceSection, isNew);
-    deviceSection.hasChanges = true;
-    renderDeviceReadView(listItem, savedDevice, deviceSection);
+    const changes = getTagChanges(inputs);
+    const savedTag = await updateTag(
+      tag,
+      changes,
+      tagsSection,
+      isNew,
+    );
+    tagsSection.hasSavedChanges = true;
+    renderTagReadView(listItem, savedTag, tagsSection);
   } catch (error) {
     showNotification({
       type: "error",
@@ -277,20 +295,20 @@ async function saveDevice(listItem, device, inputs, fields, deviceSection, isNew
   }
 }
 
-async function updateDevice(device, changes, deviceSection, isNew) {
+async function updateTag(tag, changes, tagsSection, isNew) {
   if (isNew) {
-    const createdDevice = await setTag({
+    const createdTag = await setTag({
       ...changes,
-      client_id: deviceSection.clientId,
+      client_id: tagsSection.clientId,
     });
-    deviceSection.devices.push(createdDevice);
-    return createdDevice;
+    tagsSection.tags.push(createdTag);
+    return createdTag;
   }
 
   // El backend solo admite los campos editables, sin id ni client_id.
-  const savedDevice = await modifyTag(changes, device.id);
-  Object.assign(device, savedDevice);
-  return device;
+  const savedTag = await modifyTag(changes, tag.id);
+  Object.assign(tag, savedTag);
+  return tag;
 }
 
 function createElement(tagName, className) {
@@ -358,8 +376,14 @@ async function saveClientChanges({
   overlay,
 }) {
   try {
+    const shouldClientBeActive = clientInputs.statusInput.value === "true";
     applyClientFormValues(client, clientInputs);
     await modifyClient(client, client.id);
+
+    if (shouldClientBeActive && !client.is_active) {
+      await restoreClient(client.id);
+      client.is_active = true;
+    }
 
     await updateClientProjects(
       availableProjects,
@@ -367,6 +391,12 @@ async function saveClientChanges({
       selectedProjectIds,
       client.id,
     );
+
+    if (!shouldClientBeActive && client.is_active) {
+      await archiveClient(client.id);
+      client.is_active = false;
+    }
+
     await checkAndRemoveAccess(
       currentUserId,
       client.id,
@@ -421,14 +451,10 @@ function createClientForm(client) {
   };
 }
 
-function applyClientFormValues(
-  client,
-  { nameInput, cifInput, phoneInput, statusInput },
-) {
+function applyClientFormValues(client, { nameInput, cifInput, phoneInput }) {
   client.name = nameInput.value.trim();
   client.cif = cifInput.value.trim();
   client.phone = phoneInput.value.trim();
-  client.is_active = statusInput.value === "true";
 }
 
 async function updateClientProjects(

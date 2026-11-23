@@ -46,7 +46,20 @@ main {
   letter-spacing: -0.4px;
 }
 
+.clients-table-header {
+  flex-wrap: wrap;
+}
+
+.clients-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .button-new-client,
+.button-edit-client,
+.button-delete-client,
 .pagination button,
 .archived-clients,
 .actived-clients {
@@ -59,12 +72,30 @@ main {
   font-weight: 700;
 }
 
-.button-new-client {
+.button-new-client,
+.button-edit-client,
+.button-delete-client {
   padding: 10px 14px;
 }
 
-.button-new-client:hover {
+.button-new-client:hover,
+.button-edit-client:hover:not(:disabled) {
   background-color: var(--navy);
+}
+
+.button-delete-client {
+  border-color: var(--test);
+  background-color: var(--surface);
+  color: var(--test);
+}
+
+.button-delete-client:hover:not(:disabled) {
+  background-color: var(--danger-background);
+}
+
+.clients-table-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .table-actions {
@@ -148,6 +179,15 @@ main {
 
 .clients-table tbody tr:hover {
   background-color: var(--hover-surface);
+}
+
+#clients-table-body tr {
+  cursor: pointer;
+}
+
+.clients-table tbody tr.client-row-selected,
+.clients-table tbody tr.client-row-selected:hover {
+  background-color: var(--blue-light);
 }
 
 .client-link {
